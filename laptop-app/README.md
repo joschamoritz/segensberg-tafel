@@ -81,6 +81,11 @@ Herstellersoftware. Siehe `../CLAUDE.md` und `../DESIGN.md` für Hintergrund.
   (Spielstand/Uhr dagegen bewusst nicht – die starten immer bei null).
   Heim ist fest auf SV Hochlar 28 / SVH mit Vereinslogo vorbelegt
   (`assets/heim-logo.png`), bleibt aber editierbar.
+- **Fassung und Baudatum in der Kopfzeile** des Steuerungsfensters
+  („Fassung 1.0.0 · 19.8.2026"). Klein und beiläufig, aber der einzige
+  Ort, an dem am Spieltag ablesbar ist, welcher Stand auf dem Rechner
+  läuft – ohne das ist eine Rückmeldung („das ging nicht") keiner
+  Fassung zuzuordnen. Auf der Tafel steht die Angabe bewusst nicht.
 
 ## Build-Besonderheit: esbuild statt reinem tsc
 
@@ -204,7 +209,13 @@ Im Electron-userData-Ordner (`%APPDATA%/anzeigetafel-laptop-app/`):
   die Sicherung bei jedem Schreibvorgang um Megabyte an Base64-Daten
   aufblähen. Beim Fortsetzen werden sie über den Vereinsnamen wieder
   zugespielt. „Neues Spiel" löscht die Datei.
-- `fehler.log` – Protokoll unbehandelter Fehler
+- `fehler.log` – Protokoll unbehandelter Fehler. Jede Zeile trägt die
+  Fassung, die sie erzeugt hat.
+
+Nicht dort, sondern **neben dem Programm** liegt `dist/build-info.json`:
+Version und Baudatum, geschrieben bei jedem `npm run build`. Sie gehört
+zum ausgelieferten Stand, nicht zu den Nutzerdaten – und wird deshalb
+mitgepackt statt gespeichert.
 
 Hinterlegte Bilder werden beim Einlesen verkleinert (Logos auf 256px,
 Portraits auf 320px Kantenlänge). Logos bleiben immer PNG, weil sie von
@@ -229,7 +240,7 @@ Undo über die Chronik hinaus, Speichern von Spieltagen, Trainingsmodus.
 npm test
 ```
 
-Baut und prüft anschließend mit `node:test`: 217 Fälle in rund vier
+Baut und prüft anschließend mit `node:test`: 222 Fälle in rund vier
 Sekunden.
 `npm run check` ist derselbe Lauf unter dem Namen, der die
 Vorab-Prüfung meint – das, was vor einer Auslieferung durchlaufen soll.
@@ -311,7 +322,7 @@ automatischem Neu-Kompilieren bei Dateiänderungen: `npm run watch` (Electron
 selbst muss dafür separat neu gestartet werden, es gibt noch keinen
 Hot-Reload).
 
-## Windows-Paket erstellen (für den Spieltags-Laptop)
+## Windows-Paket erstellen
 
 ```bash
 npm run dist
@@ -329,9 +340,88 @@ Erzeugt in `release/` zwei Varianten (jeweils ca. 96 MB):
 
 Auf dem Zielrechner wird weder Node.js noch npm gebraucht.
 
-**Hinweis zur Windows-Warnung:** Die Dateien sind nicht signiert (dafür
-bräuchte es ein kostenpflichtiges Code-Signing-Zertifikat). Beim ersten
-Start meldet sich deshalb der SmartScreen-Filter mit „Der Computer wurde
-durch Windows geschützt" – über „Weitere Informationen" → „Trotzdem
-ausführen" startet die App. Das ist bei unsignierten Programmen normal und
-kein Fehler.
+## Eine neue Fassung ausliefern
+
+Verteilt wird **von Hand**, bewusst ohne Auto-Update – die Begründung
+steht in `../CLAUDE.md`. Damit sich Fassungen trotzdem auseinanderhalten
+lassen, gehört zu jeder Auslieferung dieselbe Reihenfolge:
+
+1. `npm run check` – derselbe Lauf wie `npm test`, unter dem Namen, der
+   die Vorab-Prüfung meint.
+2. **Version in `package.json` erhöhen.** Ohne das heißen zwei
+   verschiedene Stände gleich, und auf dem Vereinsrechner ist nicht mehr
+   feststellbar, welcher davon läuft.
+3. **Eintrag in `../CHANGELOG.md`** – was sich für die Bedienung ändert,
+   nicht welche Datei angefasst wurde.
+4. `npm run dist`
+5. **Alte `.exe` nach `release/archiv/` verschieben, nicht
+   überschreiben.** Das ist der Rückweg, wenn die neue Fassung am
+   Spieltag durchfällt. Jede Fassung belegt rund 200 MB – ältere
+   gelegentlich wegräumen, aber immer die zuletzt bewährte behalten.
+6. Datei auf den Stick bzw. den Spieltags-Laptop.
+
+**Welche Stelle steigt wann** (`major.minor.patch`):
+
+| Stelle | wann | Beispiel |
+|---|---|---|
+| Patch (1.0.**1**) | Fehlerbehebung, nichts Neues zu lernen | Uhr zeigte 60:00 statt 1:00:00 |
+| Minor (1.**1**.0) | neue Funktion, Bedienung bleibt vertraut | Trainingsmodus kommt dazu |
+| Major (**2**.0.0) | die Bedienung ändert sich merklich | Umstieg auf eine Controller-App |
+
+Die Fassung steht anschließend **in der Kopfzeile des
+Steuerungsfensters**, zusammen mit dem Baudatum („Fassung 1.0.0 ·
+19.8.2026"). Das Datum kommt aus `dist/build-info.json`, geschrieben von
+`scripts/build-info.js` bei jedem `npm run build`. Fehlt die Datei, zeigt
+die Kopfzeile nur die Version – nie ein erfundenes Datum.
+
+Dieselbe Fassung steht in jeder Zeile von `fehler.log`. Eine Rückmeldung
+vom Spieltag ist sonst keinem Stand zuzuordnen.
+
+## Erstinstallation auf dem Spieltags-Laptop
+
+**Installer oder portable?** Der **Installer** ist die Empfehlung für den
+festen Spieltags-Laptop: Startmenü-Eintrag, und eine neue Fassung
+installiert sich über die alte, ohne dass Daten verlorengehen (siehe
+unten). Die **portable Fassung** ist für den USB-Stick gedacht – dort
+liegt sinnvollerweise auch der Ordner `Vereinsdaten/` daneben, dann
+wandern Logos, Werbemotive und Sounds mit.
+
+**Vereinsdaten bereitlegen.** Die App sucht `Vereinsdaten/` der Reihe
+nach neben der Anwendung, unter `Dokumente/Anzeigetafel/` und zuletzt am
+Entwicklungspfad. Fehlt der Ordner, bleibt das Vereins-Dropdown leer und
+die Diashow findet nichts – das Steuerungsfenster sagt dann, wo es
+gesucht hat.
+
+**Windows-Warnung beim ersten Start.** Die Dateien sind nicht signiert;
+ein Code-Signing-Zertifikat kostet 200–400 € im Jahr und verlangt seit
+2023 zusätzlich einen Hardware-Token. Beim ersten Start meldet sich
+deshalb der SmartScreen-Filter mit „Der Computer wurde durch Windows
+geschützt" – über „Weitere Informationen" → „Trotzdem ausführen" startet
+die App. Das ist bei unsignierten Programmen normal und kein Fehler.
+
+**Virenscanner-Ausnahme (Avast, Defender).** Unsignierte Programme
+schlagen dort regelmäßig an – im ungünstigsten Fall wird die `.exe`
+kommentarlos in die Quarantäne verschoben, während vor dem Anpfiff
+aufgebaut wird. Deshalb einmalig eine Ausnahme eintragen, und zwar
+**auf den Ordner, nicht auf die Datei**:
+
+- Installiert: `C:\Program Files\Anzeigetafel\`
+- Portabel: der Ordner auf dem Stick
+
+Der Grund für den Ordner: Der Dateiname enthält die Versionsnummer
+(`Anzeigetafel-portable-1.0.0.exe`). Eine Ausnahme auf die Datei wäre
+nach der nächsten Auslieferung wertlos – und das fiele genau dann auf,
+wenn es niemand gebrauchen kann.
+
+**Was ein Update mitnimmt.** Kader, Team-Stammdaten, Logo-Pfad, Texte
+und die Sicherung des laufenden Spiels liegen in
+`%APPDATA%/anzeigetafel-laptop-app/` und bleiben bei einer neuen Fassung
+unangetastet. Der Ordnername leitet sich aus dem Feld `name` in
+`package.json` ab – geprüft: Das gepackte `package.json` enthält
+**kein** `productName`, deshalb ist es in der Entwicklungs- und in der
+gepackten Fassung derselbe Ordner.
+
+> **Guardrail:** Käme dort je ein `productName` hinein, änderte Electron
+> den Ordnernamen still mit – die App startete dann mit leeren Kadern
+> und ohne Logos, und die alten Daten lägen unauffindbar daneben. Wer an
+> der `build`-Konfiguration arbeitet, muss das im Blick behalten.
