@@ -1,0 +1,9 @@
+# Zeilenenden im Repository immer LF, auch auf Windows. Ohne das gilt
+# jede Datei nach einem frischen Checkout als geändert.
+* text=auto eol=lf
+
+# Binärdateien nicht anfassen
+*.png binary
+*.jpg binary
+*.woff2 binary
+*.jar binary
