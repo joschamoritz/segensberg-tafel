@@ -1,0 +1,1021 @@
+/* ═══════════════════════════════════════════
+   Anzeigetafel – Steuerungsfenster
+   Farben/Schriften aus dem SVH-Website-Plugin übernommen.
+   ═══════════════════════════════════════════ */
+
+:root {
+  --svh: #29166f;
+  --svh-dk: #1d0f52;
+  --svh-lt: #3a2490;
+  --svh-gold: #d4a843;
+  --svh-txt: #1a1a2e;
+  --svh-mut: #6b6b78;
+  --svh-bg: #f5f5f7;
+  --svh-wh: #fff;
+  --svh-brd: #e0e0e4;
+  --svh-loss: #dc2626;
+  /* Warnung/Gelb-Rot -- siehe DESIGN.md: keine Hex-Werte in Komponenten */
+  --svh-warn: #c2410c;
+
+  /* Blasse Tönungen für Hinweisflächen. Sie gehören zu je einer
+     Signalfarbe darüber und stehen deshalb hier statt als Hex in den
+     Komponenten -- sonst laufen sie beim nächsten Farbwechsel
+     auseinander. Nur für die Control-Ansicht: Auf der Tafel wären so
+     helle Töne nach den LED-Guardrails ohnehin nicht zulässig. */
+  --tint-gold: #fdf6e3;
+  --tint-warn: #fff1e6;
+  --tint-loss: #fef2f2;
+  /* Text auf --tint-gold -- das Gold selbst wäre darauf nicht lesbar. */
+  --svh-gold-dk: #7a5c12;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Source Sans 3', -apple-system, 'Segoe UI', Arial, sans-serif;
+  background: var(--svh-bg);
+  color: var(--svh-txt);
+  line-height: 1.5;
+}
+
+.js-error-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  max-height: 40vh;
+  overflow-y: auto;
+  background: var(--svh-loss);
+  color: var(--svh-wh);
+  font-family: 'Consolas', monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+  padding: 8px 12px;
+}
+
+/* ═══ Kopfbereich ═══ */
+
+header {
+  background: var(--svh-dk);
+  color: var(--svh-wh);
+  padding: 12px 24px;
+}
+
+header h1 {
+  margin: 0 0 4px 0;
+  font-family: 'Oswald', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+}
+
+.status-banner {
+  font-size: 12px;
+  opacity: 0.65;
+}
+
+.status-banner.warning {
+  color: var(--svh-gold);
+  opacity: 1;
+  font-weight: 600;
+}
+
+/* ═══ Buttons (Basis zuerst, Varianten danach) ═══ */
+
+.btn {
+  font-family: 'Oswald', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: 1px solid var(--svh-brd);
+  background: var(--svh-wh);
+  color: var(--svh-txt);
+  cursor: pointer;
+  min-height: 48px;
+  min-width: 48px;
+}
+
+.btn:hover {
+  filter: brightness(0.96);
+}
+
+.btn:active {
+  filter: brightness(0.9);
+}
+
+.btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.btn:disabled:hover {
+  filter: none;
+}
+
+.btn-plus,
+.btn-minus {
+  font-size: 28px;
+  padding: 8px 24px;
+}
+
+.btn-danger {
+  color: var(--svh-wh);
+  background: var(--svh-loss);
+  border-color: var(--svh-loss);
+}
+
+.btn-small {
+  font-size: 12px;
+  padding: 8px 12px;
+  min-height: unset;
+  min-width: unset;
+}
+
+/* Der im Spielverlauf fällige nächste Schritt -- am Spielfeldrand soll
+   auf einen Blick klar sein, welcher Knopf jetzt dran ist. */
+.btn-next {
+  background: var(--svh);
+  border-color: var(--svh);
+  color: var(--svh-wh);
+  font-weight: 600;
+}
+
+.btn-next:hover {
+  filter: brightness(1.15);
+}
+
+/* ═══ Zielbildschirm ═══ */
+
+.display-picker {
+  display: flex;
+  align-items: center;
+  /* Umbruch statt Quetschen: Auf einem schmalen Laptop-Bildschirm rutscht
+     die Tafelauflösung in eine zweite Zeile, statt das Dropdown
+     unbrauchbar schmal zu machen. */
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--svh-brd);
+  font-size: 14px;
+}
+
+.display-picker select {
+  flex: 1;
+  /* Ohne Mindestbreite schrumpft das Dropdown im Umbruchfall auf wenige
+     Pixel -- ein Flex-Kind darf sonst unter seinen Inhalt schrumpfen. */
+  min-width: 180px;
+  padding: 6px 8px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+/* Auflösung der Anzeigefläche. Zwei Zahlenfelder statt einer Auswahlliste:
+   Welche Auflösung der TB50 wirklich hat, ist noch nicht verifiziert
+   (siehe Backlog.md), und eine Liste müsste bei jeder neuen
+   Controller-Generation nachgepflegt werden. */
+.board-size {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.board-size input {
+  width: 5.5em;
+  padding: 6px 8px;
+  font-size: 14px;
+  font-family: 'Oswald', sans-serif;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid var(--svh-brd);
+  border-radius: 6px;
+}
+
+.board-size-x {
+  color: var(--svh-mut);
+}
+
+.board-size-hint {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 12px;
+  color: var(--svh-mut);
+}
+
+/* ═══ Spielphasen ═══ */
+
+.phase-control {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--svh-brd);
+}
+
+.phase-current {
+  font-size: 13px;
+  color: var(--svh-mut);
+  margin-bottom: 12px;
+}
+
+.phase-current strong {
+  font-family: 'Oswald', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--svh);
+}
+
+.phase-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.lineup-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--svh-brd);
+}
+
+.lineup-controls-label {
+  font-size: 13px;
+  color: var(--svh-mut);
+}
+
+.lineup-controls-hint {
+  font-size: 12px;
+  color: var(--svh-mut);
+}
+
+.kickoff-field {
+  margin-left: 16px;
+  font-size: 13px;
+  color: var(--svh-mut);
+}
+
+.kickoff-field input {
+  font-family: 'Oswald', sans-serif;
+  font-size: 14px;
+  padding: 4px 6px;
+  border: 1px solid var(--svh-brd);
+  border-radius: 6px;
+  margin-left: 4px;
+}
+
+#half-duration-input {
+  width: 56px;
+}
+
+.clock .stoppage {
+  font-size: 26px;
+  vertical-align: super;
+  margin-left: 4px;
+  color: var(--svh-gold);
+}
+
+/* ═══ Logo-Bibliothek ═══ */
+
+.library-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.library-info {
+  flex: 1;
+  font-size: 12px;
+  color: var(--svh-mut);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.team-settings-block select {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  border: 1px solid var(--svh-brd);
+  border-radius: 6px;
+}
+
+/* ═══ Team-Stammdaten ═══ */
+
+.team-settings {
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--svh-brd);
+}
+
+.team-settings summary {
+  cursor: pointer;
+  font-family: 'Oswald', sans-serif;
+  font-weight: 500;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--svh-mut);
+}
+
+.team-settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 16px;
+}
+
+.team-settings-block {
+  background: var(--svh-wh);
+  border: 1px solid var(--svh-brd);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.team-settings-block h3 {
+  margin: 0 0 12px 0;
+  font-family: 'Oswald', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--svh-mut);
+}
+
+.team-settings-block label {
+  display: block;
+  font-size: 12px;
+  color: var(--svh-mut);
+  margin-top: 12px;
+}
+
+.team-settings-block input {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  border: 1px solid var(--svh-brd);
+  border-radius: 6px;
+}
+
+/* Logos sind teils für dunklen Untergrund gezeichnet (weiße Linien) --
+   auf weißer Karte wären sie unsichtbar. */
+.logo-preview {
+  display: block;
+  max-width: 120px;
+  max-height: 60px;
+  margin-bottom: 8px;
+  object-fit: contain;
+  background: var(--svh-dk);
+  border-radius: 6px;
+  padding: 6px;
+}
+
+.logo-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+/* ═══ Spielstand & Uhr ═══ */
+
+.teams {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 16px;
+  padding: 24px;
+  align-items: start;
+}
+
+.team {
+  background: var(--svh-wh);
+  border: 1px solid var(--svh-brd);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+}
+
+.team h2 {
+  margin: 0 0 12px 0;
+  font-family: 'Oswald', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--svh);
+}
+
+.score {
+  font-family: 'Oswald', sans-serif;
+  font-size: 72px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  margin-bottom: 16px;
+}
+
+.stepper {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.card-buttons {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+/* Eckenzähler. Bewusst klein unter den Kartenknöpfen -- er wird selten
+   gebraucht und darf den Spielstand-Stepper nicht verdrängen. */
+.corner-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.corner-label {
+  font-size: 12px;
+  color: var(--svh-mut);
+  margin-right: 2px;
+}
+
+.corner-count {
+  font-family: 'Oswald', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  min-width: 2ch;
+  text-align: center;
+}
+
+/* Die Zuschauerzahl steht neben ihrem Knopf, nicht bei den Spielphasen --
+   sie wird einmal eingetragen und danach nur noch eingeblendet. */
+.info-controls #attendance-input {
+  width: 80px;
+  text-align: right;
+}
+
+/* Der Dankestext wird einmal eingerichtet und dann kaum noch angefasst --
+   deshalb zugeklappt, damit die Phasenleiste übersichtlich bleibt. */
+.thanks-box {
+  margin-top: 10px;
+}
+
+.thanks-box summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--svh-mut);
+}
+
+.thanks-box input {
+  width: 100%;
+  max-width: 520px;
+  margin-top: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 6px 8px;
+  border: 1px solid var(--svh-brd);
+  border-radius: 6px;
+}
+
+.thanks-hint {
+  margin: 6px 0 0 0;
+  font-size: 11px;
+  color: var(--svh-mut);
+}
+
+/* Tonausgabe. Der Regler muss am Platz schnell erreichbar sein --
+   deshalb offen in der Phasenleiste und nicht in einem Aufklapp-Bereich. */
+.sound-volume {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--svh-mut);
+}
+
+.sound-volume input {
+  width: 120px;
+}
+
+.sound-volume span {
+  font-family: 'Oswald', sans-serif;
+  font-variant-numeric: tabular-nums;
+  min-width: 4ch;
+  text-align: right;
+}
+
+.sound-mute {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--svh-mut);
+}
+
+.thanks-box textarea {
+  width: 100%;
+  max-width: 520px;
+  margin-top: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 6px 8px;
+  border: 1px solid var(--svh-brd);
+  border-radius: 6px;
+  resize: vertical;
+}
+
+/* Leerer Medienordner muss auffallen -- sonst sucht man den Fehler in der
+   App statt im Dateisystem (dieselbe Lehre wie bei der Logo-Bibliothek). */
+.lineup-controls-hint.is-empty {
+  color: var(--svh-warn);
+  font-weight: 600;
+}
+
+.thanks-hint code {
+  background: var(--svh-bg);
+  border: 1px solid var(--svh-brd);
+  border-radius: 4px;
+  padding: 0 3px;
+}
+
+.card-yellow {
+  border-color: var(--svh-gold);
+  background: var(--tint-gold);
+}
+
+.card-yellow-red {
+  border-color: var(--svh-warn);
+  background: var(--tint-warn);
+}
+
+.card-red {
+  border-color: var(--svh-loss);
+  background: var(--tint-loss);
+}
+
+.clock-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 220px;
+  padding-top: 12px;
+}
+
+.clock {
+  font-family: 'Oswald', sans-serif;
+  font-size: 56px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.half {
+  font-size: 13px;
+  color: var(--svh-mut);
+  margin-bottom: 8px;
+}
+
+.clock-controls {
+  display: flex;
+  gap: 8px;
+}
+
+/* Nachspielzeit: die vom Schiedsrichter angezeigte Dauer. Schnellknöpfe,
+   weil am Spielfeldrand ein Klick reichen muss. */
+.stoppage-set {
+  margin-top: 12px;
+  max-width: 220px;
+}
+
+.stoppage-set > label {
+  display: block;
+  font-size: 11px;
+  color: var(--svh-mut);
+  margin-bottom: 4px;
+}
+
+.stoppage-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.stoppage-buttons .btn {
+  min-width: 34px;
+  padding: 4px 6px;
+}
+
+/* Der gesetzte Wert muss auf einen Blick erkennbar sein. */
+.stoppage-buttons .btn.is-active {
+  background: var(--svh);
+  border-color: var(--svh);
+  color: var(--svh-wh);
+}
+
+.stoppage-more {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--svh-mut);
+}
+
+.stoppage-more input {
+  width: 56px;
+  text-align: center;
+}
+
+.stoppage-hint {
+  margin: 6px 0 0 0;
+  font-size: 11px;
+  color: var(--svh-mut);
+}
+
+/* Notfall-Eingabe für die Spielzeit. Bewusst schmal und unauffällig --
+   im normalen Ablauf steuern die Spielphasen die Uhr. */
+/* Fehlende Logo-Bibliothek deutlich machen statt still leer zu bleiben. */
+.library-info.is-empty {
+  color: var(--svh-warn);
+  font-weight: 600;
+}
+
+.clock-set {
+  margin-top: 10px;
+  max-width: 220px;
+}
+
+.clock-set > label {
+  display: block;
+  font-size: 11px;
+  color: var(--svh-mut);
+  margin-bottom: 4px;
+}
+
+.clock-set-row {
+  display: flex;
+  gap: 6px;
+}
+
+.clock-set-row input {
+  width: 70px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Meldet eine unverständliche Eingabe, statt sie stillschweigend zu
+   verwerfen. */
+.clock-set-hint.is-error {
+  color: var(--svh-warn);
+  font-weight: 600;
+}
+
+.clock-set-hint {
+  margin: 6px 0 0 0;
+  font-size: 11px;
+  color: var(--svh-mut);
+}
+
+.clock-set-hint code {
+  font-size: 11px;
+}
+
+.clock-hint {
+  margin: 8px 0 0 0;
+  font-size: 11px;
+  color: var(--svh-mut);
+  text-align: center;
+  max-width: 220px;
+}
+
+/* ═══ Kader ═══ */
+
+.squad-settings {
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--svh-brd);
+}
+
+.squad-settings summary {
+  cursor: pointer;
+  font-family: 'Oswald', sans-serif;
+  font-weight: 500;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--svh-mut);
+}
+
+.squad-hint {
+  margin: 12px 0 0 0;
+  font-size: 12px;
+  color: var(--svh-mut);
+}
+
+.squad-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 12px;
+}
+
+.squad-block {
+  background: var(--svh-wh);
+  border: 1px solid var(--svh-brd);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.squad-block h3 {
+  margin: 0 0 12px 0;
+  font-family: 'Oswald', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--svh);
+}
+
+.squad-warning {
+  margin: 0 0 12px 0;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--tint-gold);
+  border: 1px solid var(--svh-gold);
+  font-size: 12px;
+  color: var(--svh-gold-dk);
+}
+
+.coach-field {
+  display: block;
+  font-size: 12px;
+  color: var(--svh-mut);
+  margin-bottom: 12px;
+}
+
+.coach-field select,
+.coach-field input {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  border: 1px solid var(--svh-brd);
+  border-radius: 6px;
+}
+
+.squad-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.squad-row {
+  display: grid;
+  grid-template-columns: 44px 1fr 1.2fr 24px 24px 82px 28px 26px;
+  gap: 5px;
+  align-items: center;
+}
+
+.squad-head {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--svh-mut);
+  margin-bottom: 2px;
+}
+
+.squad-head span {
+  text-align: center;
+}
+
+.squad-head span:nth-child(2),
+.squad-head span:nth-child(3) {
+  text-align: left;
+}
+
+.squad-row input[type='checkbox'] {
+  justify-self: center;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+.squad-role {
+  padding: 6px 4px;
+  font-size: 12px;
+  font-family: inherit;
+  border: 1px solid var(--svh-brd);
+  border-radius: 6px;
+}
+
+.squad-row input {
+  padding: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  border: 1px solid var(--svh-brd);
+  border-radius: 6px;
+  min-width: 0;
+}
+
+.squad-photo {
+  border: 1px solid var(--svh-brd);
+  background: var(--svh-wh);
+  color: var(--svh-mut);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  padding: 6px 0;
+}
+
+.squad-photo.has-photo {
+  background: var(--svh);
+  border-color: var(--svh);
+}
+
+.squad-remove {
+  border: 1px solid var(--svh-brd);
+  background: var(--svh-wh);
+  color: var(--svh-loss);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 6px 0;
+}
+
+.squad-remove:hover {
+  background: var(--tint-loss);
+}
+
+.squad-empty {
+  font-size: 13px;
+  color: var(--svh-mut);
+}
+
+.paste-box {
+  margin-top: 12px;
+  border-top: 1px solid var(--svh-brd);
+  padding-top: 12px;
+}
+
+.paste-box summary {
+  cursor: pointer;
+  font-family: 'Oswald', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--svh);
+}
+
+.paste-hint {
+  margin: 8px 0;
+  font-size: 12px;
+  color: var(--svh-mut);
+}
+
+.paste-box textarea {
+  width: 100%;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 8px;
+  border: 1px solid var(--svh-brd);
+  border-radius: 6px;
+  resize: vertical;
+}
+
+.paste-preview {
+  margin: 8px 0;
+  font-size: 12px;
+  color: var(--svh-mut);
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.paste-preview ul {
+  margin: 4px 0 0 0;
+  padding-left: 18px;
+}
+
+.paste-preview li {
+  font-variant-numeric: tabular-nums;
+}
+
+.paste-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+/* ═══ Torfolge ═══ */
+
+.goal-log-block {
+  padding: 0 24px 24px;
+}
+
+.goal-log-block h3 {
+  margin: 0 0 8px 0;
+  font-family: 'Oswald', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--svh-mut);
+}
+
+.goal-log {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.goal-log li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--svh-wh);
+  border: 1px solid var(--svh-brd);
+  border-left: 3px solid var(--svh);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+/* Ereignisart an der linken Kante erkennbar */
+.goal-log li.is-card-yellow {
+  border-left-color: var(--svh-gold);
+}
+
+.goal-log li.is-card-yellow-red {
+  border-left-color: var(--svh-warn);
+}
+
+.goal-log li.is-card-red {
+  border-left-color: var(--svh-loss);
+}
+
+.goal-remove {
+  border: none;
+  background: none;
+  color: var(--svh-mut);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 2px;
+}
+
+.goal-remove:hover {
+  color: var(--svh-loss);
+}
+
+.goal-log select {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 4px 6px;
+  border: 1px solid var(--svh-brd);
+  border-radius: 6px;
+  max-width: 180px;
+}
+
+.goal-log .goal-minute {
+  font-family: 'Oswald', sans-serif;
+  font-weight: 600;
+  color: var(--svh);
+  /* Platz fuer die breiteste Form ("90+5'") -- sonst stehen die
+     Vereinsnamen versetzt, sobald ein Nachspielzeit-Tor dazwischen liegt. */
+  min-width: 5ch;
+}
+
+.goal-log .goal-standing {
+  font-family: 'Oswald', sans-serif;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.goal-log-empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--svh-mut);
+}

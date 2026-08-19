@@ -1,0 +1,40 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'de.anzeigetafel.controllertestapp'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId "de.anzeigetafel.controllertestapp"
+        // minSdk 21 (Android 5.0), weil NovaStars T-SDK-Kompatibilitätsliste
+        // Android ab 5.0 nennt -- die tatsächliche Android-Version auf dem
+        // TB50 ist noch nicht verifiziert (siehe Backlog.md).
+        minSdk 21
+        targetSdk 36
+        versionCode 1
+        versionName "0.1"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+}
+
+dependencies {
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+}

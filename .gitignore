@@ -1,0 +1,28 @@
+# Abhängigkeiten und Bauergebnisse -- alles daraus ist reproduzierbar
+node_modules/
+laptop-app/dist/
+laptop-app/release/
+
+# Android-Grundgerüst (Gradle). local.properties enthält den SDK-Pfad
+# dieses Rechners und gehört deshalb nicht in die Versionskontrolle.
+controller-app/build/
+controller-app/app/build/
+controller-app/.gradle/
+controller-app/local.properties
+
+# Vereinsdaten: Spielerportraits (personenbezogen), Vereinslogos,
+# Werbemotive und Sounds. Bewusst draußen -- ~51 MB Binärdateien, und
+# Personenbilder gehören nicht in ein Code-Repository.
+# ACHTUNG: Damit ist dieser Ordner NICHT durch git gesichert.
+Vereinsdaten/
+
+# Herstellersoftware und Handbücher (~708 MB): Installer von NovaLCT,
+# ViPlex, PDF-Handbücher, goracon-Werbemittel. Fremdes
+# Material, unverändert, jederzeit wiederbeschaffbar.
+Software LED-Anzeigetafel/
+
+# Windows / Editoren
+Thumbs.db
+Desktop.ini
+.vscode/
+.idea/

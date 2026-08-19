@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <!-- svh-media: liefert die Tormusik direkt von der Platte (siehe main.ts).
+       Der Ton läuft bewusst hier und nicht im Anzeigefenster: Er geht
+       ohnehin ans Windows-Standardgerät, und Regler und Stummschalter
+       gehören dorthin, wo die Person sitzt. -->
+  <!-- Die Tormusik kommt über IPC und wird als Blob abgespielt
+       (media-src blob:) -- warum nicht über svh-media:, steht in
+       control.ts an loadGoalSound(). -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; media-src 'self' blob:;" />
+  <title>Anzeigetafel-Steuerung</title>
+  <link rel="stylesheet" href="../fonts/fonts.css" />
+  <link rel="stylesheet" href="control.css" />
+</head>
+<body>
+  <div id="js-error-banner" class="js-error-banner" hidden></div>
+
+  <header>
+    <h1>Anzeigetafel-Steuerung</h1>
+    <div id="display-status" class="status-banner"></div>
+  </header>
+
+  <section class="display-picker">
+    <label for="display-select">Zielbildschirm:</label>
+    <select id="display-select"></select>
+    <button id="display-reopen" class="btn btn-small">Anzeigefenster neu öffnen</button>
+
+    <span class="board-size">
+      <label for="board-width-input">Tafelauflösung:</label>
+      <input type="number" id="board-width-input" min="64" max="4096" step="1" />
+      <span class="board-size-x" aria-hidden="true">×</span>
+      <input type="number" id="board-height-input" min="64" max="4096" step="1" />
+      <span>px</span>
+    </span>
+
+    <p class="board-size-hint">
+      Die Anzeige rechnet ihr Layout in genau dieser Größe und skaliert es
+      formatfüllend hoch. Die Vorschau zeigt damit dasselbe Layout wie die
+      LED-Wand – gleiche Zeilenzahl, gleiche Kürzungen. Standard laut
+      goracon-Anleitung: 384 × 192.
+    </p>
+  </section>
+
+  <details class="team-settings">
+    <summary>Team-Stammdaten &amp; Logos</summary>
+
+    <div class="library-bar">
+      <span id="library-info" class="library-info"></span>
+      <button id="library-folder" class="btn btn-small">Logo-Ordner…</button>
+      <button id="library-reload" class="btn btn-small">Neu einlesen</button>
+    </div>
+
+    <div class="team-settings-grid">
+      <div class="team-settings-block">
+        <h3>Heim</h3>
+        <img id="home-logo-preview" class="logo-preview" alt="Heim-Logo" hidden />
+        <label>Verein aus Bibliothek
+          <select id="home-library-select"></select>
+        </label>
+        <div class="logo-buttons">
+          <button id="home-logo-pick" class="btn btn-small">Logo aus Datei…</button>
+          <button id="home-logo-clear" class="btn btn-small" hidden>Logo entfernen</button>
+        </div>
+        <label>Vereinsname
+          <input type="text" id="home-name-input" maxlength="40" />
+        </label>
+        <label>Kürzel (nur ohne Logo sichtbar)
+          <input type="text" id="home-shortname-input" maxlength="6" />
+        </label>
+      </div>
+      <div class="team-settings-block">
+        <h3>Gast</h3>
+        <img id="away-logo-preview" class="logo-preview" alt="Gast-Logo" hidden />
+        <label>Verein aus Bibliothek
+          <select id="away-library-select"></select>
+        </label>
+        <div class="logo-buttons">
+          <button id="away-logo-pick" class="btn btn-small">Logo aus Datei…</button>
+          <button id="away-logo-clear" class="btn btn-small" hidden>Logo entfernen</button>
+        </div>
+        <label>Vereinsname
+          <input type="text" id="away-name-input" maxlength="40" />
+        </label>
+        <label>Kürzel (nur ohne Logo sichtbar)
+          <input type="text" id="away-shortname-input" maxlength="6" />
+        </label>
+      </div>
+    </div>
+  </details>
+
+  <details class="squad-settings">
+    <summary>Kader</summary>
+    <p class="squad-hint">
+      Kader werden pro Verein gespeichert – beim Rückspiel gegen denselben
+      Gegner sind die Spieler wieder da.
+    </p>
+    <div class="squad-grid">
+      <div class="squad-block">
+        <h3 id="home-squad-title">Heim</h3>
+        <p class="squad-warning" id="home-squad-warning" hidden></p>
+        <label class="coach-field">Gespeicherten Kader laden
+          <select id="home-squad-select"></select>
+        </label>
+        <label class="coach-field">Trainer
+          <input type="text" id="home-coach-input" maxlength="40" />
+        </label>
+        <div class="squad-list" id="home-squad-list"></div>
+        <button id="home-squad-add" class="btn btn-small">Spieler hinzufügen</button>
+
+        <details class="paste-box">
+          <summary>Aufstellung einfügen</summary>
+          <p class="paste-hint">
+            Text einfügen oder eine vorbereitete Datei laden. Die Vorschau
+            zeigt vor dem Übernehmen, was erkannt wurde.
+          </p>
+          <textarea id="home-paste-input" rows="6" placeholder="1 Max Mustermann&#10;2 Peter Meier&#10;…"></textarea>
+          <div class="paste-preview" id="home-paste-preview"></div>
+          <div class="paste-buttons">
+            <button id="home-paste-file" class="btn btn-small">Aus Datei laden…</button>
+            <button id="home-paste-replace" class="btn btn-small">Kader ersetzen</button>
+            <button id="home-paste-append" class="btn btn-small">Anhängen</button>
+          </div>
+        </details>
+      </div>
+      <div class="squad-block">
+        <h3 id="away-squad-title">Gast</h3>
+        <p class="squad-warning" id="away-squad-warning" hidden></p>
+        <label class="coach-field">Gespeicherten Kader laden
+          <select id="away-squad-select"></select>
+        </label>
+        <label class="coach-field">Trainer
+          <input type="text" id="away-coach-input" maxlength="40" />
+        </label>
+        <div class="squad-list" id="away-squad-list"></div>
+        <button id="away-squad-add" class="btn btn-small">Spieler hinzufügen</button>
+
+        <details class="paste-box">
+          <summary>Aufstellung einfügen</summary>
+          <p class="paste-hint">
+            Text einfügen oder eine vorbereitete Datei laden. Die Vorschau
+            zeigt vor dem Übernehmen, was erkannt wurde.
+          </p>
+          <textarea id="away-paste-input" rows="6" placeholder="1 Max Mustermann&#10;2 Peter Meier&#10;…"></textarea>
+          <div class="paste-preview" id="away-paste-preview"></div>
+          <div class="paste-buttons">
+            <button id="away-paste-file" class="btn btn-small">Aus Datei laden…</button>
+            <button id="away-paste-replace" class="btn btn-small">Kader ersetzen</button>
+            <button id="away-paste-append" class="btn btn-small">Anhängen</button>
+          </div>
+        </details>
+      </div>
+    </div>
+  </details>
+
+  <section class="phase-control">
+    <div class="phase-current">
+      Spielphase: <strong id="phase-current-label">Vor Anpfiff</strong>
+      <label class="kickoff-field">
+        Anstoß
+        <input type="time" id="kickoff-input" />
+      </label>
+      <label class="kickoff-field">
+        Halbzeit
+        <input type="number" id="half-duration-input" min="1" max="60" step="1" />
+        min
+      </label>
+    </div>
+    <div class="phase-buttons">
+      <button id="phase-kickoff" class="btn">Anpfiff</button>
+      <button id="phase-halftime" class="btn">Halbzeit</button>
+      <button id="phase-second-half" class="btn">2. Halbzeit anpfeifen</button>
+      <button id="phase-fulltime" class="btn">Abpfiff</button>
+      <button id="phase-revert" class="btn">↩ Phase zurück</button>
+      <button id="match-reset" class="btn btn-danger">Neues Spiel</button>
+    </div>
+
+    <div class="lineup-controls">
+      <span class="lineup-controls-label">Aufstellung einblenden:</span>
+      <button id="lineup-show-home" class="btn btn-small">Heim</button>
+      <button id="lineup-show-away" class="btn btn-small">Gast</button>
+      <button id="lineup-hide" class="btn btn-small">Zurück zur Begegnung</button>
+      <span class="lineup-controls-hint" id="lineup-controls-hint"></span>
+    </div>
+
+    <div class="lineup-controls info-controls">
+      <span class="lineup-controls-label">Einblenden:</span>
+      <button id="info-show-corners" class="btn btn-small">Ecken</button>
+      <label class="kickoff-field">
+        Zuschauer
+        <input type="number" id="attendance-input" min="0" max="99999" step="1"
+               placeholder="–" />
+      </label>
+      <button id="info-show-attendance" class="btn btn-small">Zuschauer</button>
+      <span class="lineup-controls-hint" id="info-controls-hint"></span>
+    </div>
+
+    <div class="lineup-controls sound-controls">
+      <span class="lineup-controls-label">Tormusik:</span>
+      <label class="sound-volume">
+        <input type="range" id="sound-volume" min="0" max="100" step="5" />
+        <span id="sound-volume-value">80&nbsp;%</span>
+      </label>
+      <label class="sound-mute">
+        <input type="checkbox" id="sound-muted" /> stumm
+      </label>
+      <button id="sound-play" class="btn btn-small">Abspielen</button>
+      <button id="sound-stop" class="btn btn-small">Stopp</button>
+      <span class="lineup-controls-hint" id="sound-hint"></span>
+    </div>
+
+    <div class="lineup-controls slideshow-controls">
+      <span class="lineup-controls-label">Diashow:</span>
+      <button id="slideshow-start" class="btn btn-small">Starten</button>
+      <button id="slideshow-stop" class="btn btn-small">Beenden</button>
+      <button id="media-reload" class="btn btn-small">Medien neu einlesen</button>
+      <span class="lineup-controls-hint" id="slideshow-hint"></span>
+    </div>
+
+    <details class="thanks-box">
+      <summary>Termine &amp; Ankündigungen (Halbzeitpause)</summary>
+      <textarea id="announcements-input" rows="5"
+                placeholder="Eine Ankündigung je Zeile&#10;Nächstes Heimspiel: So 25.08., 15:00 vs. FC Beispiel&#10;Helfer für das Sommerfest gesucht"></textarea>
+      <p class="thanks-hint">
+        Erscheinen als eigene Folien in der Diashow der Halbzeitpause,
+        höchstens fünf Zeilen je Folie.
+      </p>
+    </details>
+
+    <details class="thanks-box">
+      <summary>Dankestext für die Zuschauer-Einblendung</summary>
+      <input type="text" id="attendance-message-input" maxlength="120" />
+      <p class="thanks-hint">
+        <code>{n}</code> wird durch die Zuschauerzahl ersetzt und auf der
+        Tafel groß herausgestellt. Leeres Feld setzt den Standardtext zurück.
+      </p>
+    </details>
+  </section>
+
+  <main class="teams">
+    <section class="team team-home">
+      <h2 id="home-team-label">Heim</h2>
+      <div class="score" id="home-score">0</div>
+      <div class="stepper">
+        <button data-team="home" data-delta="-1" class="btn btn-minus">−</button>
+        <button data-team="home" data-delta="1" class="btn btn-plus">+</button>
+      </div>
+      <div class="card-buttons">
+        <button data-card-team="home" data-card="yellow" class="btn btn-small card-yellow">Gelb</button>
+        <button data-card-team="home" data-card="yellow-red" class="btn btn-small card-yellow-red">Gelb-Rot</button>
+        <button data-card-team="home" data-card="red" class="btn btn-small card-red">Rot</button>
+      </div>
+      <div class="corner-row">
+        <span class="corner-label">Ecken</span>
+        <button data-corner-team="home" data-corner-delta="-1" class="btn btn-small">−</button>
+        <span class="corner-count" id="home-corner-count">0</span>
+        <button data-corner-team="home" data-corner-delta="1" class="btn btn-small">+</button>
+      </div>
+    </section>
+
+    <section class="clock-block">
+      <div class="clock">
+        <span id="clock-display">00:00</span><span class="stoppage" id="stoppage-display" hidden></span>
+      </div>
+      <div class="half" id="half-display">1. Halbzeit</div>
+      <div class="clock-controls">
+        <button id="clock-start" class="btn">Start</button>
+        <button id="clock-stop" class="btn">Stop</button>
+        <button id="clock-reset" class="btn btn-danger">Reset</button>
+      </div>
+      <div class="stoppage-set">
+        <label>Nachspielzeit (Anzeige des Schiedsrichters)</label>
+        <div class="stoppage-buttons" id="stoppage-buttons">
+          <button data-stoppage="0" class="btn btn-small">aus</button>
+          <button data-stoppage="1" class="btn btn-small">+1</button>
+          <button data-stoppage="2" class="btn btn-small">+2</button>
+          <button data-stoppage="3" class="btn btn-small">+3</button>
+          <button data-stoppage="4" class="btn btn-small">+4</button>
+          <button data-stoppage="5" class="btn btn-small">+5</button>
+        </div>
+        <label class="stoppage-more">mehr:
+          <input type="number" id="stoppage-input" min="0" max="20" step="1" />
+        </label>
+        <p class="stoppage-hint">
+          Erscheint auf der Tafel, sobald die reguläre Zeit überschritten ist.
+          Beim Anpfiff jeder Halbzeit automatisch zurückgesetzt.
+        </p>
+      </div>
+
+      <div class="clock-set">
+        <label for="clock-set-input">Spielzeit setzen</label>
+        <div class="clock-set-row">
+          <input type="text" id="clock-set-input" placeholder="MM:SS" maxlength="6"
+                 inputmode="numeric" autocomplete="off" />
+          <button id="clock-set-apply" class="btn btn-small">Übernehmen</button>
+        </div>
+        <p class="clock-set-hint" id="clock-set-hint">
+          Notfall: gesamte Spielzeit, z.&nbsp;B. <code>67:30</code> oder <code>67</code>.
+          In der 2.&nbsp;Halbzeit durchlaufend gezählt.
+        </p>
+      </div>
+      <p class="clock-hint">Nur zum Nachkorrigieren – der normale Ablauf läuft über die Spielphasen oben.</p>
+    </section>
+
+    <section class="team team-away">
+      <h2 id="away-team-label">Gast</h2>
+      <div class="score" id="away-score">0</div>
+      <div class="stepper">
+        <button data-team="away" data-delta="-1" class="btn btn-minus">−</button>
+        <button data-team="away" data-delta="1" class="btn btn-plus">+</button>
+      </div>
+      <div class="card-buttons">
+        <button data-card-team="away" data-card="yellow" class="btn btn-small card-yellow">Gelb</button>
+        <button data-card-team="away" data-card="yellow-red" class="btn btn-small card-yellow-red">Gelb-Rot</button>
+        <button data-card-team="away" data-card="red" class="btn btn-small card-red">Rot</button>
+      </div>
+      <div class="corner-row">
+        <span class="corner-label">Ecken</span>
+        <button data-corner-team="away" data-corner-delta="-1" class="btn btn-small">−</button>
+        <span class="corner-count" id="away-corner-count">0</span>
+        <button data-corner-team="away" data-corner-delta="1" class="btn btn-small">+</button>
+      </div>
+    </section>
+  </main>
+
+  <section class="goal-log-block">
+    <h3>Spielverlauf</h3>
+    <ol class="goal-log" id="goal-log"></ol>
+    <p class="goal-log-empty" id="goal-log-empty">Noch keine Tore oder Karten.</p>
+  </section>
+
+  <!-- Tormusik. Die Quelle setzt der Renderer, sobald der Zustand den
+       Dateinamen aus dem Sounds-Ordner meldet. -->
+  <audio id="goal-sound" preload="auto"></audio>
+
+  <script src="control.js"></script>
+</body>
+</html>

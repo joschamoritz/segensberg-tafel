@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <!-- svh-media: liefert die Diashow-Bilder direkt von der Platte, ohne
+       Umweg über data:-URLs im Zustand (siehe main.ts). -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: svh-media:; font-src 'self';" />
+  <title>Anzeigetafel</title>
+  <link rel="stylesheet" href="../fonts/fonts.css" />
+  <link rel="stylesheet" href="display.css" />
+</head>
+<body data-phase="pre-match">
+  <!-- Die Bühne: Alles Sichtbare liegt hierin, und sie ist exakt so groß
+       wie die Anzeigefläche der LED-Wand (Standardmaß 384x192, in den
+       Einstellungen änderbar). Das Layout wird also in der Zielauflösung
+       gerechnet und anschließend formatfüllend hochskaliert -- schon das
+       Vorschaufenster zeigt damit dieselben Zeilenumbrüche, Kürzungen und
+       Zeilenzahlen wie später die Tafel. Alle Größenangaben im Stylesheet
+       beziehen sich mit cqw/cqh auf diese Fläche, nicht auf das Fenster.
+
+       Die Maße kommen als CSS-Variablen aus display.ts; im Stylesheet
+       steht bewusst keine Auflösung (Guardrail in DESIGN.md). -->
+  <div class="stage" id="stage">
+    <!-- Vereinsmotiv: diagonale Streifen in zwei gegenüberliegenden Ecken.
+         Bewusst als CSS statt im Hintergrundbild -- so lässt sich die
+         Position exakt so wählen, dass sie nie mit einem Wappen kollidiert. -->
+    <div class="deco deco-tl" aria-hidden="true"><i></i><i></i></div>
+    <div class="deco deco-br" aria-hidden="true"><i></i><i></i></div>
+
+
+    <!-- Vor dem Anpfiff: die Begegnung als Plakat.
+         Dreispaltiges Raster, damit die Namen exakt unter ihrem Wappen
+         stehen und das "VS" immer in der Bildmitte bleibt. -->
+    <div class="board board-pre">
+      <!-- Seite 1: die Begegnung -->
+      <div class="pre-page" data-page="matchup">
+      <div class="pre-grid">
+        <div class="pre-side">
+          <div class="crest crest-xl">
+            <img class="crest-img" id="pre-home-logo" alt="" hidden />
+            <span class="crest-text" id="pre-home-fallback">HEIM</span>
+          </div>
+          <div class="pre-name" id="pre-home-name">Heim</div>
+        </div>
+
+        <div class="pre-vs">VS</div>
+
+        <div class="pre-side">
+          <div class="crest crest-xl">
+            <img class="crest-img" id="pre-away-logo" alt="" hidden />
+            <span class="crest-text" id="pre-away-fallback">GAST</span>
+          </div>
+          <div class="pre-name" id="pre-away-name">Gast</div>
+        </div>
+      </div>
+
+      <div class="pre-kickoff" id="pre-kickoff"></div>
+      </div>
+
+      <!-- Seiten 2-5: Aufstellungen. Werden aus dem Kader erzeugt und in
+           der Rotation übersprungen, solange keine Spieler erfasst sind. -->
+      <div class="pre-page lineup-page" data-page="lineup-home">
+        <div class="lineup-header">
+          <img class="lineup-logo" id="lineup-home-logo" alt="" hidden />
+          <span class="lineup-title" id="lineup-home-title"></span>
+        </div>
+        <div class="lineup-grid" id="lineup-home-grid"></div>
+      </div>
+
+      <div class="pre-page lineup-page" data-page="bench-home">
+        <div class="lineup-header">
+          <img class="lineup-logo" id="bench-home-logo" alt="" hidden />
+          <span class="lineup-title" id="bench-home-title"></span>
+        </div>
+        <div class="lineup-grid" id="bench-home-grid"></div>
+      </div>
+
+      <div class="pre-page lineup-page" data-page="lineup-away">
+        <div class="lineup-header">
+          <img class="lineup-logo" id="lineup-away-logo" alt="" hidden />
+          <span class="lineup-title" id="lineup-away-title"></span>
+        </div>
+        <div class="lineup-grid" id="lineup-away-grid"></div>
+      </div>
+
+      <div class="pre-page lineup-page" data-page="bench-away">
+        <div class="lineup-header">
+          <img class="lineup-logo" id="bench-away-logo" alt="" hidden />
+          <span class="lineup-title" id="bench-away-title"></span>
+        </div>
+        <div class="lineup-grid" id="bench-away-grid"></div>
+      </div>
+    </div>
+
+    <!-- Laufendes Spiel, Halbzeitpause und Endstand teilen sich diese Ansicht:
+         der Spielstand bleibt immer prominent, nur der Fuß wechselt. -->
+    <div class="board board-match">
+      <div class="match-main">
+        <div class="team-column">
+          <div class="crest">
+            <img class="crest-img" id="home-logo" alt="" hidden />
+            <span class="crest-text" id="home-fallback">HEIM</span>
+          </div>
+          <ol class="scorer-list" id="home-scorers"></ol>
+        </div>
+
+        <div class="scoreline">
+          <span class="score score-home" id="home-score"></span>
+          <span class="score-sep" aria-hidden="true"><i></i><i></i></span>
+          <span class="score score-away" id="away-score"></span>
+        </div>
+
+        <div class="team-column">
+          <div class="crest">
+            <img class="crest-img" id="away-logo" alt="" hidden />
+            <span class="crest-text" id="away-fallback">GAST</span>
+          </div>
+          <ol class="scorer-list" id="away-scorers"></ol>
+        </div>
+      </div>
+
+      <div class="match-footer">
+        <div class="clock-pill">
+          <span class="clock" id="clock-display"></span>
+          <span class="stoppage" id="stoppage-display" hidden></span>
+        </div>
+        <div class="phase-label" id="phase-label"></div>
+      </div>
+    </div>
+
+    <!-- Kurze Zusatzinformation im laufenden Spiel: Karte, Eckenstand,
+         Zuschauerzahl. Liegt als Leiste über dem Uhr-Panel und verschwindet
+         nach wenigen Sekunden von selbst. Bewusst EIN Element für alle drei
+         Fälle -- auf 384x192 ist ohnehin nur für eine Leiste Platz. -->
+    <div class="info-bar">
+      <span class="info-mark" id="info-mark" hidden></span>
+      <span class="info-label" id="info-label"></span>
+      <span class="info-value" id="info-value"></span>
+    </div>
+
+    <!-- Diashow: Werbung/Sponsoren, Vereinshighlights und Termine.
+         Läuft nur auf Knopfdruck (Nutzerwunsch) und rotiert dann Seite für
+         Seite; die normale Ansicht ist selbst eine Station der Rotation. -->
+    <div class="board board-slides">
+      <img class="slide-image" id="slide-image" alt="" hidden />
+      <div class="slide-text" id="slide-text" hidden>
+        <div class="slide-title" id="slide-title"></div>
+        <ul class="slide-lines" id="slide-lines"></ul>
+      </div>
+    </div>
+
+    <!-- Danksagung an die Zuschauer: füllt wie der Torjubel das ganze Bild.
+         Die Zahl steht groß in der Mitte, der Text darum herum kleiner --
+         sie wird pro Spiel nur einmal gezeigt und ist eher eine Geste ans
+         Publikum als eine Zusatzinformation nebenher. -->
+    <div class="board board-thanks">
+      <div class="thanks-before" id="thanks-before"></div>
+      <div class="thanks-number" id="thanks-number"></div>
+      <div class="thanks-after" id="thanks-after"></div>
+    </div>
+
+    <!-- Torjubel, erster Akt: Vollbild.
+
+         Der Ablauf hängt daran, WER getroffen hat -- beim eigenen Verein
+         das Wappen mit "TOR!", beim Gegner sachlich der Mannschaftsname.
+         Was in welcher Stufe steht, entscheidet allein `display.css`
+         über `body[data-goal-stage]`.
+
+         Ein Torschütze steht hier bewusst NICHT: Er ist im Moment des
+         Tores praktisch nie eingetragen. Dafür gibt es den Knopf
+         "Torschütze einblenden" mit Portrait. -->
+    <div class="board board-goal">
+      <!-- Rahmenpuls bei eigenem Führungswechsel, sonst unsichtbar. -->
+      <div class="goal-frame" aria-hidden="true"></div>
+
+      <img class="goal-crest" id="goal-crest" alt="" hidden />
+      <div class="goal-word" id="goal-word">TOR!</div>
+      <div class="goal-team" id="goal-team"></div>
+    </div>
+
+    <!-- Torjubel, zweiter Akt: Konfetti über der normalen Spielansicht.
+
+         Liegt deshalb AUSSERHALB von .board-goal -- in der Stufe `boost`
+         ist die Vollbildfläche längst weg und der Spielstand wieder da,
+         in dem sich die neue Ziffer an ihren Platz schiebt. Genau dort
+         gehört das Konfetti hin und nicht auf eine eigene Seite.
+
+         Feste Elemente statt im Torfall erzeugter Knoten: In genau der
+         Sekunde, in der die Anzeige flüssig bleiben muss, soll sie nichts
+         aufbauen. Position und Verzögerung je Stück stehen als
+         nth-child-Regeln im Stylesheet -- als style-Attribut ginge es
+         nicht, die CSP des Fensters setzt `style-src 'self'`. -->
+    <div class="goal-confetti" aria-hidden="true">
+      <i></i>
+      <i></i>
+      <i></i>
+      <i></i>
+      <i></i>
+      <i></i>
+      <i></i>
+      <i></i>
+      <i></i>
+      <i></i>
+      <i></i>
+      <i></i>
+      <i></i>
+      <i></i>
+      <i></i>
+      <i></i>
+    </div>
+
+    <!-- Torschützen-Einblendung: Portrait, Name und Spielstand -->
+    <div class="board board-scorer">
+      <img class="spotlight-photo" id="spotlight-photo" alt="" hidden />
+      <div class="spotlight-body">
+        <div class="spotlight-label" id="spotlight-label">TOR</div>
+        <div class="spotlight-name" id="spotlight-name"></div>
+        <div class="spotlight-meta" id="spotlight-meta"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="display.js"></script>
+</body>
+</html>

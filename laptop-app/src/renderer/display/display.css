@@ -1,0 +1,1217 @@
+/* ═══════════════════════════════════════════
+   Anzeigetafel – Display-Ansicht
+   Farben und Schriften übernommen aus dem SVH-Website-Plugin,
+   damit Anzeigetafel und Vereinsauftritt zusammenpassen.
+   ═══════════════════════════════════════════ */
+
+:root {
+  /* Blau des Vereins-Hintergrundbildes -- als Flächenfarbe hinterlegt,
+     damit die Ränder nahtlos ins Bild übergehen */
+  --svh-blue: #104a81;
+  /* Vereins-Indigo aus der Website (--svh / --svh-dk) */
+  --svh: #29166f;
+  --svh-dk: #1d0f52;
+  --svh-gold: #d4a843;
+  --svh-wh: #ffffff;
+  /* Kartenfarben als Token statt als Hex in den Komponenten -- siehe
+     Guardrail in DESIGN.md. Sie werden an mehreren Stellen gebraucht
+     (Liste unter dem Wappen, Info-Leiste). */
+  --card-yellow: #f5c518;
+  --card-red: #d90429;
+  /* Fläche neben der Bühne. Schwarz und nicht Vereinsblau: Was dort steht,
+     gehört nicht zum Motiv, sondern ist ein Balken. */
+  --stage-void: #000000;
+
+  /* Breite einer Ziffernzelle, relativ zur jeweiligen Schriftgröße.
+     Oswald hat KEINE dicktengleichen Ziffern -- ohne feste Zellen ändert
+     sich die Breite bei jedem Sekundenwechsel und Spielstand, wodurch
+     Uhr-Panel und Wappen springen. */
+  --digit-w: 0.62em;
+  --digit-sep-w: 0.3em;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--stage-void);
+}
+
+/* Die Bühne zentriert im Fenster. Was daneben liegt, bleibt schwarz. */
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* --- Bühne ------------------------------------------------------------- */
+/* Die Anzeige rechnet ihr Layout NICHT in der Fenstergröße, sondern in
+   der Auflösung der LED-Wand, und skaliert das Ergebnis anschließend
+   formatfüllend hoch. Damit zeigt schon das Vorschaufenster exakt das
+   Layout der Tafel: dieselben Zeilenumbrüche, dieselben Kürzungen,
+   dieselbe Zahl an Zeilen in der Torschützenliste.
+
+   Die Maße stehen bewusst NICHT hier, sondern kommen als Variablen aus
+   display.ts (Guardrail in DESIGN.md: keine Auflösung im CSS). Die
+   Rückfallwerte greifen nur, falls der Renderer nicht anläuft -- dann
+   steht wenigstens etwas im richtigen Format da. */
+
+.stage {
+  position: relative;
+  /* NICHT schrumpfen. Als Flex-Kind gäbe die Bühne sonst nach, sobald das
+     Fenster kleiner als die Zielauflösung ist -- und rechnete ihr Layout
+     dann doch wieder in der Fenstergröße, also genau das, was hier
+     vermieden werden soll. */
+  flex: 0 0 auto;
+  width: var(--board-w, 384px);
+  height: var(--board-h, 192px);
+  overflow: hidden;
+  /* Bezugsfläche für sämtliche cqw/cqh-Angaben dieser Datei. Erzeugt
+     zugleich den Bezugsrahmen für die absolut positionierten Flächen
+     darin. */
+  container-type: size;
+  transform: scale(var(--board-scale, 1));
+  transform-origin: center center;
+  /* Eigene Kompositionsebene erzwingen: Chromium rastert den Text dann in
+     der skalierten Größe, statt eine 384px-Fläche als Bild hochzuziehen.
+     Ohne das wäre die Vorschau sichtbar unscharf. */
+  will-change: transform;
+  background-color: var(--svh-blue);
+  background-image: url('background.jpg');
+  background-size: cover;
+  background-position: center;
+  color: var(--svh-wh);
+  font-family: 'Oswald', 'Segoe UI', Arial, sans-serif;
+}
+
+/* --- Vereinsmotiv: diagonale Streifen ---------------------------------- */
+/* Bewusst als CSS statt im Hintergrundbild: Beim Bild verschob sich die
+   Streifenposition mit jedem Seitenverhältnis, wodurch sie unter den
+   weißen Wappen lagen. Hier liegen sie fest in den Ecken, oberhalb bzw.
+   unterhalb aller Inhalte. */
+
+.deco {
+  position: absolute;
+  display: flex;
+  gap: 1.4cqw;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.deco i {
+  display: block;
+  background: var(--svh-wh);
+  transform: skewX(-16deg);
+}
+
+.deco-tl {
+  top: -6cqh;
+  left: 1.5cqw;
+  height: 26cqh;
+}
+
+.deco-tl i:first-child {
+  width: 2.6cqw;
+}
+.deco-tl i:last-child {
+  width: 0.9cqw;
+}
+
+.deco-br {
+  bottom: -6cqh;
+  right: 1.5cqw;
+  height: 26cqh;
+}
+
+.deco-br i:first-child {
+  width: 0.9cqw;
+}
+.deco-br i:last-child {
+  width: 2.6cqw;
+}
+
+/* Über Vollbild-Einblendungen liegen sie nicht -- dort stören sie nur. */
+body.celebrating .deco,
+body.showing-scorer .deco,
+body.showing-thanks .deco,
+body.showing-slide .deco {
+  display: none;
+}
+
+/* --- Ziffern mit fester Zellbreite ------------------------------------- */
+
+.digit,
+.digit-sep {
+  display: inline-block;
+  text-align: center;
+}
+
+.digit {
+  width: var(--digit-w);
+}
+
+.digit-sep {
+  width: var(--digit-sep-w);
+}
+
+/* --- Sichtbarkeit je Spielphase ---------------------------------------- */
+
+.board {
+  width: 100cqw;
+  height: 100cqh;
+  display: flex;
+  flex-direction: column;
+}
+
+body[data-phase='pre-match'] .board-match {
+  display: none;
+}
+
+body:not([data-phase='pre-match']) .board-pre {
+  display: none;
+}
+
+/* Die Vollbildfläche des Torjubels liegt über allem und blendet die
+   normale Ansicht aus. Sie gilt NUR für die erste Stufe -- in der
+   zweiten (`boost`) ist der Spielstand wieder da, dort schiebt sich die
+   neue Ziffer an ihren Platz. `body.celebrating` wird deshalb vom
+   Renderer nur für die Vollbildstufen gesetzt. */
+.board-goal {
+  display: none;
+}
+
+body.celebrating .board-goal {
+  display: flex;
+}
+
+body.celebrating .board-pre,
+body.celebrating .board-match,
+body.celebrating .board-scorer,
+body.celebrating .board-thanks,
+body.celebrating .board-slides {
+  display: none;
+}
+
+/* In Pause und nach Abpfiff ersetzt ein großes Label das Uhr-Panel. */
+body[data-phase='half-time'] .clock-pill,
+body[data-phase='full-time'] .clock-pill {
+  display: none;
+}
+
+body[data-phase='live'] .phase-label {
+  display: none;
+}
+
+/* --- Wappen (Logo, sonst Kürzel als Rückfallebene) ---------------------- */
+
+.crest {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.crest-img {
+  max-height: 30cqh;
+  max-width: 20cqw;
+  object-fit: contain;
+}
+
+.crest-text {
+  font-weight: 700;
+  font-size: 11cqh;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+
+.crest-xl .crest-img {
+  max-height: 40cqh;
+  max-width: 26cqw;
+}
+
+.crest-xl .crest-text {
+  font-size: 16cqh;
+}
+
+/* --- Kontrastfläche hinter farbigen Wappen ----------------------------- */
+/* Die Anzeige hat einen blauen Grund. Weiße Logovarianten stehen darauf
+   bestens -- und für alle 32 Vereine der Bibliothek gibt es eine. Fehlt
+   sie einmal, greift die farbige Variante, und die ist für helle
+   Untergründe gezeichnet: Ihre dunklen Linien verschwänden auf dem Blau.
+   Dafür, und nur dafür, kommt diese Fläche.
+
+   Sie sitzt am Bild und nicht am umgebenden `.crest`: Das ist im
+   laufenden Spiel spaltenbreit, eine Fläche darauf wäre ein weißer
+   Balken quer über die Tafel. Am Bild schmiegt sie sich ans Logo.
+
+   Ecken bewusst klein (siehe Guardrail) -- große Rundungen wirken auf
+   einer niedrig auflösenden Matrix treppig. */
+
+.crest-img.has-plate,
+.lineup-logo.has-plate,
+.goal-crest.has-plate {
+  background: var(--svh-wh);
+  border-radius: 1cqh;
+  padding: 0.8cqh 0.8cqw;
+}
+
+/* --- Ansicht vor dem Anpfiff ------------------------------------------- */
+
+/* Vor dem Anpfiff rotieren mehrere Seiten. Nur die aktive ist sichtbar --
+   22 Spielernamen passen nicht gleichzeitig auf eine 384x192-Fläche. */
+.board-pre {
+  position: relative;
+}
+
+.pre-page {
+  display: none;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3cqh;
+}
+
+.pre-page.is-active {
+  display: flex;
+}
+
+/* --- Aufstellungsseiten ------------------------------------------------ */
+
+.lineup-page {
+  justify-content: flex-start;
+  gap: 0;
+  padding: 2cqh 3cqw;
+}
+
+.lineup-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5cqw;
+  height: 16cqh;
+}
+
+.lineup-logo {
+  max-height: 13cqh;
+  max-width: 12cqw;
+  object-fit: contain;
+}
+
+.lineup-title {
+  font-weight: 700;
+  font-size: 9cqh;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+/* Zwei Spalten à sechs Zeilen: 11 Spieler + Trainer ergeben genau 12
+   Einträge. Spaltenweise gefüllt, damit die Nummern aufsteigend
+   untereinander stehen. */
+.lineup-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: repeat(6, 1fr);
+  grid-auto-flow: column;
+  column-gap: 3cqw;
+  align-content: stretch;
+  /* Falls versehentlich mehr als 12 Spieler auf "Start" stehen, soll das
+     Layout nicht auseinanderfliegen. */
+  overflow: hidden;
+}
+
+.lineup-entry {
+  display: flex;
+  align-items: center;
+  gap: 1cqw;
+  font-weight: 600;
+  font-size: 8cqh;
+  /* Genug Zeilenhöhe für die Unterlängen von g, j, y -- bei line-height: 1
+     schnitt Oswald sie ab. */
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.lineup-entry .lineup-number {
+  flex: 0 0 auto;
+  min-width: 2.2ch;
+  text-align: right;
+  color: var(--svh-gold);
+}
+
+.lineup-entry .lineup-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Kennzeichnung für Torwart und Spielführer. Gefüllte Fläche statt nur
+   farbiger Schrift -- das liest sich auf einer LED-Wand deutlich besser. */
+.lineup-badge {
+  flex: 0 0 auto;
+  font-size: 0.55em;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0.25em 0.4em;
+  background: var(--svh-gold);
+  color: var(--svh-dk);
+  border-radius: 0.2em;
+}
+
+/* Der Trainer schließt die Aufstellung ab und wird dezenter gesetzt. */
+.lineup-entry.is-coach .lineup-number {
+  font-size: 0.7em;
+}
+
+/* Feste Spaltenbreiten: die Wappen bleiben unabhängig von der Namenslänge
+   an derselben Stelle, das "VS" sitzt immer exakt in der Bildmitte. */
+.pre-grid {
+  display: grid;
+  grid-template-columns: 34cqw 12cqw 34cqw;
+  align-items: center;
+  justify-items: center;
+}
+
+.pre-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5cqh;
+  width: 100%;
+}
+
+.pre-name {
+  font-weight: 600;
+  font-size: 6cqh;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  text-align: center;
+  line-height: 1.1;
+  max-width: 100%;
+}
+
+.pre-vs {
+  font-weight: 700;
+  font-size: 11cqh;
+  color: var(--svh-gold);
+  line-height: 1;
+  letter-spacing: 0.05em;
+}
+
+.pre-kickoff {
+  font-weight: 600;
+  font-size: 6cqh;
+  letter-spacing: 0.06em;
+  color: var(--svh-gold);
+  text-transform: uppercase;
+  text-align: center;
+}
+
+/* --- Ansicht während/nach dem Spiel ------------------------------------ */
+/* Aufbau nach Stadion-Vorbild: Spielstand groß in der Mitte, Wappen
+   flankierend, Uhr abgesetzt darunter. Alle Spaltenbreiten sind fest,
+   damit sich beim Torerfolg nichts verschiebt. */
+
+.match-main {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 40cqw 1fr;
+  align-items: center;
+  justify-items: center;
+  padding-top: 2cqh;
+}
+
+/* Wappen mit den Ereignissen der jeweiligen Mannschaft darunter.
+   Das Wappen wird absolut gesetzt, damit es im laufenden Spiel IMMER auf
+   einer Höhe mit dem Spielstand bleibt -- eine wachsende
+   Torschützenliste darf es nicht nach oben schieben.
+
+   Die Höhe steht in --crest-top, weil Wappen und Liste zwingend
+   zusammenhängen: Die Liste beginnt eine halbe Wappenhöhe darunter. Zwei
+   getrennte Werte liefen beim nächsten Umbau auseinander. */
+.team-column {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  /* Im laufenden Spiel bleibt das Wappen mittig -- es soll auf einer Höhe
+     mit dem Spielstand stehen. Das ist eine bewusste Gestaltungs-
+     entscheidung und wiegt schwerer als eine zusätzliche Zeile in der
+     Torschützenliste: Für eine fünfte Zeile müsste dieser Wert auf etwa
+     34 %, und dann steht das Wappen sichtbar über dem Spielstand.
+     Ausprobiert und wieder verworfen (19.08.2026). */
+  --crest-top: 50%;
+}
+
+/* In Pause und Endstand ist mehr Platz: Der Spielstand ist dort kleiner
+   (32cqh statt 44cqh) und der Fuß trägt nur noch das Phasen-Label, die
+   Spalte ist also 83cqh statt 78cqh hoch. Reicht für sieben Zeilen. */
+body[data-phase='half-time'] .team-column,
+body[data-phase='full-time'] .team-column {
+  --crest-top: 24%;
+}
+
+.team-column .crest {
+  position: absolute;
+  top: var(--crest-top);
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+}
+
+/* Beginnt unterhalb des Wappens (halbe Wappenhöhe + Abstand). */
+.scorer-list {
+  position: absolute;
+  top: calc(var(--crest-top) + 17cqh);
+  left: 0;
+  right: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0 1cqw;
+  display: flex;
+  flex-direction: column;
+  /* Linksbündig, damit die Minuten exakt untereinander stehen */
+  align-items: flex-start;
+  gap: 0.2cqh;
+  overflow: hidden;
+}
+
+.scorer-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6cqw;
+  font-weight: 600;
+  font-size: 4.4cqh;
+  /* Genug Zeilenhöhe für die Unterlängen von g, j und y -- bei knapperen
+     Werten schneidet Oswald sie ab. 1,3 ist laut DESIGN.md das Minimum
+     für Listeneinträge; tiefer darf das nicht, auch wenn es eine weitere
+     Zeile brächte. */
+  line-height: 1.3;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+/* Schriftgröße hier ausdrücklich setzen: Ein deklarierter Wert schlägt
+   einen vererbten, unabhängig von der Spezifität. Als es zusätzlich eine
+   allgemeine .scorer-name-Regel für die große Einblendung gab, erbte diese
+   Liste deren 16cqh -- die Einblendung heißt deshalb jetzt .spotlight-*. */
+.scorer-list .scorer-name {
+  font-size: inherit;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Feste Breite für die Minute -- sonst stehen die Namen versetzt. */
+.scorer-list .scorer-minute {
+  flex: 0 0 auto;
+  min-width: 2.6ch;
+  text-align: right;
+  color: var(--svh-gold);
+}
+
+/* Zeichen dafür, dass ältere Einträge herausgefallen sind.
+
+   Drei harte Quadrate statt eines Auslassungszeichens: Schriftpunkte
+   liegen bei dieser Größe unter 3px und verschwinden auf einer
+   LED-Matrix, eine gefüllte Fläche nicht. Dasselbe Argument wie beim
+   Doppelpunkt des Spielstands (siehe .score-sep). */
+.scorer-list .scorer-more {
+  display: flex;
+  align-items: center;
+  gap: 0.6cqh;
+  /* So flach wie möglich: Im laufenden Spiel ist der Platz unter dem
+     Wappen knapp, und jede Zehntel vh hier fehlt der letzten Zeile. */
+  height: 2.6cqh;
+  padding-left: 0.3cqw;
+}
+
+.scorer-list .scorer-more i {
+  display: block;
+  width: 1.6cqh;
+  height: 1.6cqh;
+  background: var(--svh-gold);
+}
+
+/* Rote Karten stehen mit unter dem Wappen -- ein Platzverweis ist für
+   die Zuschauer genauso wichtig wie ein Tor. */
+.scorer-list .scorer-card {
+  flex: 0 0 auto;
+  display: inline-block;
+  width: 2.2cqh;
+  height: 3cqh;
+  border-radius: 0.3cqh;
+  align-self: center;
+}
+
+.scorer-list .scorer-card.is-red {
+  background: var(--card-red);
+}
+
+.scorer-list .scorer-card.is-yellow-red {
+  background: linear-gradient(135deg, var(--card-yellow) 0 50%, var(--card-red) 50% 100%);
+}
+
+.scoreline {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  width: 100%;
+}
+
+.score {
+  font-weight: 700;
+  font-size: 44cqh;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* Heim rechtsbündig, Gast linksbündig -- so bleibt der Trenner immer
+   exakt mittig, auch bei zweistelligen Ergebnissen. */
+.score-home {
+  text-align: right;
+  padding-right: 1cqw;
+}
+
+.score-away {
+  text-align: left;
+  padding-left: 1cqw;
+}
+
+/* Zwei Quadrate statt eines Doppelpunkt-Zeichens: die Position lässt sich
+   so exakt steuern und hängt nicht von den Schriftmetriken ab (ein
+   Textdoppelpunkt saß deutlich zu tief). */
+.score-sep {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 7cqh;
+}
+
+.score-sep i {
+  display: block;
+  width: 3.2cqh;
+  height: 3.2cqh;
+  background: var(--svh-gold);
+}
+
+.match-footer {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 3cqh;
+  min-height: 20cqh;
+}
+
+/* Abgesetztes Panel für die Uhr -- Vereins-Indigo als Vollfläche.
+   Feste Breite, damit der Rahmen nicht bei jedem Ziffernwechsel atmet. */
+.clock-pill {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 1.5cqw;
+  width: 42cqw;
+  background: var(--svh-dk);
+  padding: 0.8cqh 0;
+  border-radius: 1cqh;
+}
+
+.clock {
+  font-weight: 700;
+  font-size: 14cqh;
+  line-height: 1.1;
+  color: var(--svh-gold);
+}
+
+/* Nachspielzeit als abgesetzte Fläche neben der stehenden Uhr -- so ist
+   auf einen Blick klar, dass die reguläre Spielzeit bereits abgelaufen ist. */
+.stoppage {
+  font-weight: 700;
+  font-size: 8cqh;
+  line-height: 1;
+  padding: 0.15em 0.35em;
+  background: var(--svh-gold);
+  color: var(--svh-dk);
+  border-radius: 0.15em;
+}
+
+.half {
+  font-weight: 600;
+  font-size: 5.5cqh;
+  letter-spacing: 0.05em;
+  color: var(--svh-wh);
+}
+
+.phase-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5cqh;
+}
+
+.phase-label {
+  font-weight: 700;
+  font-size: 11cqh;
+  letter-spacing: 0.08em;
+  color: var(--svh-gold);
+  text-align: center;
+  line-height: 1;
+}
+
+/* In Pause und nach Abpfiff geht Platz vom Spielstand an die
+   Torschützenliste -- dort steht der Endstand mit allen Torschützen. */
+body[data-phase='half-time'] .score,
+body[data-phase='full-time'] .score {
+  font-size: 32cqh;
+}
+
+/* Der Fuß trägt hier nur noch das Phasen-Label (11cqh), die Uhr ist
+   ausgeblendet. Vorher standen hier 30cqh -- reserviert für eine
+   Torchronik, die es im HTML nie gab. Damit lag rund ein Drittel der
+   Bildhöhe brach. */
+body[data-phase='half-time'] .match-footer,
+body[data-phase='full-time'] .match-footer {
+  min-height: 15cqh;
+}
+
+/* --- Info-Leiste (Karte, Ecken, Zuschauer) ------------------------------ */
+/* Schmale Leiste am unteren Rand, ~4s sichtbar. Sie verdeckt dabei das
+   Uhr-Panel: Bei 384x192 gibt es darunter keinen freien Streifen, und
+   kleiner darf die Schrift nicht werden, wenn sie aus
+   Zuschauerentfernung lesbar bleiben soll. Bewusst OHNE Blinken --
+   die Information soll ruhig ablesbar sein (Nutzerwunsch). */
+
+.info-bar {
+  display: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  align-items: center;
+  justify-content: center;
+  gap: 2cqw;
+  height: 22cqh;
+  padding: 0 3cqw;
+  background: var(--svh-dk);
+}
+
+body.showing-info .info-bar {
+  display: flex;
+}
+
+/* Vollbild-Einblendungen haben Vorrang -- die Leiste würde dort nur
+   stören. Diese Regeln müssen NACH der Regel oben stehen: gleiche
+   Spezifität, die spätere gewinnt. */
+body.celebrating .info-bar,
+body.showing-scorer .info-bar,
+body.showing-thanks .info-bar {
+  display: none;
+}
+
+/* Karte als Farbfläche in Kartenform, wie in der Chronik. */
+.info-mark {
+  flex: 0 0 auto;
+  display: inline-block;
+  width: 9cqh;
+  height: 13cqh;
+  border-radius: 0.4cqh;
+  background: var(--card-yellow);
+}
+
+/* Ohne diese Zeile bliebe die Kartenfläche auch bei Ecken und
+   Zuschauerzahl stehen: Eine Autoren-Regel mit `display` schlägt die
+   Browser-Regel `[hidden] { display: none }` -- unabhängig von der
+   Spezifität. Das `hidden`-Attribut aus display.ts liefe damit ins Leere. */
+.info-mark[hidden] {
+  display: none;
+}
+
+.info-mark.is-red {
+  background: var(--card-red);
+}
+
+.info-mark.is-yellow-red {
+  background: linear-gradient(135deg, var(--card-yellow) 0 50%, var(--card-red) 50% 100%);
+}
+
+.info-label {
+  font-weight: 600;
+  font-size: 11cqh;
+  /* Platz für die Unterlängen von g, j, y -- Oswald schneidet sie bei
+     line-height: 1 unten ab. */
+  line-height: 1.25;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.info-value {
+  flex: 0 0 auto;
+  font-weight: 700;
+  font-size: 13cqh;
+  line-height: 1.25;
+  color: var(--svh-gold);
+  white-space: nowrap;
+}
+
+/* --- Diashow ------------------------------------------------------------ */
+/* Werbung, Highlights und Termine. Die normale Ansicht (Begegnung bzw.
+   Zwischenstand) ist selbst eine Station der Rotation -- dann ist diese
+   Fläche ausgeblendet und der Spielstand steht wieder da. */
+
+.board-slides {
+  display: none;
+  position: absolute;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  background: var(--svh-blue);
+}
+
+body.showing-slide .board-slides {
+  display: flex;
+}
+
+body.showing-slide .board-pre,
+body.showing-slide .board-match {
+  display: none;
+}
+
+/* Motive werden vollständig gezeigt, nicht beschnitten: Ein angeschnittenes
+   Sponsorenlogo wäre schlimmer als ein Rand. */
+.slide-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* Ohne diese Regeln liefe das hidden-Attribut ins Leere, sobald die
+   Elemente eine eigene display-Angabe bekommen -- siehe Guardrail in
+   DESIGN.md. Hier vorsorglich gesetzt. */
+.slide-image[hidden],
+.slide-text[hidden] {
+  display: none;
+}
+
+.slide-text {
+  width: 100%;
+  padding: 0 5cqw;
+  text-align: center;
+}
+
+.slide-title {
+  font-weight: 700;
+  font-size: 12cqh;
+  line-height: 1.2;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--svh-gold);
+}
+
+.slide-lines {
+  list-style: none;
+  margin: 1.5cqh 0 0 0;
+  padding: 0;
+}
+
+.slide-lines li {
+  font-weight: 600;
+  font-size: 9cqh;
+  /* Platz für die Unterlängen von g, j, y */
+  line-height: 1.3;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* --- Danksagung an die Zuschauer --------------------------------------- */
+/* Vollflächig wie der Torjubel, aber ruhig: kein Blinken, kein
+   Farbwechsel. Die Zahl ist das Motiv, der Text rahmt sie. */
+
+.board-thanks {
+  display: none;
+  position: absolute;
+  inset: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4cqw;
+  background: var(--svh-dk);
+  text-align: center;
+}
+
+body.showing-thanks .board-thanks {
+  display: flex;
+}
+
+body.showing-thanks .board-pre,
+body.showing-thanks .board-match {
+  display: none;
+}
+
+.thanks-before,
+.thanks-after {
+  font-weight: 600;
+  font-size: 9cqh;
+  /* Platz für die Unterlängen von g, j, y */
+  line-height: 1.25;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--svh-wh);
+}
+
+.thanks-number {
+  font-weight: 700;
+  font-size: 34cqh;
+  line-height: 1.05;
+  color: var(--svh-gold);
+}
+
+/* --- Torschützen-Einblendung ------------------------------------------- */
+/* Ruhige Darstellung mit Portrait -- im Gegensatz zum Torjubel soll man
+   hier den Namen in Ruhe lesen können. */
+
+.board-scorer {
+  display: none;
+  position: absolute;
+  inset: 0;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 4cqw;
+  padding: 0 6cqw;
+  background: var(--svh-dk);
+}
+
+body.showing-scorer .board-scorer {
+  display: flex;
+}
+
+body.showing-scorer .board-pre,
+body.showing-scorer .board-match {
+  display: none;
+}
+
+.spotlight-photo {
+  flex: 0 0 auto;
+  max-height: 76cqh;
+  max-width: 30cqw;
+  object-fit: contain;
+  border-radius: 1cqh;
+}
+
+.spotlight-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1.5cqh;
+  min-width: 0;
+}
+
+.spotlight-label {
+  font-weight: 700;
+  font-size: 9cqh;
+  letter-spacing: 0.1em;
+  color: var(--svh-gold);
+  line-height: 1;
+}
+
+.spotlight-name {
+  font-weight: 700;
+  font-size: 16cqh;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.spotlight-meta {
+  font-weight: 600;
+  font-size: 7cqh;
+  line-height: 1;
+  color: var(--svh-wh);
+}
+
+/* --- Torjubel ---------------------------------------------------------- */
+/* Zwei Akte, und der zweite läuft bewusst auf der normalen Spielansicht
+   (Nutzerentscheidung 19.08.2026):
+
+   1. Vollbild -- `word` beim eigenen Tor, `plain` beim Gegentor.
+   2. `boost` -- die Vollbildfläche ist weg, der Spielstand steht wieder
+      da, und die neue Ziffer schiebt sich von oben an ihren Platz. Beim
+      eigenen Tor fällt darüber Konfetti.
+
+   Zwischenseiten mit Mannschaftsnamen oder Torschützen gibt es nicht:
+   Die Mannschaft steht schon im Wappen, und der Torschütze ist im
+   Moment des Tores praktisch nie eingetragen.
+
+   Gesteuert wird alles über `body[data-goal-stage]`; die Stufen und
+   ihre Dauern stehen in `shared/types.ts`, damit Renderer und Tests
+   dieselben Werte sehen. */
+
+/* Beide Töne liegen im selben Indigo und unterscheiden sich nur in der
+   Helligkeit. Vorher wechselte die Fläche zwischen Indigo und dem
+   Hintergrundblau -- das stach zu sehr (Befund des Nutzers,
+   19.08.2026). In Zahlen: Der Kontrast des Wechsels ist von 1,61 auf
+   1,16 gefallen. Die Fläche soll pulsen, nicht flackern.
+
+   Das Gold des Schriftzugs steht auf beiden Tönen gleich gut (6,6 bzw.
+   7,6) -- es bleibt über den ganzen Wechsel hinweg lesbar, und genau
+   darum geht es.
+
+   Frequenz bewusst bei ~1,4 Hz: Ein hochfrequenter kontraststarker
+   Wechsel ist für lichtempfindliche Zuschauer problematisch. */
+@keyframes goal-bg {
+  0%,
+  100% {
+    background-color: var(--svh);
+  }
+  50% {
+    background-color: var(--svh-dk);
+  }
+}
+
+.board-goal {
+  position: absolute;
+  inset: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2cqh;
+  overflow: hidden;
+  background-color: var(--svh);
+}
+
+/* --- Welche Teile in welcher Stufe stehen ------------------------------ */
+/* Grundsatz: alles aus dem Weg, jede Stufe holt sich zurück, was sie
+   braucht.
+
+   Die Abfragen stehen als `:not([hidden])`, damit das hidden-Attribut
+   aus dem Renderer wirksam bleibt: Eine Autoren-Regel mit `display`
+   schlägt sonst die Browser-Regel `[hidden] { display: none }`,
+   unabhängig von der Spezifität (Guardrail in DESIGN.md). Hier hängt
+   genau daran, ob Wappen oder Name steht -- der Renderer blendet immer
+   eines von beiden aus. */
+
+.goal-frame,
+.goal-crest,
+.goal-word,
+.goal-team,
+.goal-confetti {
+  display: none;
+}
+
+/* Beide Vollbildstufen sind gleich aufgebaut: das Wappen der treffenden
+   Mannschaft über dem Schriftzug. Für die Gastvereine sind Logos
+   genauso hinterlegt wie für den eigenen -- ein ausgeschriebener Name
+   fiele hier aus dem Bild. Er springt nur ein, wenn wirklich kein Logo
+   da ist; dann hat der Renderer das Wappen ausgeblendet.
+
+   Der Unterschied zwischen Feier und Meldung liegt in Farbe, Größe und
+   Fläche, nicht im Aufbau. */
+body[data-goal-stage='word'] .goal-crest:not([hidden]),
+body[data-goal-stage='word'] .goal-team:not([hidden]),
+body[data-goal-stage='word'] .goal-word,
+body[data-goal-stage='plain'] .goal-crest:not([hidden]),
+body[data-goal-stage='plain'] .goal-team:not([hidden]),
+body[data-goal-stage='plain'] .goal-word {
+  display: block;
+}
+
+/* --- Flächen je Stufe -------------------------------------------------- */
+
+body[data-goal-stage='word'] .board-goal {
+  animation: goal-bg 0.7s steps(1, end) infinite;
+}
+
+/* Gegentor: ruhige, dunkle Fläche, kein Wechsel. */
+body[data-goal-stage='plain'] .board-goal {
+  background-color: var(--svh-dk);
+}
+
+/* --- Schrift ----------------------------------------------------------- */
+
+.goal-word,
+.goal-team {
+  color: var(--svh-wh);
+  text-align: center;
+  line-height: 1.15;
+}
+
+/* "TOR!" in Gold -- die Akzentfarbe des Vereins, auf beiden Tönen des
+   Wechsels kontraststark. Kein Zittern: Das wirkte hektisch (Befund des
+   Nutzers, 19.08.2026), und die Fläche pulst ohnehin schon. */
+body[data-goal-stage='word'] .goal-word {
+  font-weight: 700;
+  font-size: 40cqh;
+  letter-spacing: 0.02em;
+  color: var(--svh-gold);
+}
+
+.goal-crest {
+  max-height: 28cqh;
+  max-width: 30cqw;
+  object-fit: contain;
+}
+
+/* Gegentor: derselbe Aufbau, nur zurückgenommen. Kein Gold, kleinerer
+   Schriftzug -- es soll ablesbar sein, nicht gefeiert. */
+body[data-goal-stage='plain'] .goal-word {
+  font-weight: 700;
+  font-size: 20cqh;
+  letter-spacing: 0.12em;
+}
+
+/* Rückfallebene ohne Logo. Etwas kleiner als der Schriftzug: Ein langer
+   Vereinsname braucht bei 384px Breite den Platz. */
+.goal-team {
+  font-weight: 600;
+  font-size: 12cqh;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0 3cqw;
+}
+
+/* --- Die neue Ziffer schiebt sich an ihren Platz ----------------------- */
+/* Läuft im Spielstand der normalen Ansicht, nicht auf einer eigenen
+   Seite. Von oben nach unten, weil die Ziffer dorthin "nachrückt".
+
+   `linear` statt `steps()`: Gemeint ist ein Schieben, kein Zählwerk.
+   Zwischentöne entstehen dabei nicht -- jedes einzelne Bild zeigt die
+   Ziffer scharf an einer anderen Stelle, und genau das kann eine
+   LED-Matrix. */
+
+@keyframes goal-roll {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Der Schnitt, hinter dem die Ziffer herkommt.
+
+   Die Schriftbox von Oswald ragt bei `line-height: 1` oben und unten aus
+   der Zeilenbox heraus -- die sichtbare Ziffer aber nicht. Nachgemessen
+   bei 44cqh auf 384x192: Zeilenbox 84,5px, Ziffer 72px, darüber 10px
+   Luft, darunter 2,5px. Es wird also nichts vom Zeichen abgeschnitten.
+   Wer die Zeilenhöhe hier ändert, muss das nachrechnen. */
+.score {
+  overflow: hidden;
+}
+
+.score .digit.is-rolling {
+  animation: goal-roll 0.35s linear;
+}
+
+/* --- Konfetti ---------------------------------------------------------- */
+/* Fällt über die normale Spielansicht, während die Ziffer einläuft --
+   deshalb liegt es außerhalb von .board-goal und über allem anderen.
+   Nur beim eigenen Tor.
+
+   Kleine gefüllte Rechtecke in den beiden hellen Vereinsfarben, in
+   derselben Schräglage wie die Streifen des Vereinsmotivs. Keine
+   Unschärfe, keine Drehung mit Zwischenwinkeln -- beides zerfiele auf
+   der Matrix zu Grau. */
+
+@keyframes goal-confetti-fall {
+  from {
+    transform: translateY(0) skewX(-16deg);
+  }
+  to {
+    transform: translateY(115cqh) skewX(-16deg);
+  }
+}
+
+.goal-confetti {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+body[data-goal-stage='boost'].goal-home .goal-confetti {
+  display: block;
+}
+
+.goal-confetti i {
+  position: absolute;
+  top: -8cqh;
+  display: block;
+  width: 1cqw;
+  height: 2cqh;
+  background: var(--svh-gold);
+  animation: goal-confetti-fall 1.5s steps(14, end) infinite;
+}
+
+/* Zwei Farben im Wechsel. Beide hell genug für das Vereinsblau darunter --
+   Indigo verschwände darauf. */
+.goal-confetti i:nth-child(even) {
+  background: var(--svh-wh);
+}
+
+/* Streuung. Bewusst ungleichmäßig: Gleiche Abstände sähen nach
+   Lattenzaun aus statt nach Konfetti. */
+.goal-confetti i:nth-child(1) { left: 4%; animation-delay: 0s; }
+.goal-confetti i:nth-child(2) { left: 11%; animation-delay: 0.42s; }
+.goal-confetti i:nth-child(3) { left: 18%; animation-delay: 0.17s; }
+.goal-confetti i:nth-child(4) { left: 24%; animation-delay: 0.63s; }
+.goal-confetti i:nth-child(5) { left: 31%; animation-delay: 0.09s; }
+.goal-confetti i:nth-child(6) { left: 37%; animation-delay: 0.51s; }
+.goal-confetti i:nth-child(7) { left: 44%; animation-delay: 0.28s; }
+.goal-confetti i:nth-child(8) { left: 50%; animation-delay: 0.72s; }
+.goal-confetti i:nth-child(9) { left: 56%; animation-delay: 0.05s; }
+.goal-confetti i:nth-child(10) { left: 63%; animation-delay: 0.35s; }
+.goal-confetti i:nth-child(11) { left: 69%; animation-delay: 0.58s; }
+.goal-confetti i:nth-child(12) { left: 76%; animation-delay: 0.13s; }
+.goal-confetti i:nth-child(13) { left: 82%; animation-delay: 0.46s; }
+.goal-confetti i:nth-child(14) { left: 88%; animation-delay: 0.24s; }
+.goal-confetti i:nth-child(15) { left: 93%; animation-delay: 0.67s; }
+.goal-confetti i:nth-child(16) { left: 97%; animation-delay: 0.31s; }
+
+/* --- Rahmenpuls bei eigenem Führungswechsel ---------------------------- */
+/* Dreimal hart an und aus, über die Vollbildstufe hinweg. Nur beim
+   eigenen Tor: Der Rahmen ist eine Feier, und die Führungsübernahme des
+   Gegners ist keine (Nutzerentscheidung 19.08.2026).
+
+   Bewusst ein Rahmen und keine zweite Vollfläche: Die Fläche pulst in
+   dieser Stufe bereits. */
+
+@keyframes goal-frame-pulse {
+  0%,
+  100% {
+    border-color: var(--svh-gold);
+  }
+  50% {
+    border-color: transparent;
+  }
+}
+
+.goal-frame {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border: 1.6cqh solid transparent;
+}
+
+body.goal-lead-change .goal-frame {
+  display: block;
+  animation: goal-frame-pulse 0.4s steps(1, end) 3;
+}
