@@ -27,8 +27,16 @@ const DIST = path.join(__dirname, '..', 'dist', 'renderer');
  * anschließend Zustände hineinschieben kann; alles andere ist ein
  * Leerlauf, der ein aufgelöstes Promise liefert -- das deckt sowohl
  * `send` als auch `invoke` ab.
+ *
+ * `overrides` ersetzt einzelne Mitglieder durch eine eigene Fassung. Das
+ * braucht jede Funktion, die der Renderer per `invoke` ABFRAGT statt sie
+ * nur zu rufen: Der Leerlauf liefert `null`, und ein Test, der nur den
+ * Leerlauf sieht, kann nicht umfallen, wenn die Anzeige des Ergebnisses
+ * kaputtgeht.
+ *
+ * @param {Record<string, Function>} [overrides]
  */
-function makeApiStub() {
+function makeApiStub(overrides = {}) {
   const callbacks = new Map();
 
   const api = new Proxy(
@@ -36,6 +44,7 @@ function makeApiStub() {
     {
       get(_target, prop) {
         if (typeof prop !== 'string') return undefined;
+        if (Object.prototype.hasOwnProperty.call(overrides, prop)) return overrides[prop];
         return (...args) => {
           if (prop.startsWith('on') && typeof args[0] === 'function') {
             callbacks.set(prop, args[0]);
@@ -65,8 +74,10 @@ function makeApiStub() {
  * @param {import('node:test').TestContext} [t] Testkontext. Wird er
  *   übergeben, schließt sich das Fenster auch dann, wenn eine Zusicherung
  *   vorher wirft -- siehe unten.
+ * @param {Record<string, Function>} [overrides] Einzelne Mitglieder der
+ *   Preload-Attrappe ersetzen -- siehe makeApiStub().
  */
-function openRenderer(name, t) {
+function openRenderer(name, t, overrides) {
   const html = fs.readFileSync(path.join(DIST, name, 'index.html'), 'utf-8');
   const bundle = fs.readFileSync(path.join(DIST, name, `${name}.js`), 'utf-8');
 
@@ -89,7 +100,7 @@ function openRenderer(name, t) {
   window.URL.createObjectURL = () => 'blob:test';
   window.URL.revokeObjectURL = () => {};
 
-  const { api, callbacks } = makeApiStub();
+  const { api, callbacks } = makeApiStub(overrides);
   window.api = api;
 
   window.eval(bundle);

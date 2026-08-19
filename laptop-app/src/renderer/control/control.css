@@ -63,6 +63,21 @@ header {
   background: var(--svh-dk);
   color: var(--svh-wh);
   padding: 12px 24px;
+  /* Bezug für die Fassungsangabe oben rechts */
+  position: relative;
+}
+
+/* Fassung und Baudatum. Absolut positioniert statt im Fluss: Die Zeile
+   soll auf Höhe der Überschrift stehen, ohne deren Abstand zur
+   Statuszeile darunter anzufassen. Leer, solange die Angabe nicht da
+   ist -- dann fällt auch nichts auf. */
+.app-version {
+  position: absolute;
+  top: 12px;
+  right: 24px;
+  font-size: 11px;
+  opacity: 0.55;
+  font-variant-numeric: tabular-nums;
 }
 
 header h1 {

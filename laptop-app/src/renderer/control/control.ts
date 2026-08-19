@@ -987,7 +987,38 @@ function wireTeamSettings(team: TeamId): void {
   });
 }
 
+/**
+ * Fassung und Baudatum in die Kopfzeile.
+ *
+ * Zweck ist nicht Zierde: Auf dem Vereinsrechner war bisher nicht
+ * ablesbar, welcher Stand dort läuft -- und ohne das ist eine
+ * Rückmeldung vom Spieltag ("das ging nicht") keiner Fassung zuzuordnen.
+ *
+ * Verträgt ein fehlendes Ergebnis, statt sich darauf zu verlassen: Der
+ * Preload-Stub der Tests liefert für jede Funktion `null`, und im
+ * gepackten Stand könnte `build-info.json` fehlen. Dann bleibt die Zeile
+ * eben leer -- ein abgestürztes Steuerungsfenster wäre der weit
+ * schlechtere Tausch.
+ */
+function renderAppVersion(): void {
+  const element = document.getElementById('app-version')!;
+  window.api
+    .appInfo()
+    .then((info) => {
+      if (!info || !info.version) return;
+      const date = new Date(info.builtAt);
+      const built = info.builtAt && !Number.isNaN(date.getTime())
+        ? ` · ${date.toLocaleDateString('de-DE')}`
+        : '';
+      element.textContent = `Fassung ${info.version}${built}`;
+    })
+    .catch(() => {
+      // Ohne Angabe bleibt die Zeile leer.
+    });
+}
+
 function main(): void {
+  renderAppVersion();
   window.api.onStateUpdated(renderState);
   window.api.onClockTick(renderClock);
   window.api.onStatusUpdated(renderStatus);

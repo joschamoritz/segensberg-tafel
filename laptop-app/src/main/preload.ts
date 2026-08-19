@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import {
+  AppInfo,
   AppStatus,
   BoardSize,
   CardColor,
@@ -109,6 +110,8 @@ const api = {
   setSound: (volume: number, muted: boolean) => ipcRenderer.send(IPC.setSound, volume, muted),
   readGoalSound: (fileName: string): Promise<Uint8Array | null> =>
     ipcRenderer.invoke(IPC.soundRead, fileName),
+  /** Fassung und Baudatum -- einmal beim Start, siehe `AppInfo` */
+  appInfo: (): Promise<AppInfo | null> => ipcRenderer.invoke(IPC.appInfo),
 } as const;
 
 contextBridge.exposeInMainWorld('api', api);

@@ -715,6 +715,20 @@ export interface AppStatus {
   displayOpen: boolean;
 }
 
+/**
+ * Fassung und Baudatum der laufenden App.
+ *
+ * Bewusst NICHT Teil von `AppStatus`: Der geht bei jedem
+ * Bildschirmereignis neu an beide Fenster, die Fassung ändert sich
+ * dagegen nie. Sie wird einmal beim Start abgerufen.
+ */
+export interface AppInfo {
+  /** aus package.json, z. B. "1.0.0" */
+  version: string;
+  /** ISO-Zeitstempel des Bauvorgangs; leer, wenn build-info.json fehlt */
+  builtAt: string;
+}
+
 /** IPC-Kanalnamen, zentral gepflegt damit Control/Display/Main nicht auseinanderlaufen */
 export const IPC = {
   /**
@@ -783,4 +797,6 @@ export const IPC = {
   setHalfDuration: 'match:set-half-duration',
   setBoardSize: 'display:set-board-size',
   goalSetScorer: 'goal:set-scorer',
+  /** einmalig abgefragt, liefert `AppInfo` -- siehe dort */
+  appInfo: 'app:info',
 } as const;
