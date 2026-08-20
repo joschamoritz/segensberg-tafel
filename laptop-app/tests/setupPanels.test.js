@@ -151,6 +151,29 @@ test('die Spielbedienung bleibt außerhalb der Flächen', (t) => {
   r.close();
 });
 
+test('die Chronik springt ans Ende, wo das jüngste Ereignis steht', (t) => {
+  // Die Liste sortiert chronologisch, das jüngste Ereignis steht also
+  // unten -- und genau dem wird gleich ein Torschütze zugeordnet. Seit
+  // die Liste einen eigenen Scrollbalken hat, wäre es sonst nach ein
+  // paar Ereignissen außer Sicht.
+  //
+  // jsdom rechnet kein Layout, `scrollHeight` bliebe also 0 und der Test
+  // wäre gehaltlos. Deshalb wird die Höhe vorgegeben.
+  const store = angepfiffen();
+  const r = fenster(t, store);
+
+  const liste = r.document.getElementById('goal-log');
+  Object.defineProperty(liste, 'scrollHeight', { value: 500, configurable: true });
+
+  store.incrementScore('home', 1);
+  r.emit('onStateUpdated', store.getState());
+  assert.deepEqual(r.drainErrors(), []);
+
+  assert.strictEqual(liste.scrollTop, 500, 'die Liste muss ans Ende gescrollt sein');
+
+  r.close();
+});
+
 test('bei offener Fläche wird weitergezeichnet', (t) => {
   // Die teuerste Falle des Umbaus: Wer "nicht zeichnen, wenn die Fläche
   // zu ist" baut, verbrennt die Revisionssignatur in hasChanged(), ohne

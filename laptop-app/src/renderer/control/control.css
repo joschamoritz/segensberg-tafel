@@ -37,7 +37,23 @@
   box-sizing: border-box;
 }
 
+/* Die Seite ist eine Spalte fester Zonen plus einer wachsenden.
+   Jeder zusätzliche Pixel Fensterhöhe geht an die Chronik -- dort steht
+   nach jedem Tor die Torschützen-Zuordnung, und die soll ohne Scrollen
+   erreichbar sein. min-height statt height: Passt der Inhalt bei sehr
+   kleinem Fenster nicht, scrollt die Seite wie bisher, statt Inhalt
+   abzuschneiden. */
 body {
+  display: flex;
+  flex-direction: column;
+  /* Feste Höhe, nicht min-height: Nur ein begrenzter Flex-Container gibt
+     der Chronik überhaupt einen Rest zu verteilen -- mit min-height
+     wüchse der Body einfach mit und die Liste bekäme nie einen eigenen
+     Scrollbalken. Reicht der Platz trotzdem nicht (sehr kleines
+     Fenster), scrollt die Seite wie bisher; die Chronik fällt dann auf
+     ihre min-height zurück. */
+  height: 100vh;
+  overflow-y: auto;
   margin: 0;
   font-family: 'Source Sans 3', -apple-system, 'Segoe UI', Arial, sans-serif;
   background: var(--svh-bg);
@@ -61,14 +77,38 @@ body {
   padding: 8px 12px;
 }
 
+/* Die festen Zonen dürfen nicht nachgeben -- als Flex-Kinder schrumpften
+   sie sonst, sobald der Platz knapp wird, und der Spielstand würde
+   gestaucht statt der Chronik einen Scrollbalken zu geben. */
+header,
+.phase-control,
+main.teams,
+.match-tools {
+  flex: 0 0 auto;
+}
+
 /* ═══ Kopfbereich ═══ */
 
+/* Eine Zeile statt dreier. Überschrift, Einrichtungsleiste und
+   Statuszeile stehen nebeneinander, weil jede Zeile hier unten in der
+   Chronik fehlt -- und die Chronik ist der Ort, an dem nach jedem Tor
+   der Torschütze zugeordnet wird. Die Fassungsangabe bleibt rechts. */
 header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
   background: var(--svh-dk);
   color: var(--svh-wh);
-  padding: 12px 24px;
+  padding: 8px 24px;
   /* Bezug für die Fassungsangabe oben rechts */
   position: relative;
+}
+
+/* Schiebt die Statuszeile ans rechte Ende, vor die Fassungsangabe. */
+header .status-banner {
+  margin-left: auto;
+  margin-right: 80px;
 }
 
 /* Fassung und Baudatum. Absolut positioniert statt im Fluss: Die Zeile
@@ -77,7 +117,7 @@ header {
    ist -- dann fällt auch nichts auf. */
 .app-version {
   position: absolute;
-  top: 12px;
+  top: 10px;
   right: 24px;
   font-size: 11px;
   opacity: 0.55;
@@ -85,7 +125,7 @@ header {
 }
 
 header h1 {
-  margin: 0 0 4px 0;
+  margin: 0;
   font-family: 'Oswald', sans-serif;
   font-weight: 600;
   font-size: 16px;
@@ -192,7 +232,6 @@ header h1 {
 .setup-bar {
   display: flex;
   gap: 4px;
-  margin-top: 8px;
 }
 
 .setup-entry {
@@ -372,15 +411,25 @@ body[data-setup='kader'] #setup-kader {
 
 /* ═══ Spielphasen ═══ */
 
+/* Phasenzeile und Phasenknöpfe stehen nebeneinander statt untereinander.
+   Die gesparte Zeile geht an die Chronik -- die ist der Ort, an dem nach
+   jedem Tor der Torschütze zugeordnet wird, und sie muss ohne Scrollen
+   erreichbar sein. */
 .phase-control {
-  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  padding: 10px 24px;
   border-bottom: 1px solid var(--svh-brd);
 }
 
 .phase-current {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   font-size: 13px;
   color: var(--svh-mut);
-  margin-bottom: 12px;
 }
 
 .phase-current strong {
@@ -442,6 +491,45 @@ body[data-setup='kader'] #setup-kader {
   vertical-align: super;
   margin-left: 4px;
   color: var(--svh-gold);
+}
+
+/* ═══ Werkzeuge am Fuß ═══
+
+   Alles, was an eine Spielpause gebunden ist (Aufstellung, Diashow,
+   Ankündigungen, Zuschauerzahl) plus die Notausgänge. Die Trennlinie
+   ist NICHT "Einrichtung vs. Spieltag", sondern "braucht eine
+   Verschnaufpause vs. mitten im Spiel". Deshalb steht die Tormusik
+   davor und dauerhaft offen: Sie wird nach Toren gebraucht. */
+
+.match-tools {
+  border-top: 1px solid var(--svh-brd);
+}
+
+.more-tools > summary {
+  padding: 8px 24px;
+  cursor: pointer;
+  font-family: 'Oswald', sans-serif;
+  font-weight: 500;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--svh-mut);
+}
+
+/* Der Klapper hat eigenen Innenabstand; die enthaltenen .lineup-controls
+   bringen ihren Trennstrich selbst mit. */
+.more-tools > .lineup-controls:first-of-type {
+  border-top: none;
+}
+
+/* Einblenden des Eckenstands, direkt unter der Nachspielzeit und damit
+   auf einer Höhe mit den Ecken-Zählern der beiden Teamspalten. */
+.corner-show {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px 0;
 }
 
 /* ═══ Logo-Bibliothek ═══ */
@@ -1090,7 +1178,14 @@ body[data-setup='kader'] #setup-kader {
 /* ═══ Torfolge ═══ */
 
 .goal-log-block {
-  padding: 0 24px 24px;
+  /* Nimmt die freie Höhe auf; die übrigen Zonen bleiben starr. */
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  /* Rund zwei Zeilen. Darunter bringt die Liste nichts mehr, dann soll
+     lieber die Seite scrollen. */
+  min-height: 110px;
+  padding: 0 24px 16px;
 }
 
 .goal-log-block h3 {
@@ -1109,7 +1204,15 @@ body[data-setup='kader'] #setup-kader {
   padding: 0;
   display: flex;
   flex-wrap: wrap;
+  align-content: flex-start;
   gap: 8px;
+  /* Eigener Scrollbalken statt Wachsen ins Endlose: Bei zwanzig
+     Ereignissen schöbe die Liste sonst alles darunter aus dem Bild.
+     min-height: 0 ist Pflicht -- ein Flex-Kind schrumpft sonst nicht
+     unter seinen Inhalt und der Scrollbalken erschiene nie. */
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .goal-log li {

@@ -568,6 +568,13 @@ function renderGoalLog(state: MatchState): void {
 
     list.appendChild(item);
   }
+
+  // Ans Ende springen. Die Chronik sortiert chronologisch, das JÜNGSTE
+  // Ereignis steht also unten -- und genau das ist das, dem gleich ein
+  // Torschütze zugeordnet wird. Ohne diesen Sprung wäre es nach dem
+  // zwanzigsten Ereignis wieder außer Sicht, diesmal im Scrollbalken der
+  // Liste statt in dem der Seite.
+  list.scrollTop = list.scrollHeight;
 }
 
 /**

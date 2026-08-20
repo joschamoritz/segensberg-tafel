@@ -226,66 +226,6 @@
       <button id="match-reset" class="btn btn-danger">Neues Spiel</button>
     </div>
 
-    <div class="lineup-controls">
-      <span class="lineup-controls-label">Aufstellung einblenden:</span>
-      <button id="lineup-show-home" class="btn btn-small">Heim</button>
-      <button id="lineup-show-away" class="btn btn-small">Gast</button>
-      <button id="lineup-hide" class="btn btn-small">Zurück zur Begegnung</button>
-      <span class="lineup-controls-hint" id="lineup-controls-hint"></span>
-    </div>
-
-    <div class="lineup-controls info-controls">
-      <span class="lineup-controls-label">Einblenden:</span>
-      <button id="info-show-corners" class="btn btn-small">Ecken</button>
-      <label class="kickoff-field">
-        Zuschauer
-        <input type="number" id="attendance-input" min="0" max="99999" step="1"
-               placeholder="–" />
-      </label>
-      <button id="info-show-attendance" class="btn btn-small">Zuschauer</button>
-      <span class="lineup-controls-hint" id="info-controls-hint"></span>
-    </div>
-
-    <div class="lineup-controls sound-controls">
-      <span class="lineup-controls-label">Tormusik:</span>
-      <label class="sound-volume">
-        <input type="range" id="sound-volume" min="0" max="100" step="5" />
-        <span id="sound-volume-value">80&nbsp;%</span>
-      </label>
-      <label class="sound-mute">
-        <input type="checkbox" id="sound-muted" /> stumm
-      </label>
-      <button id="sound-play" class="btn btn-small">Abspielen</button>
-      <button id="sound-stop" class="btn btn-small">Stopp</button>
-      <span class="lineup-controls-hint" id="sound-hint"></span>
-    </div>
-
-    <div class="lineup-controls slideshow-controls">
-      <span class="lineup-controls-label">Diashow:</span>
-      <button id="slideshow-start" class="btn btn-small">Starten</button>
-      <button id="slideshow-stop" class="btn btn-small">Beenden</button>
-      <button id="media-reload" class="btn btn-small">Medien neu einlesen</button>
-      <span class="lineup-controls-hint" id="slideshow-hint"></span>
-    </div>
-
-    <details class="thanks-box">
-      <summary>Termine &amp; Ankündigungen (Halbzeitpause)</summary>
-      <textarea id="announcements-input" rows="5"
-                placeholder="Eine Ankündigung je Zeile&#10;Nächstes Heimspiel: So 25.08., 15:00 vs. FC Beispiel&#10;Helfer für das Sommerfest gesucht"></textarea>
-      <p class="thanks-hint">
-        Erscheinen als eigene Folien in der Diashow der Halbzeitpause,
-        höchstens fünf Zeilen je Folie.
-      </p>
-    </details>
-
-    <details class="thanks-box">
-      <summary>Dankestext für die Zuschauer-Einblendung</summary>
-      <input type="text" id="attendance-message-input" maxlength="120" />
-      <p class="thanks-hint">
-        <code>{n}</code> wird durch die Zuschauerzahl ersetzt und auf der
-        Tafel groß herausgestellt. Leeres Feld setzt den Standardtext zurück.
-      </p>
-    </details>
   </section>
 
   <main class="teams">
@@ -319,7 +259,12 @@
         <button id="clock-stop" class="btn">Stop</button>
         <button id="clock-reset" class="btn btn-danger">Reset</button>
       </div>
-      <div class="stoppage-set">
+      <!-- Der frühere Erklärtext darunter kostete 50px der knappsten
+           Fläche des Fensters. Er sagte, was nach dem zweiten Spiel
+           ohnehin jeder weiß; als `title` bleibt er beim Zeigen
+           abrufbar, ohne Höhe zu belegen. -->
+      <div class="stoppage-set"
+           title="Erscheint auf der Tafel, sobald die reguläre Zeit überschritten ist. Beim Anpfiff jeder Halbzeit automatisch zurückgesetzt.">
         <label>Nachspielzeit (Anzeige des Schiedsrichters)</label>
         <div class="stoppage-buttons" id="stoppage-buttons">
           <button data-stoppage="0" class="btn btn-small">aus</button>
@@ -332,25 +277,18 @@
         <label class="stoppage-more">mehr:
           <input type="number" id="stoppage-input" min="0" max="20" step="1" />
         </label>
-        <p class="stoppage-hint">
-          Erscheint auf der Tafel, sobald die reguläre Zeit überschritten ist.
-          Beim Anpfiff jeder Halbzeit automatisch zurückgesetzt.
-        </p>
       </div>
 
-      <div class="clock-set">
-        <label for="clock-set-input">Spielzeit setzen</label>
-        <div class="clock-set-row">
-          <input type="text" id="clock-set-input" placeholder="MM:SS" maxlength="6"
-                 inputmode="numeric" autocomplete="off" />
-          <button id="clock-set-apply" class="btn btn-small">Übernehmen</button>
-        </div>
-        <p class="clock-set-hint" id="clock-set-hint">
-          Notfall: gesamte Spielzeit, z.&nbsp;B. <code>67:30</code> oder <code>67</code>.
-          In der 2.&nbsp;Halbzeit durchlaufend gezählt.
-        </p>
+      <!-- Einblenden der Ecken steht jetzt bei den Ecken-Zählern statt
+           550px entfernt bei den Spielphasen. Ein Knopf für beide
+           Mannschaften -- die Leiste auf der Tafel zeigt ohnehin beide
+           Stände --, deshalb in der Mittelspalte und nicht in einer der
+           beiden Teamspalten. -->
+      <div class="corner-show">
+        <span class="lineup-controls-label">Eckenstand</span>
+        <button id="info-show-corners" class="btn btn-small">Ecken</button>
       </div>
-      <p class="clock-hint">Nur zum Nachkorrigieren – der normale Ablauf läuft über die Spielphasen oben.</p>
+
     </section>
 
     <section class="team team-away">
@@ -378,6 +316,83 @@
     <h3>Spielverlauf</h3>
     <ol class="goal-log" id="goal-log"></ol>
     <p class="goal-log-empty" id="goal-log-empty">Noch keine Tore oder Karten.</p>
+  </section>
+
+  <!-- Werkzeuge, die an eine Spielpause gebunden sind. Die Tormusik steht
+       bewusst DAVOR und dauerhaft sichtbar: Sie wird nach Toren mitten im
+       Spiel gebraucht, nicht in der Pause. -->
+  <section class="match-tools">
+    <div class="lineup-controls sound-controls">
+      <span class="lineup-controls-label">Tormusik:</span>
+      <label class="sound-volume">
+        <input type="range" id="sound-volume" min="0" max="100" step="5" />
+        <span id="sound-volume-value">80&nbsp;%</span>
+      </label>
+      <label class="sound-mute">
+        <input type="checkbox" id="sound-muted" /> stumm
+      </label>
+      <button id="sound-play" class="btn btn-small">Abspielen</button>
+      <button id="sound-stop" class="btn btn-small">Stopp</button>
+      <span class="lineup-controls-hint" id="sound-hint"></span>
+    </div>
+
+    <details class="more-tools">
+      <summary>Mehr für den Spieltag</summary>
+    <div class="lineup-controls">
+      <span class="lineup-controls-label">Aufstellung einblenden:</span>
+      <button id="lineup-show-home" class="btn btn-small">Heim</button>
+      <button id="lineup-show-away" class="btn btn-small">Gast</button>
+      <button id="lineup-hide" class="btn btn-small">Zurück zur Begegnung</button>
+      <span class="lineup-controls-hint" id="lineup-controls-hint"></span>
+    </div>
+    <div class="lineup-controls info-controls">
+      <span class="lineup-controls-label">Zuschauerzahl:</span>
+      <label class="kickoff-field">
+        Zuschauer
+        <input type="number" id="attendance-input" min="0" max="99999" step="1"
+               placeholder="–" />
+      </label>
+      <button id="info-show-attendance" class="btn btn-small">Zuschauer</button>
+      <span class="lineup-controls-hint" id="info-controls-hint"></span>
+    </div>
+    <div class="lineup-controls slideshow-controls">
+      <span class="lineup-controls-label">Diashow:</span>
+      <button id="slideshow-start" class="btn btn-small">Starten</button>
+      <button id="slideshow-stop" class="btn btn-small">Beenden</button>
+      <button id="media-reload" class="btn btn-small">Medien neu einlesen</button>
+      <span class="lineup-controls-hint" id="slideshow-hint"></span>
+    </div>
+    <details class="thanks-box">
+      <summary>Termine &amp; Ankündigungen (Halbzeitpause)</summary>
+      <textarea id="announcements-input" rows="5"
+                placeholder="Eine Ankündigung je Zeile&#10;Nächstes Heimspiel: So 25.08., 15:00 vs. FC Beispiel&#10;Helfer für das Sommerfest gesucht"></textarea>
+      <p class="thanks-hint">
+        Erscheinen als eigene Folien in der Diashow der Halbzeitpause,
+        höchstens fünf Zeilen je Folie.
+      </p>
+    </details>
+    <details class="thanks-box">
+      <summary>Dankestext für die Zuschauer-Einblendung</summary>
+      <input type="text" id="attendance-message-input" maxlength="120" />
+      <p class="thanks-hint">
+        <code>{n}</code> wird durch die Zuschauerzahl ersetzt und auf der
+        Tafel groß herausgestellt. Leeres Feld setzt den Standardtext zurück.
+      </p>
+    </details>
+      <div class="clock-set">
+        <label for="clock-set-input">Spielzeit setzen</label>
+        <div class="clock-set-row">
+          <input type="text" id="clock-set-input" placeholder="MM:SS" maxlength="6"
+                 inputmode="numeric" autocomplete="off" />
+          <button id="clock-set-apply" class="btn btn-small">Übernehmen</button>
+        </div>
+        <p class="clock-set-hint" id="clock-set-hint">
+          Notfall: gesamte Spielzeit, z.&nbsp;B. <code>67:30</code> oder <code>67</code>.
+          In der 2.&nbsp;Halbzeit durchlaufend gezählt.
+        </p>
+      </div>
+      <p class="clock-hint">Nur zum Nachkorrigieren – der normale Ablauf läuft über die Spielphasen oben.</p>
+    </details>
   </section>
 
   <!-- Tormusik. Die Quelle setzt der Renderer, sobald der Zustand den
