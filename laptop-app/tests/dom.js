@@ -39,6 +39,21 @@ const DIST = path.join(__dirname, '..', 'dist', 'renderer');
 function makeApiStub(overrides = {}) {
   const callbacks = new Map();
 
+  /**
+   * Mitschnitt jedes Aufrufs über die Brücke, in der Reihenfolge des
+   * Auftretens: `{ name, args }`.
+   *
+   * Wozu: Die Suite prüfte bisher nur, dass Element-Ids überleben -- sie
+   * klickte nie. Damit war die Fehlerklasse unsichtbar, die ein Umbau des
+   * HTML tatsächlich erzeugt: Alle Ereignis-Handler werden genau einmal in
+   * `main()` gesetzt und leben danach in Closures auf konkreten Knoten.
+   * Wird ein Knoten ausgetauscht, sieht die Anzeige weiter korrekt aus --
+   * `renderState` holt jedes Mal frisch per `getElementById` --, aber der
+   * Knopf tut nichts. Am Spielfeldrand ist das der schlechteste denkbare
+   * Ausfall, weil nichts darauf hinweist.
+   */
+  const calls = [];
+
   const api = new Proxy(
     {},
     {
@@ -50,6 +65,7 @@ function makeApiStub(overrides = {}) {
             callbacks.set(prop, args[0]);
             return undefined;
           }
+          calls.push({ name: prop, args });
           return Promise.resolve(null);
         };
       },
@@ -57,7 +73,7 @@ function makeApiStub(overrides = {}) {
     }
   );
 
-  return { api, callbacks };
+  return { api, callbacks, calls };
 }
 
 /**
@@ -100,7 +116,7 @@ function openRenderer(name, t, overrides) {
   window.URL.createObjectURL = () => 'blob:test';
   window.URL.revokeObjectURL = () => {};
 
-  const { api, callbacks } = makeApiStub(overrides);
+  const { api, callbacks, calls } = makeApiStub(overrides);
   window.api = api;
 
   window.eval(bundle);
@@ -171,11 +187,48 @@ function openRenderer(name, t, overrides) {
    */
   if (t && typeof t.after === 'function') t.after(close);
 
+  /**
+   * Klickt ein Element und liefert die Brücken-Aufrufe, die dabei
+   * herauskamen.
+   *
+   * Der Mitschnitt wird VOR dem Klick geleert, damit jeder Klick für sich
+   * beurteilbar ist -- sonst schleppte man alles mit, was beim Aufbau des
+   * Fensters schon gelaufen ist.
+   *
+   * `element.click()` statt eines von Hand gebauten Ereignisses: Der
+   * Renderer hängt seine Handler mit `addEventListener('click', …)` an,
+   * und jsdom löst darüber dieselbe Kette aus wie ein echter Klick --
+   * einschließlich der Prüfung auf `disabled`, die ein direkt
+   * abgeschickter Event umgehen würde.
+   *
+   * @param {string} id Element-Id
+   * @returns {{name: string, args: unknown[]}[]}
+   */
+  function click(id) {
+    const element = window.document.getElementById(id);
+    if (!element) throw new Error(`Element "${id}" gibt es nicht`);
+    calls.length = 0;
+    element.click();
+    return [...calls];
+  }
+
+  /** Wie `click`, aber über einen Selektor -- für Knöpfe ohne eigene Id. */
+  function clickSelector(selector) {
+    const element = window.document.querySelector(selector);
+    if (!element) throw new Error(`Kein Element für "${selector}"`);
+    calls.length = 0;
+    element.click();
+    return [...calls];
+  }
+
   return {
     window,
     document: window.document,
     emit,
     drainErrors,
+    click,
+    clickSelector,
+    calls,
     /** Textinhalt eines Elements -- Kurzform für die Zusicherungen. */
     text: (id) => window.document.getElementById(id)?.textContent ?? null,
     close,
