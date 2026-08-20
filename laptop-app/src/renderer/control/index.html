@@ -331,10 +331,17 @@
     <p class="goal-log-empty" id="goal-log-empty">Noch keine Tore oder Karten.</p>
   </section>
 
-  <!-- Werkzeuge, die an eine Spielpause gebunden sind. Die Tormusik steht
-       bewusst DAVOR und dauerhaft sichtbar: Sie wird nach Toren mitten im
-       Spiel gebraucht, nicht in der Pause. -->
+  <!-- Werkzeuge, die nicht mitten im Spiel gebraucht werden.
+
+       Die Tormusik lag hier bis zum 20.08.2026 dauerhaft sichtbar davor,
+       weil sie nach Toren gebraucht wird. Seit der Schnellknopf (♪)
+       direkt am Torknopf sitzt, ist das erledigt: Regler, Stummschalter
+       und "Stopp" stellt man einmal am Platz ein, nicht im Jubel --
+       also gehören sie hierher (Nutzerwunsch 20.08.2026). -->
   <section class="match-tools">
+
+    <details class="more-tools">
+      <summary>Mehr für den Spieltag</summary>
     <div class="lineup-controls sound-controls">
       <span class="lineup-controls-label">Tormusik:</span>
       <label class="sound-volume">
@@ -348,9 +355,6 @@
       <button id="sound-stop" class="btn btn-small">Stopp</button>
       <span class="lineup-controls-hint" id="sound-hint"></span>
     </div>
-
-    <details class="more-tools">
-      <summary>Mehr für den Spieltag</summary>
     <div class="lineup-controls">
       <span class="lineup-controls-label">Aufstellung einblenden:</span>
       <button id="lineup-show-home" class="btn btn-small">Heim</button>

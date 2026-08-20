@@ -540,28 +540,11 @@ body[data-setup='kader'] #setup-kader {
    Verschnaufpause vs. mitten im Spiel". Deshalb steht die Tormusik
    davor und dauerhaft offen: Sie wird nach Toren gebraucht. */
 
-/* Tormusik-Zeile und der Klapper stehen nebeneinander, solange der
-   Klapper zu ist -- das spart eine Zeile, die unten in der Chronik
-   fehlt. Offen nimmt er die volle Breite (`details[open]`), sonst
-   quetschte sich sein Inhalt neben die Tonregler. */
+/* Enthält seit dem 20.08.2026 nur noch den Klapper: Die Tormusik ist
+   hineingewandert, weil der Schnellknopf am Torknopf den Zugriff
+   mitten im Spiel übernimmt. */
 .match-tools {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
   border-top: 1px solid var(--svh-brd);
-}
-
-.match-tools > .sound-controls {
-  flex: 1 1 auto;
-  border-top: none;
-}
-
-.match-tools > .more-tools {
-  flex: 0 0 auto;
-}
-
-.match-tools > .more-tools[open] {
-  flex: 1 1 100%;
 }
 
 .more-tools > summary {

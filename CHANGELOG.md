@@ -10,7 +10,7 @@ dem Baudatum. Welche Stelle wann steigt, steht in
 
 ---
 
-## 1.1.0 – noch nicht ausgeliefert
+## 1.1.0 – 20.08.2026
 
 Diese Fassung ändert nichts an dem, was auf der Tafel steht – sie
 räumt das **Steuerungsfenster** auf. Der Anlass: Im Spielbetrieb lag
@@ -48,7 +48,8 @@ Scrollen im Bild. Die Seite war 1650 Pixel hoch, sichtbar waren 660.
 **Kleinigkeiten, die im Betrieb zählen**
 
 - **Tormusik direkt am Torknopf**: ein ♪ neben dem „+" der
-  Heimmannschaft. Lautstärke, Stummschalter und „Stopp" bleiben unten.
+  Heimmannschaft. Lautstärke, Stummschalter und „Stopp" liegen unter
+  „Mehr für den Spieltag" – die stellt man einmal am Platz ein.
 - **„Ecken einblenden" steht jetzt bei den Ecken-Zählern**, nicht mehr
   550 Pixel entfernt bei den Spielphasen.
 - **Die Diashow läuft auch nach dem Abpfiff** – während sich der Platz

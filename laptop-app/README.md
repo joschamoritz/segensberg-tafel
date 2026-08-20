@@ -107,9 +107,12 @@ Electron-Main-Prozess (normaler Node-Kontext) und brauchen das nicht.
   erste Audiodatei im Ordner). Sie läuft über das Windows-Standardgerät –
   also über das, woran der Laptop hängt – und **ausschließlich auf
   Knopfdruck**, nie automatisch beim Tor: Ob Musik gerade passt, hängt an
-  Dingen, die die App nicht weiß. „Abspielen", „Stopp", Lautstärkeregler
-  und Stummschalter stehen im Steuerungsfenster; Lautstärke und
-  Stummschaltung überstehen „Neues Spiel".
+  Dingen, die die App nicht weiß. Gestartet wird sie über den
+  **♪-Knopf direkt neben „Tor +1"** der Heimmannschaft – nach einem
+  Treffer sollen Eintragen und Musikstart eine Handbewegung sein.
+  „Abspielen", „Stopp", Lautstärkeregler und Stummschalter liegen unter
+  „Mehr für den Spieltag": Die stellt man einmal am Platz ein, nicht im
+  Jubel. Lautstärke und Stummschaltung überstehen „Neues Spiel".
 - **Endstand mit Torschützenliste**: In Halbzeitpause und nach dem
   Abpfiff rückt das Wappen nach oben und der Fuß schrumpft auf das
   Phasen-Label – die Torschützenliste unter jedem Wappen hat dort sieben
