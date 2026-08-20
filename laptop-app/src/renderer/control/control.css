@@ -28,6 +28,11 @@
   /* Text auf --tint-gold -- das Gold selbst wäre darauf nicht lesbar. */
   --svh-gold-dk: #7a5c12;
 
+  /* Kartenfarben. Wertgleich mit display.css -- eine gelbe Karte soll
+     auf der Tafel und im Steuerungsfenster dieselbe Farbe haben. */
+  --card-yellow: #f5c518;
+  --card-red: #d90429;
+
   /* Abdeckung hinter einer offenen Einrichtungsfläche. Als Token, weil
      DESIGN.md Farbwerte ausschließlich im :root-Block zulässt. */
   --scrim: rgba(26, 26, 46, 0.45);
@@ -535,8 +540,28 @@ body[data-setup='kader'] #setup-kader {
    Verschnaufpause vs. mitten im Spiel". Deshalb steht die Tormusik
    davor und dauerhaft offen: Sie wird nach Toren gebraucht. */
 
+/* Tormusik-Zeile und der Klapper stehen nebeneinander, solange der
+   Klapper zu ist -- das spart eine Zeile, die unten in der Chronik
+   fehlt. Offen nimmt er die volle Breite (`details[open]`), sonst
+   quetschte sich sein Inhalt neben die Tonregler. */
 .match-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   border-top: 1px solid var(--svh-brd);
+}
+
+.match-tools > .sound-controls {
+  flex: 1 1 auto;
+  border-top: none;
+}
+
+.match-tools > .more-tools {
+  flex: 0 0 auto;
+}
+
+.match-tools > .more-tools[open] {
+  flex: 1 1 100%;
 }
 
 .more-tools > summary {
@@ -771,6 +796,14 @@ body[data-setup='kader'] #setup-kader {
   margin-top: 12px;
 }
 
+/* Karten lösen ein Ereignis aus, das sofort auf der Tafel steht -- ein
+   Fehlklick ist teuer. Sie waren als .btn-small nur 28px hoch. */
+.card-buttons .btn {
+  min-height: 40px;
+  font-size: 13px;
+  padding: 8px 14px;
+}
+
 /* Eckenzähler. Bewusst klein unter den Kartenknöpfen -- er wird selten
    gebraucht und darf den Spielstand-Stepper nicht verdrängen. */
 .corner-row {
@@ -779,6 +812,16 @@ body[data-setup='kader'] #setup-kader {
   justify-content: center;
   gap: 6px;
   margin-top: 10px;
+}
+
+/* 28x27px waren zu klein für etwas, das im Spiel oft gedrückt wird.
+   Bewusst kleiner als der Spielstand-Stepper: oft, aber folgenlos --
+   ein Fehlklick ist mit dem Gegenknopf sofort behoben. */
+.corner-row .btn {
+  min-width: 34px;
+  min-height: 34px;
+  padding: 4px 10px;
+  font-size: 15px;
 }
 
 .corner-label {
@@ -887,19 +930,32 @@ body[data-setup='kader'] #setup-kader {
   padding: 0 3px;
 }
 
+/* Volle Farbfläche statt blasser Tönung (Nutzerwunsch 20.08.2026, nach
+   dem Vorbild der Herstellersoftware): Man trifft die Karte, ohne zu
+   lesen. Die Beschriftung bleibt trotzdem stehen -- sie kostet nichts
+   und beantwortet die Frage "Gelb-Rot oder Rot?" im Zweifel sofort. */
 .card-yellow {
-  border-color: var(--svh-gold);
-  background: var(--tint-gold);
+  border-color: var(--card-yellow);
+  background: var(--card-yellow);
+  color: var(--svh-txt);
 }
 
+/* Roter Grund mit gelbem Streifen links, nicht halb/halb: So steht die
+   Beschriftung durchgehend auf Rot und bleibt in Weiß lesbar. Bei einer
+   50/50-Teilung läge die halbe Schrift auf Gelb -- weiß darauf ist
+   unlesbar, dunkel auf Rot wäre es fast. Der gelbe Streifen trägt die
+   Bedeutung "zweite Gelbe". */
 .card-yellow-red {
-  border-color: var(--svh-warn);
-  background: var(--tint-warn);
+  border-color: var(--card-red);
+  background: linear-gradient(90deg, var(--card-yellow) 0 22%, var(--card-red) 22% 100%);
+  color: var(--svh-wh);
+  padding-left: 22px;
 }
 
 .card-red {
-  border-color: var(--svh-loss);
-  background: var(--tint-loss);
+  border-color: var(--card-red);
+  background: var(--card-red);
+  color: var(--svh-wh);
 }
 
 .clock-block {
@@ -918,10 +974,12 @@ body[data-setup='kader'] #setup-kader {
   font-variant-numeric: tabular-nums;
 }
 
+/* Steht neben der Uhr statt darunter. Die gesparte Zeile senkt die
+   Fensterhöhe, ab der im Spiel gar nichts mehr gescrollt werden muss. */
 .half {
   font-size: 13px;
   color: var(--svh-mut);
-  margin-bottom: 8px;
+  margin: -6px 0 6px;
 }
 
 .clock-controls {
@@ -931,9 +989,22 @@ body[data-setup='kader'] #setup-kader {
 
 /* Nachspielzeit: die vom Schiedsrichter angezeigte Dauer. Schnellknöpfe,
    weil am Spielfeldrand ein Klick reichen muss. */
+/* Beschriftung, Schnellknöpfe und das Feld für größere Werte stehen
+   nebeneinander statt untereinander -- gleiche Überlegung wie beim
+   Halbzeit-Label. */
 .stoppage-set {
-  margin-top: 12px;
-  max-width: 220px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 8px;
+  margin-top: 10px;
+  max-width: 260px;
+}
+
+.stoppage-set > label {
+  flex: 1 1 100%;
+  font-size: 11px;
 }
 
 .stoppage-set > label {
@@ -1298,16 +1369,25 @@ body[data-setup='kader'] #setup-kader {
   overflow-y: auto;
 }
 
+/* Jede Zeile, die hier schmaler wird, ist eine Zeile mehr sichtbarer
+   Chronik -- und die Chronik ist der Ort, an dem nach jedem Tor der
+   Torschütze zugeordnet wird. Von 49px auf rund 34px. */
 .goal-log li {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   background: var(--svh-wh);
   border: 1px solid var(--svh-brd);
   border-left: 3px solid var(--svh);
   border-radius: 6px;
-  padding: 6px 12px;
+  padding: 2px 8px;
   font-size: 13px;
+}
+
+/* Die Knöpfe in der Zeile bestimmten deren Höhe mit. */
+.goal-log li .btn {
+  padding: 4px 8px;
+  font-size: 11px;
 }
 
 /* Ereignisart an der linken Kante erkennbar */
@@ -1323,6 +1403,9 @@ body[data-setup='kader'] #setup-kader {
   border-left-color: var(--svh-loss);
 }
 
+/* Die kleinste Zielfläche der Oberfläche saß ausgerechnet neben einem
+   nicht umkehrbaren Löschvorgang: 13x16px, direkt am Nachbarelement.
+   Jetzt 24x24 mit Abstand davor. Die Rückfrage bleibt zusätzlich. */
 .goal-remove {
   border: none;
   background: none;
@@ -1330,7 +1413,15 @@ body[data-setup='kader'] #setup-kader {
   cursor: pointer;
   font-size: 16px;
   line-height: 1;
-  padding: 0 2px;
+  min-width: 24px;
+  min-height: 24px;
+  margin-left: 4px;
+  border-radius: 4px;
+}
+
+.goal-remove:hover {
+  background: var(--tint-loss);
+  color: var(--svh-loss);
 }
 
 .goal-remove:hover {
@@ -1340,7 +1431,7 @@ body[data-setup='kader'] #setup-kader {
 .goal-log select {
   font-family: inherit;
   font-size: 13px;
-  padding: 4px 6px;
+  padding: 2px 6px;
   border: 1px solid var(--svh-brd);
   border-radius: 6px;
   max-width: 180px;
