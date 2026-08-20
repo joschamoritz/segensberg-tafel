@@ -395,6 +395,58 @@ test('schnelle Knöpfe fragen bewusst NICHT nach', (t) => {
 // Tormusik -- läuft bewusst ohne die Brücke
 // --------------------------------------------------------------------
 
+test('der Schnellknopf am Torknopf verändert den Spielstand nicht', (t) => {
+  // Er sitzt in derselben `.stepper`-Zeile wie "+" und "−". Bekäme er ein
+  // `data-team`, hinge über den dokumentweiten Selektor
+  // `button[data-team]` in control.ts ein Spielstand-Handler daran -- ein
+  // Druck auf die Tormusik zählte dann ein Tor.
+  const store = angepfiffen();
+  store.setMedia({
+    werbung: { rootPath: 'C:\\Test\\Werbung', files: [] },
+    highlights: { rootPath: 'C:\\Test\\Highlights', files: [] },
+    sounds: { rootPath: 'C:\\Test\\Sounds', files: [] },
+  });
+  const r = fensterMit(store, t);
+
+  const knopf = r.document.getElementById('sound-play-quick');
+  assert.ok(knopf, 'den Schnellknopf gibt es nicht');
+  assert.strictEqual(knopf.dataset.team, undefined, 'er darf kein data-team tragen');
+  assert.strictEqual(knopf.dataset.cardTeam, undefined, 'und kein data-card-team');
+  assert.strictEqual(knopf.dataset.cornerTeam, undefined, 'und kein data-corner-team');
+
+  assert.ok(
+    knopf.closest('.stepper'),
+    'er soll bewusst in der Stepper-Zeile stehen, direkt am Torknopf'
+  );
+
+  r.close();
+});
+
+test('der Schnellknopf ist ohne Tondatei gesperrt und mit Tondatei nutzbar', (t) => {
+  // Ein Knopf am Torknopf, der ins Leere liefe, wäre am Spielfeldrand
+  // schlimmer als keiner.
+  const ohne = angepfiffen();
+  ohne.setMedia({
+    werbung: { rootPath: 'C:\\Test\\Werbung', files: [] },
+    highlights: { rootPath: 'C:\\Test\\Highlights', files: [] },
+    sounds: { rootPath: 'C:\\Test\\Sounds', files: [] },
+  });
+  const r = fensterMit(ohne, t);
+
+  assert.strictEqual(
+    r.document.getElementById('sound-play-quick').disabled,
+    true,
+    'ohne Tondatei muss er gesperrt sein'
+  );
+  assert.strictEqual(
+    r.document.getElementById('sound-play').disabled,
+    true,
+    'der große Knopf unten genauso'
+  );
+
+  r.close();
+});
+
 test('Tormusik wird im Fenster selbst abgespielt, nicht über die Brücke', (t) => {
   // Der Ton geht ohnehin ans Windows-Standardgerät; welches Fenster ihn
   // abspielt, ändert daran nichts. Ein Brücken-Aufruf hier wäre also ein
@@ -405,6 +457,7 @@ test('Tormusik wird im Fenster selbst abgespielt, nicht über die Brücke', (t) 
 
   assert.deepStrictEqual(namen(r.click('sound-play')), []);
   assert.deepStrictEqual(namen(r.click('sound-stop')), []);
+  assert.deepStrictEqual(namen(r.click('sound-play-quick')), [], 'auch der Schnellknopf am Tor');
 
   r.close();
 });

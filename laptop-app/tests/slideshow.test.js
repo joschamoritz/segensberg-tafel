@@ -21,6 +21,7 @@ const {
   mediaUrl,
   slideFoldersForPhase,
   slideshowAvailable,
+  announcementsVisible,
   MAX_ANNOUNCEMENTS,
   MAX_ANNOUNCEMENT_LENGTH,
 } = load('shared/types');
@@ -119,17 +120,48 @@ test('die Medien-Adresse kodiert Sonderzeichen im Dateinamen', () => {
   assert.equal(mediaUrl('werbung', '01 Grün & Co.png'), 'svh-media://werbung/01%20Gr%C3%BCn%20%26%20Co.png');
 });
 
-test('Folien laufen nur vor dem Anpfiff und in der Halbzeitpause', () => {
-  // Im laufenden Spiel gehört der Spielstand auf die Tafel, nach dem
-  // Abpfiff der Endstand.
+test('Folien laufen in jeder Phase außer dem laufenden Spiel', () => {
+  // Im laufenden Spiel gehört der Spielstand auf die Tafel -- das ist die
+  // einzige Phase, in der die Diashow gesperrt bleibt.
+  //
+  // Nach dem Abpfiff läuft sie seit dem 20.08.2026 mit (Nutzerwunsch):
+  // Sie startet ohnehin nur auf Knopfdruck, verdrängt den Endstand also
+  // nur, wenn jemand das will -- und während sich der Platz leert, ist
+  // das die sinnvollste Zeit für Sponsorenmotive.
   assert.equal(slideshowAvailable('pre-match'), true);
   assert.equal(slideshowAvailable('half-time'), true);
+  assert.equal(slideshowAvailable('full-time'), true);
   assert.equal(slideshowAvailable('live'), false);
-  assert.equal(slideshowAvailable('full-time'), false);
 
   assert.deepEqual(slideFoldersForPhase('pre-match'), ['werbung']);
   assert.deepEqual(slideFoldersForPhase('half-time'), ['werbung', 'highlights']);
+  assert.deepEqual(slideFoldersForPhase('full-time'), ['werbung', 'highlights']);
   assert.deepEqual(slideFoldersForPhase('live'), []);
+});
+
+test('Ankündigungen laufen in der Pause und nach dem Abpfiff mit', () => {
+  // Vor dem Anpfiff nicht -- da schauen die Zuschauer auf die Begegnung.
+  // Die Regel steht gemeinsam in shared/types.ts, weil sie sonst im
+  // Folienaufbau der Anzeige und in der Folienzählung des
+  // Steuerungsfensters doppelt stünde und auseinanderliefe.
+  assert.equal(announcementsVisible('pre-match'), false);
+  assert.equal(announcementsVisible('live'), false);
+  assert.equal(announcementsVisible('half-time'), true);
+  assert.equal(announcementsVisible('full-time'), true);
+});
+
+test('slideshowAvailable und slideFoldersForPhase können nicht auseinanderlaufen', () => {
+  // slideshowAvailable leitet sich aus den Ordnern ab. Früher waren es
+  // zwei getrennte Phasenlisten -- eine neue Phase in nur einer davon
+  // hätte einen freigeschalteten Knopf ergeben, der eine leere Schau
+  // startet.
+  for (const phase of ['pre-match', 'live', 'half-time', 'full-time']) {
+    assert.equal(
+      slideshowAvailable(phase),
+      slideFoldersForPhase(phase).length > 0,
+      `Phase "${phase}" widerspricht sich`
+    );
+  }
 });
 
 test('die Diashow startet nur in den passenden Phasen', () => {

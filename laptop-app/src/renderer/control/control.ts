@@ -2,6 +2,7 @@ import { parseLineup, ParsedPlayer } from '../../shared/lineupParser';
 import { controlPhaseLabel, revertTargetLabel } from '../../shared/phaseLabels';
 import {
   ANNOUNCEMENTS_PER_SLIDE,
+  announcementsVisible,
   AppStatus,
   audioMimeType,
   pickGoalSound,
@@ -802,8 +803,11 @@ function renderSoundControls(state: MatchState): void {
   const mute = document.getElementById('sound-muted') as HTMLInputElement;
   if (document.activeElement !== mute) mute.checked = state.sound.muted;
 
-  (document.getElementById('sound-play') as HTMLButtonElement).disabled = datei === null;
-  (document.getElementById('sound-stop') as HTMLButtonElement).disabled = datei === null;
+  // Der Schnellknopf am Spielstand wird genauso geschaltet wie der große
+  // unten -- sonst stünde am Tor ein Knopf bereit, der ins Leere liefe.
+  for (const id of ['sound-play', 'sound-stop', 'sound-play-quick']) {
+    (document.getElementById(id) as HTMLButtonElement).disabled = datei === null;
+  }
 
   const hint = document.getElementById('sound-hint')!;
   const leer = datei === null;
@@ -816,9 +820,11 @@ function renderSoundControls(state: MatchState): void {
 /**
  * Diashow-Knöpfe und Ankündigungen.
  *
- * Die Schau läuft nur in den Phasen, in denen sie sinnvoll ist -- im
- * laufenden Spiel gehört der Spielstand auf die Tafel, nach dem Abpfiff
- * der Endstand. Findet sich kein Motiv, sagt der Hinweis deutlich WO
+ * Die Schau läuft in jeder Phase außer dem laufenden Spiel -- dort
+ * gehört der Spielstand auf die Tafel. Nach dem Abpfiff läuft sie mit
+ * (Nutzerwunsch 20.08.2026): Sie startet ohnehin nur auf Knopfdruck und
+ * verdrängt den Endstand also nur, wenn jemand das will. Findet sich
+ * kein Motiv, sagt der Hinweis deutlich WO
  * gesucht wurde: Bei der Logo-Bibliothek war ein wortlos leeres Ergebnis
  * der schlechteste Fall.
  */
@@ -828,10 +834,9 @@ function renderSlideshowControls(state: MatchState): void {
 
   const folders = slideFoldersForPhase(state.phase);
   const bilder = folders.reduce((sum, folder) => sum + state.media[folder].files.length, 0);
-  const termine =
-    state.phase === 'half-time'
-      ? Math.ceil(state.announcements.length / ANNOUNCEMENTS_PER_SLIDE)
-      : 0;
+  const termine = announcementsVisible(state.phase)
+    ? Math.ceil(state.announcements.length / ANNOUNCEMENTS_PER_SLIDE)
+    : 0;
   const folien = bilder + termine;
 
   const start = document.getElementById('slideshow-start') as HTMLButtonElement;
@@ -845,7 +850,7 @@ function renderSlideshowControls(state: MatchState): void {
   const leer = available && folien === 0;
 
   if (!available) {
-    hint.textContent = 'Nur vor dem Anpfiff und in der Halbzeitpause.';
+    hint.textContent = 'Im laufenden Spiel gehört der Spielstand auf die Tafel.';
   } else if (leer) {
     hint.textContent =
       'Keine Motive gefunden in "' + state.media.werbung.rootPath + '".';
@@ -1271,6 +1276,12 @@ function wireInfoControls(): void {
   muted.addEventListener('change', sendSound);
   document.getElementById('sound-play')!.addEventListener('click', playGoalSound);
   document.getElementById('sound-stop')!.addEventListener('click', stopGoalSound);
+
+  // Schnellzugriff direkt neben "Tor +1" (Nutzerwunsch 20.08.2026): Nach
+  // einem Treffer sollen Eintragen und Musikstart eine Handbewegung sein,
+  // statt an den Fuß des Fensters zu wechseln. Regler, Stummschalter und
+  // "Stopp" bleiben unten -- die stellt man einmal ein, nicht im Jubel.
+  document.getElementById('sound-play-quick')!.addEventListener('click', playGoalSound);
 
   document
     .getElementById('slideshow-start')!

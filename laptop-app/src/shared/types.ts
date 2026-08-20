@@ -488,18 +488,43 @@ export const ANNOUNCEMENTS_TITLE = 'TERMINE';
  * Welche Medienordner in welcher Phase laufen.
  *
  * Vor dem Anpfiff nur Werbung -- Highlights und Termine gehören in die
- * Pause, wo die Zuschauer Zeit zum Lesen haben. Nach dem Abpfiff läuft
- * keine Diashow: Dort steht der Endstand mit der Torschützenliste.
+ * Pause, wo die Zuschauer Zeit zum Lesen haben.
+ *
+ * Nach dem Abpfiff laufen dieselben Ordner wie in der Pause
+ * (Nutzerwunsch 20.08.2026). Die frühere Begründung "dort steht der
+ * Endstand mit der Torschützenliste" trägt nicht: Die Diashow startet
+ * ausschließlich auf Knopfdruck, verdrängt den Endstand also nur, wenn
+ * jemand das ausdrücklich will -- und während sich der Platz leert, ist
+ * das die sinnvollste Zeit für Sponsorenmotive. Der Endstand ist über
+ * "Diashow beenden" jederzeit zurück.
  */
 export function slideFoldersForPhase(phase: MatchPhase): MediaFolderId[] {
   if (phase === 'pre-match') return ['werbung'];
-  if (phase === 'half-time') return ['werbung', 'highlights'];
+  if (phase === 'half-time' || phase === 'full-time') return ['werbung', 'highlights'];
   return [];
+}
+
+/**
+ * Laufen in dieser Phase Ankündigungsfolien mit?
+ *
+ * Vor dem Anpfiff nicht -- da schauen die Zuschauer auf die Begegnung,
+ * nicht auf den Vereinskalender. In der Pause und nach dem Abpfiff schon:
+ * Genau dann ist "Nächstes Heimspiel: So 25.08." die Information, die
+ * jemand mitnehmen soll.
+ *
+ * Gemeinsame Funktion, weil die Regel sonst an zwei Stellen stünde -- im
+ * Folienaufbau der Anzeige und in der Folienzählung des
+ * Steuerungsfensters. Zwei Kopien liefen beim nächsten Umbau
+ * auseinander, und das Steuerungsfenster meldete dann eine Folienzahl,
+ * die auf der Tafel nicht stimmt.
+ */
+export function announcementsVisible(phase: MatchPhase): boolean {
+  return phase === 'half-time' || phase === 'full-time';
 }
 
 /** Laufen in dieser Phase überhaupt Folien? */
 export function slideshowAvailable(phase: MatchPhase): boolean {
-  return phase === 'pre-match' || phase === 'half-time';
+  return slideFoldersForPhase(phase).length > 0;
 }
 
 /**

@@ -2,6 +2,7 @@ import { displayPhaseLabel } from '../../shared/phaseLabels';
 import { buildScorerRows, visibleScorerRows } from '../../shared/scorerRows';
 import {
   ANNOUNCEMENTS_PER_SLIDE,
+  announcementsVisible,
   ANNOUNCEMENTS_TITLE,
   BoardSize,
   ClockState,
@@ -681,9 +682,9 @@ function buildSlideDeck(state: MatchState): Slide[] {
     }
   }
 
-  // Termine nur in der Pause -- vor dem Anpfiff schauen die Zuschauer auf
-  // die Begegnung, nicht auf den Vereinskalender.
-  if (state.phase === 'half-time') {
+  // Welche Phasen Ankündigungen zeigen, entscheidet announcementsVisible()
+  // -- dieselbe Regel nutzt die Folienzählung im Steuerungsfenster.
+  if (announcementsVisible(state.phase)) {
     for (let i = 0; i < state.announcements.length; i += ANNOUNCEMENTS_PER_SLIDE) {
       slides.push({
         kind: 'text',

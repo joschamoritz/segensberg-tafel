@@ -235,6 +235,19 @@
       <div class="stepper">
         <button data-team="home" data-delta="-1" class="btn btn-minus">−</button>
         <button data-team="home" data-delta="1" class="btn btn-plus">+</button>
+        <!-- Schnellzugriff auf die Tormusik, direkt am Torknopf: Nach einem
+             Treffer sollen Eintragen und Musikstart eine Handbewegung sein.
+             Regler, Stummschalter und "Stopp" bleiben unten im Fuß.
+
+             Nur in der Heimspalte, weil dort immer der eigene Verein steht
+             (die Tafel steht fest am Segensberg) -- bei einem Gegentor
+             würde ohnehin niemand Jubelmusik starten.
+
+             KEIN data-team an diesem Knopf: Der dokumentweite Selektor
+             `button[data-team]` in control.ts hängt sonst einen
+             Spielstand-Handler daran. -->
+        <button id="sound-play-quick" class="btn btn-sound"
+                title="Tormusik abspielen">♪</button>
       </div>
       <div class="card-buttons">
         <button data-card-team="home" data-card="yellow" class="btn btn-small card-yellow">Gelb</button>
@@ -346,13 +359,16 @@
       <span class="lineup-controls-hint" id="lineup-controls-hint"></span>
     </div>
     <div class="lineup-controls info-controls">
+      <!-- Vorher stand hier dreimal eine Variante von "Zuschauer":
+           Zeilenbeschriftung, Feldbeschriftung und Knopf. Jetzt wie in
+           den Zeilen darüber und darunter: links das Thema, rechts die
+           Tätigkeit. -->
       <span class="lineup-controls-label">Zuschauerzahl:</span>
       <label class="kickoff-field">
-        Zuschauer
         <input type="number" id="attendance-input" min="0" max="99999" step="1"
                placeholder="–" />
       </label>
-      <button id="info-show-attendance" class="btn btn-small">Zuschauer</button>
+      <button id="info-show-attendance" class="btn btn-small">Einblenden</button>
       <span class="lineup-controls-hint" id="info-controls-hint"></span>
     </div>
     <div class="lineup-controls slideshow-controls">
@@ -363,12 +379,12 @@
       <span class="lineup-controls-hint" id="slideshow-hint"></span>
     </div>
     <details class="thanks-box">
-      <summary>Termine &amp; Ankündigungen (Halbzeitpause)</summary>
+      <summary>Termine &amp; Ankündigungen (Pause und nach Abpfiff)</summary>
       <textarea id="announcements-input" rows="5"
                 placeholder="Eine Ankündigung je Zeile&#10;Nächstes Heimspiel: So 25.08., 15:00 vs. FC Beispiel&#10;Helfer für das Sommerfest gesucht"></textarea>
       <p class="thanks-hint">
-        Erscheinen als eigene Folien in der Diashow der Halbzeitpause,
-        höchstens fünf Zeilen je Folie.
+        Erscheinen als eigene Folien in der Diashow der Halbzeitpause und
+        nach dem Abpfiff, höchstens fünf Zeilen je Folie.
       </p>
     </details>
     <details class="thanks-box">

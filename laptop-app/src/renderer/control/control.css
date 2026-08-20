@@ -211,6 +211,17 @@ header h1 {
   filter: brightness(1.15);
 }
 
+/* Schnellzugriff auf die Tormusik neben dem Torknopf. Schmaler als die
+   Stepper-Knöpfe: Er soll erreichbar sein, ohne mit "+" um Aufmerksamkeit
+   zu ringen -- das Tor einzutragen bleibt der wichtigere Griff.
+   Eigener Schriftstapel, weil Oswald keine Notenzeichen enthält. */
+.btn-sound {
+  font-family: "Segoe UI Symbol", "Apple Symbols", sans-serif;
+  font-size: 20px;
+  padding: 8px 14px;
+  color: var(--svh);
+}
+
 /* ═══ Einrichtungsleiste und -flächen ═══
 
    Umgeschaltet wird über ein Attribut am <body>, NICHT über das
@@ -516,10 +527,59 @@ body[data-setup='kader'] #setup-kader {
   color: var(--svh-mut);
 }
 
-/* Der Klapper hat eigenen Innenabstand; die enthaltenen .lineup-controls
-   bringen ihren Trennstrich selbst mit. */
+/* Der Inhalt des Klappers klebte am linken Rand und stand ohne
+   erkennbare Ordnung untereinander. Jetzt: eine eingerückte Spalte, in
+   der die Zeilen an einer gemeinsamen Beschriftungsspalte ausgerichtet
+   sind. */
+.more-tools > *:not(summary) {
+  margin: 0 24px;
+}
+
+.more-tools > .lineup-controls,
+.more-tools > .thanks-box,
+.more-tools > .clock-set {
+  padding: 10px 0;
+  border-top: 1px solid var(--svh-brd);
+}
+
 .more-tools > .lineup-controls:first-of-type {
   border-top: none;
+}
+
+/* Gemeinsame Beschriftungsspalte: "Aufstellung einblenden:",
+   "Zuschauerzahl:" und "Diashow:" beginnen an derselben Kante, damit die
+   Knöpfe darunter eine Flucht bilden statt zu treppen. */
+.more-tools .lineup-controls > .lineup-controls-label {
+  flex: 0 0 auto;
+  width: 170px;
+}
+
+/* Der Hinweistext soll die Knöpfe nicht auseinanderziehen -- er rutscht
+   ans Ende der Zeile und bricht dort um. */
+.more-tools .lineup-controls > .lineup-controls-hint {
+  flex: 1 1 200px;
+}
+
+/* `.kickoff-field` bringt für die Phasenzeile einen eigenen linken
+   Abstand mit. Im Klapper sorgt schon die Beschriftungsspalte für den
+   Abstand -- sonst begänne das Zahlenfeld 16px weiter rechts als die
+   Knöpfe der Zeilen darüber und darunter. */
+.more-tools .lineup-controls > .kickoff-field {
+  margin-left: 0;
+}
+
+.more-tools > .thanks-box > summary,
+.more-tools > .clock-set > label {
+  font-family: 'Oswald', sans-serif;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Abstand am Fuß, sonst schließt der letzte Hinweis bündig mit der
+   Fensterkante ab. */
+.more-tools > *:last-child {
+  margin-bottom: 16px;
 }
 
 /* Einblenden des Eckenstands, direkt unter der Nachspielzeit und damit
