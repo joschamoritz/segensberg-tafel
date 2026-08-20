@@ -1,6 +1,14 @@
 import { app, BrowserWindow, Display, screen } from 'electron';
 import * as path from 'path';
 import { BoardSize, DEFAULT_BOARD_SIZE, DisplayInfo } from '../shared/types';
+import {
+  currentScreenAreas,
+  loadWindowState,
+  MIN_CONTROL_HEIGHT,
+  MIN_CONTROL_WIDTH,
+  sanitizeBounds,
+  trackWindowState,
+} from './windowState';
 
 /**
  * "Präsentationsmodus"-Ansatz statt Fenstern auf Pixelkoordinaten: Wir fragen das
@@ -30,12 +38,27 @@ export function findDisplayById(id: number): Display | null {
   return screen.getAllDisplays().find((d) => d.id === id) ?? null;
 }
 
+/**
+ * Das Steuerungsfenster merkt sich Größe, Position und Maximierung.
+ *
+ * Ohne das öffnete es starr bei 1000x700 -- rund 660px nutzbare Höhe für
+ * eine Oberfläche, die 1650px hoch ist. Wer maximiert arbeitet, stellte das
+ * nach jedem Start von Hand wieder her. Beim allerersten Start wird
+ * maximiert geöffnet, weil der Platz sonst nicht reicht.
+ */
 export function createControlWindow(): BrowserWindow {
+  const gemerkt = loadWindowState();
+  const bounds = sanitizeBounds(gemerkt.bounds, currentScreenAreas());
+
   const win = new BrowserWindow({
-    width: 1000,
-    height: 700,
-    minWidth: 720,
-    minHeight: 560,
+    // Ohne geprüfte Maße platziert Electron das Fenster selbst -- besser
+    // als ein erfundener Ort. Siehe sanitizeBounds().
+    ...(bounds ?? { width: 1000, height: 700 }),
+    minWidth: MIN_CONTROL_WIDTH,
+    minHeight: MIN_CONTROL_HEIGHT,
+    // Erst zeigen, wenn maximiert UND der Inhalt da ist -- sonst blitzt
+    // beim Start erst das kleine, dann ein leeres weißes Fenster auf.
+    show: false,
     title: 'Anzeigetafel-Steuerung',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -43,7 +66,11 @@ export function createControlWindow(): BrowserWindow {
       nodeIntegration: false,
     },
   });
+
+  if (gemerkt.maximized) win.maximize();
+  trackWindowState(win);
   win.loadFile(path.join(__dirname, '..', 'renderer', 'control', 'index.html'));
+  win.once('ready-to-show', () => win.show());
 
   // Während der Entwicklung DevTools automatisch öffnen, damit JS-Fehler im
   // Renderer sofort sichtbar sind. app.isPackaged ist bei einer fertigen
