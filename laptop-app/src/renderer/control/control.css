@@ -37,6 +37,29 @@
   box-sizing: border-box;
 }
 
+/* Das `hidden`-Attribut soll in diesem Dokument immer gelten.
+ *
+ * Ohne diese Zeile schlägt jede Autoren-Regel mit `display` die
+ * Browser-Regel `[hidden] { display: none }` -- unabhängig von der
+ * Spezifität. Der Renderer schaltet neun Elemente über `element.hidden`;
+ * bei `.logo-preview` (die ein `display: block` braucht) lief das ins
+ * Leere, und in der ausgelieferten Fassung 1.0.0 standen zwei leere
+ * 120x36-Kästen im Fenster, die der Renderer für ausgeblendet hielt.
+ *
+ * `display.css` löst dasselbe Problem mit zehn Einzelregeln je Element.
+ * Hier steht bewusst eine globale: Sie kann nicht vergessen werden, wenn
+ * jemand später einem versteckbaren Element ein `display` gibt -- und
+ * genau dieses Vergessen ist der Fehler, um den es geht. `!important`
+ * ist dafür der Punkt, nicht der Notnagel: Das Attribut soll gewinnen.
+ *
+ * Ansichten werden NICHT hierüber geschaltet (siehe
+ * `body[data-setup]`), es gibt also keinen Fall, in dem ein verstecktes
+ * Element trotzdem sichtbar sein soll.
+ */
+[hidden] {
+  display: none !important;
+}
+
 /* Die Seite ist eine Spalte fester Zonen plus einer wachsenden.
    Jeder zusätzliche Pixel Fensterhöhe geht an die Chronik -- dort steht
    nach jedem Tor die Torschützen-Zuordnung, und die soll ohne Scrollen
