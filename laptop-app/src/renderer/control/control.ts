@@ -1071,6 +1071,7 @@ function main(): void {
     });
   });
 
+  wireSetupPanels();
   wireInfoControls();
 
   wireClockSet();
@@ -1161,6 +1162,59 @@ function main(): void {
 
     wireLineupPaste(team);
   }
+}
+
+/**
+ * Leiste und Flächen für das Einmalige (Anzeige, Teams, Kader).
+ *
+ * Geschaltet wird ausschließlich `document.body.dataset.setup` -- welche
+ * Fläche dann sichtbar ist, entscheidet `control.css`. Zwei Dinge hängen
+ * daran, die man leicht anders bauen würde und die dann kaputtgingen:
+ *
+ * - **Kein Ein-/Ausbau von DOM-Knoten.** Die gesamte Verdrahtung läuft
+ *   genau einmal in `main()`; ein ausgetauschter Knoten hätte danach
+ *   keinen Handler mehr, während die Anzeige weiter korrekt aussieht.
+ * - **Kein `hidden`.** Die Flächen brauchen eine `display`-Angabe, und
+ *   eine Autoren-Regel mit `display` schlägt `[hidden] { display: none }`
+ *   (Guardrail in DESIGN.md).
+ *
+ * Gezeichnet wird auch in eine geschlossene Fläche weiter -- `renderSquad`
+ * und `renderGoalLog` dürfen NICHT an die Sichtbarkeit gekoppelt werden.
+ * Sie verbrennen sonst ihre Revisionssignatur, ohne das DOM zu schreiben,
+ * und blieben danach dauerhaft auf altem Stand. Der zugeklappte
+ * Kader-Editor macht das seit 1.0.0 genauso.
+ */
+function wireSetupPanels(): void {
+  const open = (name: string | null): void => {
+    // Vor dem Umschalten den Fokus abgeben. Ein Feld, das mit Fokus
+    // verschwindet, bekommt sein `focusout` nicht zugesichert -- es bliebe
+    // dann in `editingInputs` hängen und würde nie wieder aus dem Zustand
+    // gepflegt. Betroffen wären Anstoßzeit, Tafelauflösung und die
+    // Zahlenfelder, bei denen Chromium eigene Auswahl-Elemente öffnet.
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+
+    if (name === null) delete document.body.dataset.setup;
+    else document.body.dataset.setup = name;
+  };
+
+  for (const entry of document.querySelectorAll<HTMLButtonElement>('.setup-entry')) {
+    entry.addEventListener('click', () => {
+      const name = entry.dataset.setup ?? null;
+      // Ein zweiter Druck auf denselben Eintrag schließt wieder -- sonst
+      // wäre der Eintrag der einzige Knopf der Oberfläche, der nichts tut.
+      open(document.body.dataset.setup === name ? null : name);
+    });
+  }
+
+  for (const close of document.querySelectorAll<HTMLButtonElement>('[data-setup-close]')) {
+    close.addEventListener('click', () => open(null));
+  }
+
+  document.getElementById('setup-scrim')!.addEventListener('click', () => open(null));
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && document.body.dataset.setup) open(null);
+  });
 }
 
 /**

@@ -24,7 +24,34 @@
          nicht. Gefüllt wird die Zeile aus control.ts. -->
     <span id="app-version" class="app-version"></span>
     <div id="display-status" class="status-banner"></div>
+
+    <!-- Leiste für das Einmalige. Vorbild ist die Menüleiste der
+         Herstellersoftware: Was einmal eingerichtet und dann nie
+         wieder angefasst wird, gehört nicht dauerhaft in die Fläche, die
+         im Spiel gebraucht wird. Zielbildschirm und Tafelauflösung
+         belegten bisher die obersten 157px, ohne je im Betrieb nötig zu
+         sein.
+
+         `data-setup` und nicht `data-team`/`data-card-team`/
+         `data-corner-team`: Auf die drei greifen in control.ts
+         dokumentweite Selektoren zu, ein Knopf hier bekäme sonst
+         ungefragt einen Spielstand- oder Kartenhandler. -->
+    <nav class="setup-bar">
+      <button type="button" class="setup-entry" data-setup="anzeige">Anzeige</button>
+      <button type="button" class="setup-entry" data-setup="teams">Teams &amp; Logos</button>
+      <button type="button" class="setup-entry" data-setup="kader">Kader</button>
+    </nav>
   </header>
+
+  <!-- Abdeckung hinter der Einrichtungsfläche. Ein Klick darauf schließt,
+       wie der Klick neben ein Dialogfenster. -->
+  <div class="setup-scrim" id="setup-scrim"></div>
+
+  <div class="setup-panel" id="setup-anzeige">
+    <div class="setup-panel-head">
+      <h2>Anzeige</h2>
+      <button type="button" class="setup-close" data-setup-close>Schließen</button>
+    </div>
 
   <section class="display-picker">
     <label for="display-select">Zielbildschirm:</label>
@@ -46,8 +73,19 @@
       goracon-Anleitung: 384 × 192.
     </p>
   </section>
+  </div>
 
-  <details class="team-settings">
+  <div class="setup-panel" id="setup-teams">
+    <div class="setup-panel-head">
+      <h2>Teams &amp; Logos</h2>
+      <button type="button" class="setup-close" data-setup-close>Schließen</button>
+    </div>
+
+  <!-- Bleibt ein <details open> mit unveränderter Klasse: Sämtliche
+       Nachfahren-Regeln in control.css hängen daran, und ein Umbau zum
+       <div> bräche sie lautlos. Die <summary> blendet das Stylesheet
+       innerhalb der Fläche aus -- die Überschrift steht schon darüber. -->
+  <details class="team-settings" open>
     <summary>Team-Stammdaten &amp; Logos</summary>
 
     <div class="library-bar">
@@ -93,8 +131,15 @@
       </div>
     </div>
   </details>
+  </div>
 
-  <details class="squad-settings">
+  <div class="setup-panel" id="setup-kader">
+    <div class="setup-panel-head">
+      <h2>Kader</h2>
+      <button type="button" class="setup-close" data-setup-close>Schließen</button>
+    </div>
+
+  <details class="squad-settings" open>
     <summary>Kader</summary>
     <p class="squad-hint">
       Kader werden pro Verein gespeichert – beim Rückspiel gegen denselben
@@ -157,6 +202,7 @@
       </div>
     </div>
   </details>
+  </div>
 
   <section class="phase-control">
     <div class="phase-current">
