@@ -10,6 +10,60 @@ dem Baudatum. Welche Stelle wann steigt, steht in
 
 ---
 
+## 1.1.0 – noch nicht ausgeliefert
+
+Diese Fassung ändert nichts an dem, was auf der Tafel steht – sie
+räumt das **Steuerungsfenster** auf. Der Anlass: Im Spielbetrieb lag
+nichts von dem, was während eines laufenden Spiels gebraucht wird, ohne
+Scrollen im Bild. Die Seite war 1650 Pixel hoch, sichtbar waren 660.
+
+**Nichts mehr scrollen**
+
+- Die Bedienung des laufenden Spiels passt jetzt vollständig ins
+  Fenster: Spielphasen, Uhr, Spielstand, Karten, Ecken, Nachspielzeit,
+  Spielverlauf und Tormusik gleichzeitig sichtbar.
+- **Der Spielverlauf steht direkt unter dem Spielstand.** Zwischen
+  „Tor +1" und der Stelle, an der anschließend der Torschütze zugeordnet
+  wird, lagen 719 Pixel – bei zwei Handgriffen, die praktisch immer
+  zusammen ausgeführt werden.
+- Die Liste springt automatisch ans Ende, wo das jüngste Ereignis steht,
+  und bekommt jede zusätzliche Fensterhöhe: bei einem maximierten
+  1080p-Fenster zehn Zeilen auf einen Blick.
+
+**Das Fenster merkt sich seine Größe**
+
+- Beim ersten Start öffnet es maximiert, danach so, wie es zuletzt
+  stand. Bisher öffnete es immer gleich groß, und wer maximiert
+  arbeitet, stellte das nach jedem Start von Hand her.
+- Stand das Fenster zuletzt auf einem Bildschirm, der jetzt nicht mehr
+  angeschlossen ist, öffnet es wieder sichtbar statt im Nirgendwo.
+
+**Einrichtung aus dem Weg**
+
+- Zielbildschirm, Tafelauflösung, Team-Stammdaten und Kader liegen hinter
+  einer schmalen Leiste oben („Anzeige", „Teams & Logos", „Kader") und
+  klappen bei Bedarf über das Fenster auf. Sie belegten bisher dauerhaft
+  den besten Platz, obwohl sie im Spiel nie gebraucht werden.
+
+**Kleinigkeiten, die im Betrieb zählen**
+
+- **Tormusik direkt am Torknopf**: ein ♪ neben dem „+" der
+  Heimmannschaft. Lautstärke, Stummschalter und „Stopp" bleiben unten.
+- **„Ecken einblenden" steht jetzt bei den Ecken-Zählern**, nicht mehr
+  550 Pixel entfernt bei den Spielphasen.
+- **Die Diashow läuft auch nach dem Abpfiff** – während sich der Platz
+  leert, ist die sinnvollste Zeit für Sponsorenmotive. Die
+  Ankündigungen laufen dort mit.
+- **Karten sind farbige Flächen** statt blasser Knöpfe: Man trifft sie,
+  ohne zu lesen.
+- Größere Klickflächen bei den Ecken-Zählern und beim Löschkreuz im
+  Spielverlauf – letzteres war 13×16 Pixel groß und saß direkt neben
+  seinem Nachbarn.
+- Zwei leere Kästen in „Teams & Logos", die dort nie hätten stehen
+  dürfen, sind verschwunden.
+
+---
+
 ## 1.0.0 – 19.08.2026
 
 Erste ausgelieferte Fassung. Die Laptop-Version ersetzt die Herstellersoftware im
