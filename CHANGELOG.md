@@ -10,6 +10,33 @@ dem Baudatum. Welche Stelle wann steigt, steht in
 
 ---
 
+## 1.4.0 – 16.10.2026 (Testfassung)
+
+**Ein- und Auswechslungen**
+
+- Neben den Ecken gibt es je Mannschaft den Knopf **„⇄ Wechsel"**. Er
+  trägt den Wechsel mit der Minute in den Spielverlauf ein; dort wählt
+  man, wer raus und wer rein geht.
+- Sind beide Spieler gewählt, erscheint der Wechsel im Spiel und in der
+  Halbzeit **von selbst** auf der Tafel, z. B. „Lange für Demir".
+  Ohne Namen zeigt **„Einblenden"** ihn mit der Mannschaft.
+- Für beide Mannschaften und in allen drei Designs.
+- Danach stehen auf den Aufstellungsseiten die Eingewechselten, und bei
+  Torschützen und Karten sind die Spieler auf dem Platz oben einsortiert.
+  Der gespeicherte Kader bleibt unverändert.
+
+**Torjubel länger** (alle Designs): Heimtor 4 s statt 1,8 s, Gegentor
+3 s statt 2,2 s.
+
+**Retro-Design nachgebessert**
+
+- Passt sich jeder eingestellten Tafelauflösung an; vorher stand der
+  Inhalt bei Bildschirmgröße winzig in der Mitte.
+- Uhr kleiner, dafür stehen die **letzten drei Tore und Platzverweise**
+  unter dem Spielstand – im Spiel, in der Halbzeit und beim Endstand.
+- Die Null ohne Schrägstrich.
+- „Unsere Partner" steht als Punktschrift über den Sponsoren.
+
 ## 1.3.0 – 16.10.2026 (Testfassung)
 
 Ein drittes Design: **Retro**, eine Punktmatrix wie die alten
