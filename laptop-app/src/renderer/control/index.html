@@ -296,6 +296,10 @@
         <button data-corner-team="home" data-corner-delta="-1" class="btn btn-small">−</button>
         <span class="corner-count" id="home-corner-count">0</span>
         <button data-corner-team="home" data-corner-delta="1" class="btn btn-small">+</button>
+        <!-- Eigenes data-sub-team statt data-team: Der dokumentweite Selektor
+             button[data-team] hängte sonst einen Spielstand-Handler daran. -->
+        <button id="home-sub-add" data-sub-team="home" class="btn btn-small btn-sub"
+                title="Wechsel eintragen -- die Spieler danach im Spielverlauf wählen">⇄ Wechsel</button>
       </div>
     </section>
 
@@ -358,6 +362,10 @@
         <button data-corner-team="away" data-corner-delta="-1" class="btn btn-small">−</button>
         <span class="corner-count" id="away-corner-count">0</span>
         <button data-corner-team="away" data-corner-delta="1" class="btn btn-small">+</button>
+        <!-- Eigenes data-sub-team statt data-team: Der dokumentweite Selektor
+             button[data-team] hängte sonst einen Spielstand-Handler daran. -->
+        <button id="away-sub-add" data-sub-team="away" class="btn btn-small btn-sub"
+                title="Wechsel eintragen -- die Spieler danach im Spielverlauf wählen">⇄ Wechsel</button>
       </div>
     </section>
   </main>

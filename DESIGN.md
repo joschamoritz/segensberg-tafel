@@ -46,6 +46,7 @@ Platzhalter mehr.**
 | `--stage-void` | `#000000` | Fläche neben der Bühne (Display) |
 | `--tint-gold` / `--tint-warn` / `--tint-loss` | `#fdf6e3` / `#fff1e6` / `#fef2f2` | blasse Hinweisflächen, **nur Control** |
 | `--svh-gold-dk` | `#7a5c12` | Text auf `--tint-gold` |
+| `--sub-in` / `--sub-out` | `#16a34a` / `#d90429` | Wechselmarke in der Info-Leiste: kommt (grün) / geht (rot) |
 | `--sponsor-page-off` | `#3b2f7a` | gedämpfte Seitenmarke im Sponsoren-Fenster (Display) |
 | `--flut-hi` / `--flut-mid` / `--flut-lo` | `#2a79c4` / `#124a86` / `#06142e` | Lichtkegel des Flutlicht-Designs, hell → dunkel |
 | `--retro-bg` | `#0a0a08` | Grund der Punktmatrix (Retro) |
@@ -134,6 +135,12 @@ damit sie beim Hochzählen nicht springen.
   Fat-Finger-taugliche Zielgröße (gilt später besonders fürs iPad)
 - **Phasen-Buttons** (Control): der im Spielverlauf fällige Schritt ist als
   `.btn-next` in Vereins-Indigo hervorgehoben, unpassende sind deaktiviert
+- **Wechsel** (Display): in der Info-Leiste, Text „Lange für Demir"
+  (wie im Spielbericht), daneben die Minute. Die Marke ist hart geteilt,
+  oben `--sub-in`, unten `--sub-out` – wie die Wechseltafel des vierten
+  Offiziellen. Fehlen Namen, sagt der Text, was bekannt ist („Lange
+  kommt") oder nennt die Mannschaft. Im Retro-Design „WECHSEL" mit
+  Minute, darunter derselbe Text.
 - **Info-Leiste** (`.info-bar`, Display): schmale Vollflächen-Leiste am
   unteren Rand in `--svh-dk`, rund 4 Sekunden sichtbar, für Karte und
   Eckenstand. Wert rechts in `--svh-gold`, Label links in Weiß.

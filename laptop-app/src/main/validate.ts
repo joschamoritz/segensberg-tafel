@@ -65,7 +65,7 @@ export function isInfoOverlay(value: unknown): value is InfoOverlay {
   if (!value || typeof value !== 'object') return false;
   const overlay = value as Record<string, unknown>;
   if (overlay.kind === 'corners' || overlay.kind === 'attendance') return true;
-  return overlay.kind === 'card' && isEventId(overlay.eventId);
+  return (overlay.kind === 'card' || overlay.kind === 'sub') && isEventId(overlay.eventId);
 }
 
 /**

@@ -20,6 +20,9 @@
      (Liste unter dem Wappen, Info-Leiste). */
   --card-yellow: #f5c518;
   --card-red: #d90429;
+  /* Wechselmarke: wer kommt (grün), wer geht (rot) */
+  --sub-in: #16a34a;
+  --sub-out: #d90429;
   /* Fläche neben der Bühne. Schwarz und nicht Vereinsblau: Was dort steht,
      gehört nicht zum Motiv, sondern ist ein Balken. */
   --stage-void: #000000;
@@ -775,6 +778,12 @@ body.showing-thanks .info-bar {
 
 .info-mark.is-yellow-red {
   background: linear-gradient(135deg, var(--card-yellow) 0 50%, var(--card-red) 50% 100%);
+}
+
+/* Wechsel: oben grün (kommt), unten rot (geht) -- so kennt man es von
+   der Wechseltafel des vierten Offiziellen. Harte Kante, kein Verlauf. */
+.info-mark.is-sub {
+  background: linear-gradient(to bottom, var(--sub-in) 0 50%, var(--sub-out) 50% 100%);
 }
 
 .info-label {

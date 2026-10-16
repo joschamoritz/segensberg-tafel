@@ -1439,6 +1439,27 @@ body[data-setup='kader'] #setup-kader {
   border-left-color: var(--svh-warn);
 }
 
+.goal-log li.is-sub {
+  border-left-color: var(--svh-win);
+}
+
+/* Raus und Rein farblich wie auf der Tafel: rot für den, der geht, grün
+   für den, der kommt. */
+.goal-log select.sub-out {
+  border-left: 3px solid var(--svh-loss);
+}
+
+.goal-log select.sub-in {
+  border-left: 3px solid var(--svh-win);
+}
+
+/* Der Wechsel-Knopf sitzt in der Ecken-Zeile, etwas abgesetzt: Er gehört
+   nicht zu den Ecken, braucht aber keine eigene Zeile. */
+.corner-row .btn-sub {
+  margin-left: 10px;
+  font-size: 13px;
+}
+
 .goal-log li.is-card-red {
   border-left-color: var(--svh-loss);
 }

@@ -131,7 +131,27 @@ export interface CardEvent {
   playerId?: string;
 }
 
-export type MatchEvent = GoalEvent | CardEvent;
+/**
+ * Ein- und Auswechslung. Beide Spieler sind optional: Am Spielfeldrand
+ * steht oft erst fest, DASS gewechselt wird, und die Namen kommen danach.
+ * Sobald beide eingetragen sind, erscheint der Wechsel auf der Tafel; ohne
+ * Namen lässt er sich von Hand mit der Mannschaft einblenden.
+ */
+export interface SubstitutionEvent {
+  id: number;
+  type: 'sub';
+  team: TeamId;
+  /** siehe `GoalEvent.minute` */
+  minute: number;
+  /** siehe `GoalEvent.stoppage` */
+  stoppage?: number;
+  /** Spieler, der den Platz verlässt */
+  outId?: string;
+  /** Spieler, der hereinkommt */
+  inId?: string;
+}
+
+export type MatchEvent = GoalEvent | CardEvent | SubstitutionEvent;
 
 export const CARD_LABEL: Record<CardColor, string> = {
   yellow: 'Gelb',
@@ -153,6 +173,7 @@ export const CARD_LABEL: Record<CardColor, string> = {
  */
 export type InfoOverlay =
   | { kind: 'card'; eventId: number }
+  | { kind: 'sub'; eventId: number }
   | { kind: 'corners' }
   | { kind: 'attendance' };
 
@@ -184,8 +205,13 @@ export const THANKS_DISPLAY_MS = 8000;
 
 /** Wie lange die jeweilige Einblendung stehen bleibt. */
 export function infoOverlayDurationMs(overlay: InfoOverlay): number {
-  return overlay.kind === 'attendance' ? THANKS_DISPLAY_MS : INFO_OVERLAY_MS;
+  if (overlay.kind === 'attendance') return THANKS_DISPLAY_MS;
+  // Ein Wechsel nennt zwei Namen -- etwas länger als eine Karte.
+  if (overlay.kind === 'sub') return SUB_DISPLAY_MS;
+  return INFO_OVERLAY_MS;
 }
+
+export const SUB_DISPLAY_MS = 6000;
 
 /**
  * Stufen des Torjubels.
@@ -921,6 +947,8 @@ export const IPC = {
   soundRead: 'sound:read',
   cardAdd: 'card:add',
   cardSetPlayer: 'card:set-player',
+  subAdd: 'sub:add',
+  subSetPlayers: 'sub:set-players',
   eventRemove: 'event:remove',
   setKickoffTime: 'match:set-kickoff-time',
   libraryUpdated: 'library:updated',

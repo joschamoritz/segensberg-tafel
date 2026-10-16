@@ -81,6 +81,9 @@ const api = {
   cardAdd: (team: TeamId, card: CardColor) => ipcRenderer.send(IPC.cardAdd, team, card),
   cardSetPlayer: (eventId: number, playerId: string | undefined) =>
     ipcRenderer.send(IPC.cardSetPlayer, eventId, playerId),
+  subAdd: (team: TeamId) => ipcRenderer.send(IPC.subAdd, team),
+  subSetPlayers: (eventId: number, outId: string | undefined, inId: string | undefined) =>
+    ipcRenderer.send(IPC.subSetPlayers, eventId, outId, inId),
   eventRemove: (eventId: number) => ipcRenderer.send(IPC.eventRemove, eventId),
   setKickoffTime: (value: string) => ipcRenderer.send(IPC.setKickoffTime, value),
   setHalfDuration: (minutes: number) => ipcRenderer.send(IPC.setHalfDuration, minutes),

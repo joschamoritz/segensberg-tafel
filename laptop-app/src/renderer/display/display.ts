@@ -7,6 +7,7 @@ import {
   retroTeamName,
 } from '../../shared/retroMatrix';
 import { buildScorerRows, visibleScorerRows } from '../../shared/scorerRows';
+import { lineupNow, substitutionText } from '../../shared/substitutions';
 import {
   ANNOUNCEMENTS_PER_SLIDE,
   announcementsVisible,
@@ -160,6 +161,17 @@ function retroFooter(state: MatchState): Extract<RetroScene, { kind: 'match' }>[
       };
     }
   }
+  if (overlay?.kind === 'sub') {
+    const event = state.events.find((e) => e.id === overlay.eventId);
+    if (event && event.type === 'sub') {
+      return {
+        kind: 'info',
+        title: 'WECHSEL',
+        value: formatEventMinute(event),
+        name: substitutionText(event, state.squads[event.team], retroTeamName(state[event.team])),
+      };
+    }
+  }
   if (overlay?.kind === 'corners') {
     return {
       kind: 'info',
@@ -195,6 +207,9 @@ function retroFooter(state: MatchState): Extract<RetroScene, { kind: 'match' }>[
 function retroScorerLines(state: MatchState): { side: TeamId; text: string }[] {
   const lines: { side: TeamId; text: string }[] = [];
   for (const event of state.events) {
+    // Wechsel gehören nicht in die Torschützenliste -- sie stehen bei
+    // Retro wie überall als eigene Einblendung auf der Tafel.
+    if (event.type === 'sub') continue;
     const isGoal = event.type === 'goal';
     if (!isGoal && event.card === 'yellow') continue;
 
@@ -212,9 +227,8 @@ function retroScorerLines(state: MatchState): { side: TeamId; text: string }[] {
 function retroLineup(state: MatchState, pageName: string): RetroScene {
   const team: TeamId = pageName.endsWith('home') ? 'home' : 'away';
   const isBench = pageName.startsWith('bench');
-  const players = sortPlayersByNumber(
-    state.squads[team].filter((p) => p.role === (isBench ? 'bench' : 'start'))
-  );
+  const now = lineupNow(team, state.squads[team], state.events);
+  const players = isBench ? now.bench : now.onPitch;
   const entries = players.map((p) => ({
     number: p.number === null ? '-' : String(p.number),
     name: p.lastName || p.firstName,
@@ -692,7 +706,10 @@ function renderLineupPage(
   withCoach: boolean
 ): boolean {
   const teamState = state[team];
-  const players = state.squads[team].filter((p) => p.role === role);
+  // Nach Wechseln: wer jetzt spielt bzw. noch auf der Bank sitzt. Der
+  // Kader selbst bleibt unverändert, siehe shared/substitutions.ts.
+  const now = lineupNow(team, state.squads[team], state.events);
+  const players = role === 'start' ? now.onPitch : now.bench;
 
   const logo = document.getElementById(`${prefix}-logo`) as HTMLImageElement;
   if (teamState.logoDataUrl) {
@@ -762,7 +779,8 @@ function renderLineupPage(
 function renderLineupPages(state: MatchState): void {
   // Kader (Spieler) und Teams (Name, Logo, Trainer) -- beides steht auf den
   // Aufstellungsseiten.
-  const signature = `${state.revisions.squads}-${state.revisions.teams}`;
+  // Die Chronik gehört mit dazu: Ein Wechsel ändert, wer auf der Seite steht.
+  const signature = `${state.revisions.squads}-${state.revisions.teams}-${state.revisions.events}`;
   if (lineupSignature === signature) return;
   lineupSignature = signature;
 
@@ -1272,6 +1290,17 @@ function renderInfoOverlay(state: MatchState, overlay: InfoOverlay): string | nu
       ? state.squads[event.team].find((p) => p.id === event.playerId)
       : undefined;
     label.textContent = player ? playerLabel(player) : state[event.team].name;
+    value.textContent = formatEventMinute(event);
+    return 'showing-info';
+  }
+
+  if (overlay.kind === 'sub') {
+    const event = state.events.find((e) => e.id === overlay.eventId);
+    if (!event || event.type !== 'sub') return null;
+
+    mark.classList.add('is-sub');
+    mark.hidden = false;
+    label.textContent = substitutionText(event, state.squads[event.team], state[event.team].name);
     value.textContent = formatEventMinute(event);
     return 'showing-info';
   }

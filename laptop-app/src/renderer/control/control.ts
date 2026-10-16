@@ -1,6 +1,7 @@
 import { parseLineup, ParsedPlayer } from '../../shared/lineupParser';
 import { controlPhaseLabel, revertTargetLabel } from '../../shared/phaseLabels';
 import { deriveRetroName } from '../../shared/retroMatrix';
+import { lineupNow } from '../../shared/substitutions';
 import {
   AppStatus,
   audioMimeType,
@@ -22,6 +23,7 @@ import {
   slideCount,
   slideshowAvailable,
   sortPlayersByNumber,
+  SubstitutionEvent,
   TeamId,
 } from '../../shared/types';
 import type { LibraryPayload } from '../window';
@@ -484,6 +486,123 @@ function buildPlayerRow(team: TeamId, player: Player): SquadRow {
   return { element: row, update };
 }
 
+function playerOption(player: Player): HTMLOptionElement {
+  const option = document.createElement('option');
+  option.value = player.id;
+  option.textContent = playerLabel(player);
+  return option;
+}
+
+function optionGroup(label: string, players: Player[]): HTMLOptGroupElement | null {
+  if (players.length === 0) return null;
+  const group = document.createElement('optgroup');
+  group.label = label;
+  for (const player of players) group.appendChild(playerOption(player));
+  return group;
+}
+
+/**
+ * Spieler für Torschützen- und Kartenauswahl, gruppiert nach dem Stand
+ * NACH allen Wechseln: wer spielt, zuerst. Ein Eingewechselter steht dort
+ * also oben, wo man ihn nach einem Tor sucht. Die übrigen bleiben
+ * wählbar -- ein Tor kann vor der Auswechslung gefallen sein und wird
+ * erst später nachgetragen.
+ */
+function appendPlayersByStatus(select: HTMLSelectElement, state: MatchState, team: TeamId): void {
+  const squad = state.squads[team];
+  const now = lineupNow(team, squad, state.events);
+  const placed = new Set([...now.onPitch, ...now.bench, ...now.substitutedOut].map((p) => p.id));
+  const others = sortPlayersByNumber(squad.filter((p) => !placed.has(p.id)));
+
+  // Ohne Aufstellung (alle Spieler ohne Rolle "Start"/"Bank") gibt es
+  // nichts zu gruppieren -- dann wie bisher eine flache Liste.
+  if (now.onPitch.length === 0 && now.bench.length === 0 && now.substitutedOut.length === 0) {
+    for (const player of sortPlayersByNumber(squad)) select.appendChild(playerOption(player));
+    return;
+  }
+
+  for (const group of [
+    optionGroup('Auf dem Platz', now.onPitch),
+    optionGroup('Ausgewechselt', now.substitutedOut),
+    optionGroup('Bank', now.bench),
+    optionGroup('Übrige', others),
+  ]) {
+    if (group) select.appendChild(group);
+  }
+}
+
+/**
+ * Zeile eines Wechsels: wer raus, wer rein. Zur Wahl stehen die Spieler,
+ * die VOR diesem Wechsel spielten bzw. auf der Bank saßen -- der Wechsel
+ * selbst bleibt dabei außen vor, sonst fiele der gewählte Spieler aus
+ * seiner eigenen Liste. Ein bereits gewählter Spieler bleibt sichtbar,
+ * auch wenn ein späterer Wechsel ihn verschoben hat.
+ */
+function renderSubstitutionRow(event: SubstitutionEvent, state: MatchState): HTMLLIElement {
+  const item = document.createElement('li');
+  item.classList.add('is-sub');
+
+  const minute = document.createElement('span');
+  minute.className = 'goal-minute';
+  minute.textContent = formatEventMinute(event);
+
+  const teamName = document.createElement('span');
+  teamName.textContent = state[event.team].name;
+
+  const kind = document.createElement('span');
+  kind.className = 'goal-standing';
+  kind.textContent = 'Wechsel';
+
+  const squad = state.squads[event.team];
+  const before = lineupNow(event.team, squad, state.events, event.id);
+
+  const makeSelect = (placeholder: string, candidates: Player[], currentId?: string) => {
+    const select = document.createElement('select');
+    const none = document.createElement('option');
+    none.value = '';
+    none.textContent = placeholder;
+    select.appendChild(none);
+    const ids = new Set(candidates.map((p) => p.id));
+    const current = currentId ? squad.find((p) => p.id === currentId) : undefined;
+    for (const player of sortPlayersByNumber(current && !ids.has(current.id) ? [...candidates, current] : candidates)) {
+      select.appendChild(playerOption(player));
+    }
+    select.value = currentId ?? '';
+    return select;
+  };
+
+  // Ohne Aufstellung bietet jede Liste den ganzen Kader an -- sonst
+  // ließe sich ein Wechsel gar nicht zuordnen.
+  const hasLineup = before.onPitch.length + before.bench.length > 0;
+  const outSelect = makeSelect('– raus –', hasLineup ? before.onPitch : squad, event.outId);
+  const inSelect = makeSelect('– rein –', hasLineup ? before.bench : squad, event.inId);
+  outSelect.classList.add('sub-out');
+  inSelect.classList.add('sub-in');
+
+  const eventId = event.id;
+  const send = () =>
+    window.api.subSetPlayers(eventId, outSelect.value || undefined, inSelect.value || undefined);
+  outSelect.addEventListener('change', send);
+  inSelect.addEventListener('change', send);
+
+  const show = document.createElement('button');
+  show.className = 'btn btn-small';
+  show.textContent = 'Einblenden';
+  show.title = 'Wechsel auf der Tafel zeigen -- auch ohne Namen, dann mit der Mannschaft';
+  show.addEventListener('click', () => window.api.showInfo({ kind: 'sub', eventId }));
+
+  const remove = document.createElement('button');
+  remove.className = 'goal-remove';
+  remove.textContent = '×';
+  remove.title = 'Eintrag löschen';
+  remove.addEventListener('click', () => {
+    if (confirm('Diesen Eintrag löschen?')) window.api.eventRemove(eventId);
+  });
+
+  item.append(minute, teamName, kind, outSelect, inSelect, show, remove);
+  return item;
+}
+
 /** Chronik der Tore: Minute, Mannschaft, Zwischenstand und Torschütze. */
 function renderGoalLog(state: MatchState): void {
   const empty = document.getElementById('goal-log-empty')!;
@@ -499,6 +618,11 @@ function renderGoalLog(state: MatchState): void {
   list.innerHTML = '';
 
   for (const event of state.events) {
+    if (event.type === 'sub') {
+      list.appendChild(renderSubstitutionRow(event, state));
+      continue;
+    }
+
     const item = document.createElement('li');
     item.classList.add(event.type === 'goal' ? 'is-goal' : `is-card-${event.card}`);
 
@@ -522,12 +646,7 @@ function renderGoalLog(state: MatchState): void {
     none.value = '';
     none.textContent = event.type === 'goal' ? '– Torschütze –' : '– Spieler (optional) –';
     playerSelect.appendChild(none);
-    for (const player of sortPlayersByNumber(state.squads[event.team])) {
-      const option = document.createElement('option');
-      option.value = player.id;
-      option.textContent = playerLabel(player);
-      playerSelect.appendChild(option);
-    }
+    appendPlayersByStatus(playerSelect, state, event.team);
     playerSelect.value = currentPlayerId ?? '';
 
     const eventId = event.id;
@@ -1291,6 +1410,12 @@ function wireSetupPanels(): void {
  * Spielfeldrand muss es schnell gehen.
  */
 function wireInfoControls(): void {
+  // Ein Wechsel erscheint sofort im Spielverlauf, die Spieler werden dort
+  // gewählt. Auf die Tafel kommt er erst, wenn beide feststehen.
+  document.querySelectorAll<HTMLButtonElement>('button[data-sub-team]').forEach((btn) => {
+    btn.addEventListener('click', () => window.api.subAdd(btn.dataset.subTeam as TeamId));
+  });
+
   document.querySelectorAll<HTMLButtonElement>('button[data-corner-team]').forEach((btn) => {
     btn.addEventListener('click', () => {
       window.api.adjustCorners(btn.dataset.cornerTeam as TeamId, Number(btn.dataset.cornerDelta));

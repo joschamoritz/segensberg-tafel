@@ -801,6 +801,14 @@ app.whenReady().then(() => {
     if (!isEventId(eventId)) return;
     store.setCardPlayer(eventId, sanitizeOptionalId(playerId));
   });
+  ipcMain.on(IPC.subAdd, (_event, team: unknown) => {
+    if (!isTeamId(team)) return;
+    store.addSubstitution(team);
+  });
+  ipcMain.on(IPC.subSetPlayers, (_event, eventId: unknown, outId: unknown, inId: unknown) => {
+    if (!isEventId(eventId)) return;
+    store.setSubstitutionPlayers(eventId, sanitizeOptionalId(outId), sanitizeOptionalId(inId));
+  });
   ipcMain.on(IPC.eventRemove, (_event, eventId: unknown) => {
     if (!isEventId(eventId)) return;
     store.removeEvent(eventId);

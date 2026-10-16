@@ -4,6 +4,7 @@ import {
   DisplayAppearance,
   CardColor,
   CardEvent,
+  SubstitutionEvent,
   ClockState,
   DEFAULT_ATTENDANCE_MESSAGE,
   DEFAULT_BOARD_SIZE,
@@ -31,6 +32,7 @@ import {
   TeamId,
   toMatchMinute,
 } from '../shared/types';
+import { isCompleteSubstitution } from '../shared/substitutions';
 import { TeamsConfig } from './persistence';
 
 type Listener = (state: MatchState) => void;
@@ -605,6 +607,59 @@ export class MatchStateStore {
       ),
     };
     this.bump('events');
+    this.emit();
+  }
+
+  /**
+   * Trägt einen Wechsel ein, zunächst ohne Spieler. Anders als die Karte
+   * erscheint er NICHT sofort auf der Tafel: Ohne Namen sagt ein Wechsel
+   * wenig, und die Spieler werden gleich danach in der Chronik gewählt
+   * (Nutzerwunsch 16.10.2026).
+   */
+  addSubstitution(team: TeamId): void {
+    const event: SubstitutionEvent = {
+      id: this.nextEventId++,
+      type: 'sub',
+      team,
+      ...toMatchMinute(
+        this.state.clock.elapsedMs,
+        this.state.half,
+        this.state.halfDurationMin
+      ),
+    };
+    this.state = { ...this.state, events: [...this.state.events, event] };
+    this.bump('events');
+    this.emit();
+  }
+
+  /**
+   * Ordnet einem Wechsel die Spieler zu. Sind damit erstmals BEIDE
+   * eingetragen, erscheint der Wechsel von selbst auf der Tafel -- im
+   * Spiel und in der Halbzeitpause, in der oft gewechselt wird. Wer nur
+   * einen Namen kennt oder keinen, blendet ihn über die Chronik von Hand
+   * ein.
+   */
+  setSubstitutionPlayers(eventId: number, outId: string | undefined, inId: string | undefined): void {
+    const before = this.state.events.find((e) => e.id === eventId);
+    if (!before || before.type !== 'sub') return;
+
+    const after: SubstitutionEvent = { ...before, outId, inId };
+    this.state = {
+      ...this.state,
+      events: this.state.events.map((event) => (event.id === eventId ? after : event)),
+    };
+    this.bump('events');
+
+    const phase = this.state.phase;
+    if (
+      isCompleteSubstitution(after) &&
+      !isCompleteSubstitution(before) &&
+      (phase === 'live' || phase === 'half-time')
+    ) {
+      // showInfo() sendet selbst, deshalb hier kein zweites emit().
+      this.showInfo({ kind: 'sub', eventId });
+      return;
+    }
     this.emit();
   }
 

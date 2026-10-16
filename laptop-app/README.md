@@ -32,6 +32,14 @@ Herstellersoftware. Siehe `../CLAUDE.md` und `../DESIGN.md` für Hintergrund.
   Zeilen in der Torschützenliste. Gestaltungsfragen lassen sich damit am
   Laptop beurteilen, nicht erst an der Wand. Hintergrund und Regeln
   stehen in `../DESIGN.md` unter „Die Bühne".
+- **Ein- und Auswechslungen** für beide Mannschaften: Knopf
+  **„⇄ Wechsel"** neben den Ecken, danach im Spielverlauf wählen, wer
+  raus und wer rein geht (zur Wahl stehen die Spieler auf dem Platz bzw.
+  auf der Bank). Sind beide gewählt, erscheint der Wechsel im Spiel und
+  in der Halbzeit von selbst auf der Tafel („Lange für Demir"); ohne
+  Namen blendet **„Einblenden"** ihn mit der Mannschaft ein. Danach
+  führen Aufstellungsseiten und Torschützenauswahl den Eingewechselten.
+  Der gespeicherte Kader ändert sich dadurch nicht.
 - **Retro-Design** als drittes: Punktmatrix wie alte Stadiontafeln,
   Leuchtfarbe Bernstein oder Weiß. Statt Wappen stehen Kurznamen da
   („ERKENSCHWICK"), vorgeschlagen aus dem Vereinsnamen und unter
