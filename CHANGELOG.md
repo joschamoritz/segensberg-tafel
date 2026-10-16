@@ -10,6 +10,29 @@ dem Baudatum. Welche Stelle wann steigt, steht in
 
 ---
 
+## 1.3.0 – 16.10.2026 (Testfassung)
+
+Ein drittes Design: **Retro**, eine Punktmatrix wie die alten
+Stadiontafeln.
+
+- Unter **Anzeige → Design** gibt es jetzt **Retro**. Die Leuchtfarbe
+  lässt sich daneben wählen: **Bernstein** oder **Weiß**.
+- Die Tafel besteht dann aus einzelnen Leuchtpunkten; die erloschenen
+  bleiben als dunkles Raster sichtbar. Umlaute stehen ausgeschrieben da
+  wie früher (KOELN).
+- **Kurznamen statt Wappen:** Statt „Spvgg. Erkenschwick" steht
+  „ERKENSCHWICK". Die App schlägt den Kurznamen selbst vor; unter
+  **Teams & Logos → Kurzname im Retro-Design** lässt er sich ändern.
+  Leer lassen heißt: Vorschlag verwenden.
+- **Neuer Inhalt baut sich Punkt für Punkt auf**, etwa nach einem Tor.
+  Die laufende Uhr springt dagegen einfach weiter.
+- Torjubel, Torschütze, Karten, Ecken, Danksagung, Aufstellung und
+  Termine haben ihre eigene Retro-Fassung. Eine volle Aufstellung
+  blättert nach der halben Zeit zur zweiten Hälfte, damit lange Namen
+  nicht abgeschnitten werden.
+- Sponsorenlogos und Highlight-Bilder erscheinen als Bild über dem
+  Punktraster. Ihre endgültige Retro-Gestaltung folgt noch.
+
 ## 1.2.2 – 16.10.2026 (Testfassung)
 
 - **Aufstellungsseiten im Flutlicht-Design:** Wappen und Mannschaftsname
