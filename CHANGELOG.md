@@ -10,6 +10,23 @@ dem Baudatum. Welche Stelle wann steigt, steht in
 
 ---
 
+## 1.2.1 – 16.10.2026 (Testfassung)
+
+Nur das Flutlicht-Design ändert sich, Klassisch bleibt wie es ist.
+
+- **Weichere Lichtstrahlen:** fünf Lichtkegel aus einer hellen Quelle am
+  oberen Rand, die nach unten auslaufen, statt drei flacher Dreiecke.
+- **Die Einblendungen haben jetzt den Flutlicht-Look:**
+  - Torjubel mit leuchtendem, geneigtem „TOR!" auf Indigo mit
+    Lichtkegel. Beim Gegentor bleibt es ruhig und dunkel.
+  - Torschütze und Danksagung stehen groß und geneigt direkt auf dem
+    Lichtkegel.
+  - Karte und Ecken erscheinen auf einer Indigo-Plakette in der Form
+    der Uhr, an deren Stelle.
+  - „VS" vor dem Anpfiff ist geneigt wie die Ziffern.
+- Die Aufstellungsseiten stehen auf dem neuen Hintergrund, sind sonst
+  aber noch unverändert.
+
 ## 1.2.0 – 16.10.2026 (Testfassung)
 
 Diese Fassung bringt ein **zweites Design für die Tafel**. Sie ist für

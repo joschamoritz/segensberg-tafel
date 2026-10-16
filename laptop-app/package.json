@@ -1,6 +1,6 @@
 {
   "name": "anzeigetafel-laptop-app",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Eigene Steuerungssoftware für die Vereins-LED-Anzeigetafel (Laptop-Version, Ersatz für die Herstellersoftware)",
   "private": true,
   "author": "SV Hochlar 28",
