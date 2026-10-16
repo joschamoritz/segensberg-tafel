@@ -30,6 +30,7 @@ test('eine gültige Gestaltung geht unverändert durch', () => {
   const wert = {
     theme: 'flutlicht',
     effects: { verlauf: false, strahlen: true, leuchten: false, schatten: true },
+    retroColor: 'weiss',
   };
   assert.deepEqual(sanitizeAppearance(wert), wert);
 });
@@ -37,7 +38,7 @@ test('eine gültige Gestaltung geht unverändert durch', () => {
 test('ein unbekanntes Design fällt auf Klassisch zurück', () => {
   // Etwa ein Tippfehler in einer von Hand bearbeiteten teams.json, oder
   // eine spätere Fassung mit einem Design, das diese noch nicht kennt.
-  assert.equal(sanitizeAppearance({ theme: 'retro', effects: ALLE_AN }).theme, 'klassisch');
+  assert.equal(sanitizeAppearance({ theme: 'disco', effects: ALLE_AN }).theme, 'klassisch');
   assert.equal(sanitizeAppearance({ theme: 42 }).theme, 'klassisch');
 });
 
@@ -75,7 +76,7 @@ test('das Standarddesign ist Klassisch', () => {
 test('die Gestaltung übersteht "Neues Spiel"', () => {
   // Sie gehört zum Gerät, nicht zur Begegnung -- wie die Tafelmaße.
   const store = new MatchStateStore();
-  store.setAppearance({ theme: 'flutlicht', effects: { ...ALLE_AN, strahlen: false } });
+  store.setAppearance({ theme: 'flutlicht', effects: { ...ALLE_AN, strahlen: false }, retroColor: 'bernstein' });
   store.incrementScore('home', 1);
 
   store.resetMatch();
@@ -90,10 +91,10 @@ test('eine unveränderte Gestaltung löst kein Zustands-Update aus', () => {
   let updates = 0;
   store.onChange(() => updates++);
 
-  store.setAppearance({ theme: 'klassisch', effects: { ...ALLE_AN } });
+  store.setAppearance({ theme: 'klassisch', effects: { ...ALLE_AN }, retroColor: 'bernstein' });
   assert.equal(updates, 0, 'gleicher Wert hätte nichts auslösen dürfen');
 
-  store.setAppearance({ theme: 'flutlicht', effects: { ...ALLE_AN } });
+  store.setAppearance({ theme: 'flutlicht', effects: { ...ALLE_AN }, retroColor: 'bernstein' });
   assert.equal(updates, 1);
 });
 
@@ -102,7 +103,7 @@ test('der Store hält eine eigene Kopie der Effekte', () => {
   // Zustand an der Änderungsmeldung vorbei.
   const store = new MatchStateStore();
   const effects = { ...ALLE_AN };
-  store.setAppearance({ theme: 'flutlicht', effects });
+  store.setAppearance({ theme: 'flutlicht', effects, retroColor: 'bernstein' });
   effects.verlauf = false;
   assert.equal(store.getState().appearance.effects.verlauf, true);
 });
@@ -124,12 +125,14 @@ test('display: Design und Effekte landen am body', (t) => {
   store.setAppearance({
     theme: 'flutlicht',
     effects: { verlauf: true, strahlen: false, leuchten: true, schatten: false },
+    retroColor: 'weiss',
   });
   r.emit('onStateUpdated', store.getState());
   assert.equal(body.dataset.theme, 'flutlicht');
+  assert.equal(body.dataset.retroColor, 'weiss', 'die Leuchtfarbe kommt mit');
   assert.equal(body.dataset.fx, 'verlauf leuchten', 'nur die eingeschalteten Effekte');
 
-  store.setAppearance({ theme: 'klassisch', effects: { ...ALLE_AN } });
+  store.setAppearance({ theme: 'klassisch', effects: { ...ALLE_AN }, retroColor: 'bernstein' });
   r.emit('onStateUpdated', store.getState());
   assert.equal(body.dataset.theme, 'klassisch', 'und wieder zurück');
 
@@ -181,7 +184,7 @@ function steuerungMit(store, t) {
 
 test('control: die Design-Auswahl schickt Design und alle Effekte', (t) => {
   const store = new MatchStateStore();
-  store.setAppearance({ theme: 'klassisch', effects: { ...ALLE_AN, schatten: false } });
+  store.setAppearance({ theme: 'klassisch', effects: { ...ALLE_AN, schatten: false }, retroColor: 'bernstein' });
   const r = steuerungMit(store, t);
 
   const select = r.document.getElementById('theme-select');
@@ -199,6 +202,7 @@ test('control: die Design-Auswahl schickt Design und alle Effekte', (t) => {
     JSON.stringify({
       theme: 'flutlicht',
       effects: { verlauf: true, strahlen: true, leuchten: true, schatten: false },
+      retroColor: 'bernstein',
     }),
     'der abgeschaltete Schatten muss abgeschaltet mitgehen'
   );
@@ -207,7 +211,7 @@ test('control: die Design-Auswahl schickt Design und alle Effekte', (t) => {
 
 test('control: ein Effektschalter schickt seinen neuen Stand', (t) => {
   const store = new MatchStateStore();
-  store.setAppearance({ theme: 'flutlicht', effects: { ...ALLE_AN } });
+  store.setAppearance({ theme: 'flutlicht', effects: { ...ALLE_AN }, retroColor: 'bernstein' });
   const r = steuerungMit(store, t);
 
   const aufrufe = r.click('fx-strahlen').filter((c) => c.name === 'setAppearance');
@@ -233,7 +237,7 @@ test('control: im klassischen Design sind die Effektschalter gesperrt', (t) => {
     'gesperrter Schalter muss folgenlos bleiben'
   );
 
-  store.setAppearance({ theme: 'flutlicht', effects: { ...ALLE_AN } });
+  store.setAppearance({ theme: 'flutlicht', effects: { ...ALLE_AN }, retroColor: 'bernstein' });
   r.emit('onStateUpdated', store.getState());
   assert.equal(switches.disabled, false);
   assert.equal(r.document.getElementById('fx-verlauf').checked, true);

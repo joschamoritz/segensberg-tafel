@@ -1,4 +1,11 @@
 import { displayPhaseLabel } from '../../shared/phaseLabels';
+import {
+  composeRetro,
+  RETRO_CELL,
+  retroSceneKey,
+  RetroScene,
+  retroTeamName,
+} from '../../shared/retroMatrix';
 import { buildScorerRows, visibleScorerRows } from '../../shared/scorerRows';
 import {
   ANNOUNCEMENTS_PER_SLIDE,
@@ -83,6 +90,320 @@ function applyBoardSize(): void {
 function applyAppearance(appearance: DisplayAppearance): void {
   document.body.dataset.theme = appearance.theme;
   document.body.dataset.fx = FLUTLICHT_EFFECT_KEYS.filter((key) => appearance.effects[key]).join(' ');
+  document.body.dataset.retroColor = appearance.retroColor;
+}
+
+// --------------------------------------------------------------------
+// Retro-Design: Punktmatrix
+// --------------------------------------------------------------------
+
+/*
+ * Das Retro-Design zeichnet nicht in die vorhandenen Flächen, sondern in
+ * eine eigene Punktmatrix (Canvas). WAS dort steht, entscheiden aber
+ * dieselben Abläufe wie in den anderen Designs: Torjubel-Stufen,
+ * Einblendungen, Diashow und Aufstellungsseiten setzen weiter ihre
+ * Body-Klassen, und `currentRetroScene()` liest daraus die aktuelle Szene.
+ * So stehen Einblendungen in allen Designs gleich lange, und ein Ablauf
+ * muss nicht zweimal gepflegt werden.
+ *
+ * Die Szene wird in `shared/retroMatrix.ts` zu Punkten -- dort ohne DOM,
+ * also testbar. Hier passiert nur noch das Zeichnen und der Aufbau.
+ */
+
+/** Was die Einblendungen gerade zeigen; gesetzt in ihren Handlern. */
+let activeInfoOverlay: InfoOverlay | null = null;
+let activeScorerEventId: number | null = null;
+let activeSlide: Slide | null = null;
+let lastClock: ClockState = { elapsedMs: 0, running: false };
+/** Seit wann die aktuelle Seite vor dem Anpfiff steht, siehe `showPage()`. */
+let activePageSince = 0;
+let retroPageTimer: ReturnType<typeof setTimeout> | null = null;
+
+/** Sichtbarer Stand der Matrix und der, auf den sie gerade zuläuft. */
+let retroShown: Uint8Array | null = null;
+let retroTarget: Uint8Array | null = null;
+let retroKey = '';
+let retroRevealTimer: ReturnType<typeof setTimeout> | null = null;
+let retroRevealChunk = 1;
+let retroPaintQueued = false;
+
+/**
+ * Aufbau "Punkt für Punkt" (Nutzerwunsch 16.10.2026): Wechselt der Inhalt,
+ * leuchten die neuen Punkte in zufälliger Folge auf und die alten
+ * verlöschen, verteilt auf diese Schritte. Gut eine halbe Sekunde -- lang
+ * genug, um als Effekt wahrgenommen zu werden, kurz genug, dass eine
+ * Spielstandsänderung nicht auf sich warten lässt.
+ */
+const RETRO_REVEAL_STEPS = 12;
+const RETRO_REVEAL_STEP_MS = 45;
+
+const CARD_TITLE: Record<string, string> = {
+  yellow: 'GELBE KARTE',
+  'yellow-red': 'GELB-ROT',
+  red: 'ROTE KARTE',
+};
+
+function retroFooter(state: MatchState): Extract<RetroScene, { kind: 'match' }>['footer'] {
+  const overlay = document.body.classList.contains('showing-info') ? activeInfoOverlay : null;
+
+  if (overlay?.kind === 'card') {
+    const event = state.events.find((e) => e.id === overlay.eventId);
+    if (event && event.type === 'card') {
+      const player = event.playerId
+        ? state.squads[event.team].find((p) => p.id === event.playerId)
+        : undefined;
+      return {
+        kind: 'info',
+        title: CARD_TITLE[event.card] ?? 'KARTE',
+        value: formatEventMinute(event),
+        name: player ? playerLabel(player) : retroTeamName(state[event.team]),
+      };
+    }
+  }
+  if (overlay?.kind === 'corners') {
+    return {
+      kind: 'info',
+      title: 'ECKEN',
+      value: `${state.corners.home}:${state.corners.away}`,
+      name: '',
+    };
+  }
+
+  if (state.phase === 'half-time' || state.phase === 'full-time') {
+    return { kind: 'phase', text: displayPhaseLabel(state.phase) };
+  }
+
+  const view = clockView(lastClock.elapsedMs, state.half, state.halfDurationMin, state.stoppageMinutes);
+  return {
+    kind: 'clock',
+    clock: formatClock(view.displayMs),
+    half: `${state.half}. HZ`,
+    stoppage: view.stoppage === null ? '' : `+${view.stoppage}`,
+  };
+}
+
+function retroLineup(state: MatchState, pageName: string): RetroScene {
+  const team: TeamId = pageName.endsWith('home') ? 'home' : 'away';
+  const isBench = pageName.startsWith('bench');
+  const players = sortPlayersByNumber(
+    state.squads[team].filter((p) => p.role === (isBench ? 'bench' : 'start'))
+  );
+  const entries = players.map((p) => ({
+    number: p.number === null ? '-' : String(p.number),
+    name: p.lastName || p.firstName,
+  }));
+  // Beim Trainer nur der Nachname, wie bei den Spielern -- der volle Name
+  // passt in eine halbe Zeile nicht hinein.
+  const coach = state[team].coach.trim().split(/\s+/).pop();
+  if (!isBench && coach) entries.push({ number: 'TR', name: coach });
+  // Mehr als sechs Einträge: in zwei Hälften, je die halbe Standzeit der
+  // Seite. Zweispaltig würden lange Namen auf der Matrix abgeschnitten.
+  const secondHalf = Date.now() - activePageSince >= LINEUP_PAGE_MS / 2;
+  const shown =
+    entries.length > 6 ? (secondHalf ? entries.slice(6) : entries.slice(0, 6)) : entries;
+
+  const name = retroTeamName(state[team]);
+  return { kind: 'lineup', title: isBench ? `${name} - BANK` : name, entries: shown };
+}
+
+/** Liest aus den Body-Klassen, was gerade auf der Tafel stehen soll. */
+function currentRetroScene(state: MatchState): RetroScene {
+  const body = document.body;
+  const home = retroTeamName(state.home);
+  const away = retroTeamName(state.away);
+
+  if (body.classList.contains('celebrating')) {
+    const homeGoal = body.classList.contains('goal-home');
+    return {
+      kind: 'goal',
+      word: body.dataset.goalStage === 'word' ? 'TOR!' : 'TOR',
+      team: homeGoal ? home : away,
+    };
+  }
+
+  if (body.classList.contains('showing-scorer') && activeScorerEventId !== null) {
+    const goal = state.events.find((e) => e.id === activeScorerEventId);
+    if (goal && goal.type === 'goal') {
+      const player = goal.scorerId
+        ? state.squads[goal.team].find((p) => p.id === goal.scorerId)
+        : undefined;
+      return {
+        kind: 'scorer',
+        title: `TOR ${formatEventMinute(goal)}`,
+        name: player ? `${player.firstName} ${player.lastName}`.trim() : retroTeamName(state[goal.team]),
+        detail: `${retroTeamName(state[goal.team])} ${goal.scoreHome}:${goal.scoreAway}`,
+      };
+    }
+  }
+
+  if (body.classList.contains('showing-thanks') && state.attendance !== null) {
+    const { before, after } = splitAttendanceMessage(state.attendanceMessage);
+    return {
+      kind: 'thanks',
+      before,
+      number: state.attendance.toLocaleString('de-DE'),
+      after,
+    };
+  }
+
+  if (body.classList.contains('showing-slide') && activeSlide) {
+    if (activeSlide.kind === 'text') {
+      return { kind: 'text', title: ANNOUNCEMENTS_TITLE, lines: activeSlide.lines };
+    }
+    if (activeSlide.kind !== 'base') return { kind: 'blank' };
+  }
+
+  if (state.phase === 'pre-match') {
+    const page = document.querySelector<HTMLElement>('.pre-page.is-active')?.dataset.page ?? 'matchup';
+    if (page !== 'matchup') return retroLineup(state, page);
+    return {
+      kind: 'matchup',
+      home,
+      away,
+      // Derselbe Countdown wie in den anderen Designs, nur ohne "UHR ·":
+      // So passt "ANSTOSS 15:00 NOCH 12:34" genau in eine Zeile.
+      line: (document.getElementById('pre-kickoff')!.textContent ?? '').replace(' UHR · ', ' '),
+    };
+  }
+
+  return {
+    kind: 'match',
+    home,
+    away,
+    homeScore: state.home.score,
+    awayScore: state.away.score,
+    footer: retroFooter(state),
+  };
+}
+
+/**
+ * Zeichnet den sichtbaren Stand. Ein Punkt belegt RETRO_CELL Tafelpixel:
+ * drei leuchten, das vierte bleibt als Lücke im Raster dunkel.
+ *
+ * Gezeichnet wird nur, wenn die Fläche wirklich Platz einnimmt. Außerhalb
+ * des Retro-Designs ist sie ausgeblendet -- und in jsdom, wo die Tests
+ * laufen, gibt es keine Zeichenfläche und kein Layout.
+ */
+function drawRetro(cols: number, rows: number): void {
+  const canvas = document.getElementById('retro-matrix') as HTMLCanvasElement;
+  if (!retroShown || canvas.clientWidth === 0) return;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  if (canvas.width !== cols * RETRO_CELL || canvas.height !== rows * RETRO_CELL) {
+    canvas.width = cols * RETRO_CELL;
+    canvas.height = rows * RETRO_CELL;
+  }
+
+  // Farben aus dem Stylesheet -- Hex-Werte stehen nur dort im :root.
+  const style = getComputedStyle(document.body);
+  const background = style.getPropertyValue('--retro-bg').trim();
+  const on = style.getPropertyValue('--retro-on').trim();
+  const off = style.getPropertyValue('--retro-off').trim();
+
+  ctx.fillStyle = background;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const dot = RETRO_CELL - 1;
+  for (const [color, lit] of [
+    [off, 0],
+    [on, 1],
+  ] as const) {
+    ctx.fillStyle = color;
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < cols; x++) {
+        if (retroShown[y * cols + x] === lit) ctx.fillRect(x * RETRO_CELL, y * RETRO_CELL, dot, dot);
+      }
+    }
+  }
+}
+
+function stopRetroReveal(): void {
+  if (retroRevealTimer) clearTimeout(retroRevealTimer);
+  retroRevealTimer = null;
+}
+
+/** Ein Schritt des Aufbaus: ein Teil der noch falschen Punkte springt um. */
+function retroRevealStep(cols: number, rows: number): void {
+  retroRevealTimer = null;
+  if (!retroShown || !retroTarget) return;
+
+  const pending: number[] = [];
+  for (let i = 0; i < retroShown.length; i++) {
+    if (retroShown[i] !== retroTarget[i]) pending.push(i);
+  }
+  if (pending.length === 0) return;
+
+  for (let n = 0; n < retroRevealChunk && pending.length > 0; n++) {
+    const pick = Math.floor(Math.random() * pending.length);
+    const index = pending[pick];
+    pending[pick] = pending[pending.length - 1];
+    pending.pop();
+    retroShown[index] = retroTarget[index];
+  }
+  drawRetro(cols, rows);
+  if (pending.length > 0) {
+    retroRevealTimer = setTimeout(() => retroRevealStep(cols, rows), RETRO_REVEAL_STEP_MS);
+  }
+}
+
+function paintRetro(): void {
+  const body = document.body;
+  if (body.dataset.theme !== 'retro' || !currentState) {
+    stopRetroReveal();
+    retroShown = null;
+    retroTarget = null;
+    retroKey = '';
+    if (body.dataset.retroOverlay) delete body.dataset.retroOverlay;
+    return;
+  }
+
+  const cols = Math.floor(boardSize.width / RETRO_CELL);
+  const rows = Math.floor(boardSize.height / RETRO_CELL);
+  const scene = currentRetroScene(currentState);
+
+  // Bilder der Diashow (Sponsoren-Fenster, Highlights) bleiben Bilder --
+  // sie liegen über dem erloschenen Raster, das dann als Hintergrund dient.
+  const overlay = scene.kind === 'blank' ? 'slide' : '';
+  if ((body.dataset.retroOverlay ?? '') !== overlay) {
+    if (overlay) body.dataset.retroOverlay = overlay;
+    else delete body.dataset.retroOverlay;
+  }
+
+  const target = composeRetro(scene, cols, rows).dots;
+  const key = `${cols}x${rows}|${body.dataset.retroColor}|${retroSceneKey(scene)}`;
+  retroTarget = target;
+
+  // Erster Stand, andere Tafelgröße oder nur die Uhr hat sich bewegt:
+  // sofort umspringen. Läuft gerade ein Aufbau, übernimmt der das neue
+  // Ziel einfach mit.
+  if (!retroShown || retroShown.length !== target.length || (key === retroKey && !retroRevealTimer)) {
+    stopRetroReveal();
+    retroShown = target.slice();
+    retroKey = key;
+    drawRetro(cols, rows);
+    return;
+  }
+
+  if (key === retroKey) return;
+  retroKey = key;
+
+  let differing = 0;
+  for (let i = 0; i < target.length; i++) if (retroShown[i] !== target[i]) differing++;
+  retroRevealChunk = Math.max(1, Math.ceil(differing / RETRO_REVEAL_STEPS));
+  if (!retroRevealTimer) retroRevealStep(cols, rows);
+}
+
+/**
+ * Zeichnet beim nächsten Mikrotask neu. Mehrere Auslöser im selben
+ * Durchlauf (Zustand, Body-Klassen, Uhr) ergeben so nur eine Zeichnung.
+ */
+function requestRetroPaint(): void {
+  if (retroPaintQueued) return;
+  retroPaintQueued = true;
+  void Promise.resolve().then(() => {
+    retroPaintQueued = false;
+    step('Retro', paintRetro);
+  });
 }
 
 /** Zuletzt verarbeitetes Ereignis. Verhindert, dass der Jubel bei jedem
@@ -420,6 +741,12 @@ function showPage(pageName: string): void {
   for (const page of document.querySelectorAll<HTMLElement>('.pre-page')) {
     page.classList.toggle('is-active', page.dataset.page === pageName);
   }
+  // Für die Retro-Matrix, die eine volle Aufstellung zur Hälfte der
+  // Standzeit weiterblättert -- dafür braucht sie einen eigenen Anstoß,
+  // an dieser Stelle ändert sich sonst nichts.
+  activePageSince = Date.now();
+  if (retroPageTimer) clearTimeout(retroPageTimer);
+  retroPageTimer = setTimeout(requestRetroPaint, LINEUP_PAGE_MS / 2 + 10);
 }
 
 function hasContent(pageName: string): boolean {
@@ -618,6 +945,8 @@ function step(name: string, run: () => void): void {
  * dabei aus dem zuletzt empfangenen Zustand.
  */
 function renderClock(clock: ClockState): void {
+  lastClock = clock;
+  requestRetroPaint();
   const view = clockView(
     clock.elapsedMs,
     currentState?.half ?? 1,
@@ -687,6 +1016,7 @@ function renderState(state: MatchState): void {
   step('Torschützen-Einblendung', () => handleScorerRequest(state));
   step('Info-Leiste', () => handleInfoRequest(state));
   step('Diashow', () => handleSlideshowRequest(state));
+  requestRetroPaint();
 }
 
 /**
@@ -767,6 +1097,7 @@ function renderSponsorWindow(urls: string[], page: number, pages: number): void 
 
 /** Zeigt eine Station. `base` blendet die Folienfläche einfach aus. */
 function showSlide(slide: Slide): void {
+  activeSlide = slide;
   if (slide.kind === 'base') {
     document.body.classList.remove('showing-slide');
     return;
@@ -804,6 +1135,7 @@ function stopSlideshow(): void {
   slideTimer = null;
   slideDeck = [];
   slideIndex = 0;
+  activeSlide = null;
   document.body.classList.remove('showing-slide');
 }
 
@@ -942,6 +1274,7 @@ function handleInfoRequest(state: MatchState): void {
   // angefordert werden.
   clearInfoOverlay();
   document.body.classList.add(bodyClass);
+  activeInfoOverlay = request.overlay;
 
   if (infoTimer) clearTimeout(infoTimer);
   infoTimer = setTimeout(() => {
@@ -993,6 +1326,7 @@ function handleScorerRequest(state: MatchState): void {
   document.getElementById('spotlight-meta')!.textContent =
     `${state[goal.team].name} · ${goal.scoreHome}:${goal.scoreAway}`;
 
+  activeScorerEventId = request.eventId;
   document.body.classList.add('showing-scorer');
   if (scorerTimer) clearTimeout(scorerTimer);
   scorerTimer = setTimeout(() => {
@@ -1032,10 +1366,23 @@ function main(): void {
 
   // Eigener Takt für den Countdown: der läuft unabhängig von der Spieluhr,
   // die vor dem Anpfiff ja noch steht.
-  setInterval(renderKickoffCountdown, 1000);
+  setInterval(() => {
+    renderKickoffCountdown();
+    requestRetroPaint();
+  }, 1000);
 
   // Standardansicht vor dem Anpfiff ist die Begegnung
   showPage('matchup');
+
+  // Die Retro-Matrix folgt den Body-Klassen: Torjubel-Stufen, Einblendungen,
+  // Diashow und Aufstellungsseiten wechseln über Zeitschalter, nicht über
+  // einen neuen Zustand. Ein Beobachter erspart es, an jeder dieser
+  // Stellen einzeln ans Neuzeichnen zu denken.
+  new MutationObserver(requestRetroPaint).observe(document.body, {
+    attributes: true,
+    subtree: true,
+    attributeFilter: ['class', 'data-goal-stage', 'data-phase', 'data-theme', 'data-retro-color'],
+  });
 }
 
 document.addEventListener('DOMContentLoaded', main);

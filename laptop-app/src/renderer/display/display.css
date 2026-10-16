@@ -46,6 +46,15 @@
   --flut-source: rgb(255 255 255 / 0.28);
   --flut-pulse: rgb(29 15 82 / 0.45);
   --flut-gold-glow: rgb(212 168 67 / 0.7);
+
+  /* Retro-Design: Punktmatrix. "aus" ist der erloschene Punkt, der als
+     dunkles Raster sichtbar bleibt -- leicht in der Leuchtfarbe getönt,
+     wie eine kalte Glühlampe. */
+  --retro-bg: #0a0a08;
+  --retro-amber-on: #ffb02e;
+  --retro-amber-off: #2a1f0e;
+  --retro-white-on: #f2efe2;
+  --retro-white-off: #22221f;
   --flut-fade: rgb(6 20 46 / 0.9);
   --flut-glow: rgb(79 168 255 / 0.75);
   --flut-shadow: rgb(0 0 0 / 0.45);
@@ -1758,4 +1767,57 @@ body[data-theme='flutlicht'][data-fx~='leuchten'][data-goal-stage='word'] .goal-
 
 body[data-theme='flutlicht'][data-fx~='leuchten'] .goal-crest {
   filter: drop-shadow(0 0 1.8cqh var(--flut-glow));
+}
+
+/* ═══════════════════════════════════════════
+   Design "Retro"
+   ═══════════════════════════════════════════ */
+/* Punktmatrix wie alte Stadiontafeln. Gezeichnet wird in display.ts
+   (Canvas), die Seitenaufteilung steht in shared/retroMatrix.ts. Das
+   Stylesheet schaltet nur um: Die Matrix wird sichtbar, alle übrigen
+   Flächen treten zurück. `visibility` statt `display`, damit die
+   Abläufe darin (Zeitschalter, Body-Klassen) unverändert weiterlaufen --
+   sie bestimmen, was die Matrix zeigt. */
+
+.retro-matrix {
+  display: none;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* Bei der Vorschau wird die Bühne hochskaliert -- ohne das verschwämmen
+     die Punkte zu Flecken. Auf der Tafel selbst ist 1 Pixel = 1 Pixel. */
+  image-rendering: pixelated;
+}
+
+body[data-theme='retro'] .stage {
+  background: var(--retro-bg);
+}
+
+body[data-theme='retro'] .retro-matrix {
+  display: block;
+}
+
+body[data-theme='retro'] .stage > :not(.retro-matrix) {
+  visibility: hidden;
+}
+
+/* Bilder der Diashow (Sponsoren-Fenster, Highlights) lassen sich nicht in
+   Punkte übersetzen. Sie liegen deshalb als Bild über dem erloschenen
+   Raster, das dann als Hintergrund dient -- die Tendenz des Nutzers für
+   die Sponsoren; die endgültige Gestaltung ist noch offen. */
+body[data-theme='retro'][data-retro-overlay='slide'] .board-slides {
+  visibility: visible;
+  background: transparent;
+}
+
+/* Leuchtfarbe. Bernstein ist die Vorgabe. */
+body {
+  --retro-on: var(--retro-amber-on);
+  --retro-off: var(--retro-amber-off);
+}
+
+body[data-retro-color='weiss'] {
+  --retro-on: var(--retro-white-on);
+  --retro-off: var(--retro-white-off);
 }

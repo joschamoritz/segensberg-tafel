@@ -1,5 +1,6 @@
 import { parseLineup, ParsedPlayer } from '../../shared/lineupParser';
 import { controlPhaseLabel, revertTargetLabel } from '../../shared/phaseLabels';
+import { deriveRetroName } from '../../shared/retroMatrix';
 import {
   AppStatus,
   audioMimeType,
@@ -17,6 +18,7 @@ import {
   parseClockInput,
   Player,
   playerLabel,
+  RetroColor,
   slideCount,
   slideshowAvailable,
   sortPlayersByNumber,
@@ -113,6 +115,13 @@ function renderTeamSettings(team: TeamId, state: MatchState): void {
 
   const shortNameInput = document.getElementById(`${team}-shortname-input`) as HTMLInputElement;
   updateInputIfNotFocused(shortNameInput, teamState.shortName);
+
+  // Leeres Feld heißt "automatisch" -- der Vorschlag steht deshalb als
+  // Platzhalter darin, damit man sieht, was ohne Eingabe auf der Tafel
+  // steht.
+  const retroNameInput = document.getElementById(`${team}-retroname-input`) as HTMLInputElement;
+  updateInputIfNotFocused(retroNameInput, teamState.retroName ?? '');
+  retroNameInput.placeholder = deriveRetroName(teamState.name);
 
   const preview = document.getElementById(`${team}-logo-preview`) as HTMLImageElement;
   const clearBtn = document.getElementById(`${team}-logo-clear`) as HTMLButtonElement;
@@ -838,6 +847,12 @@ function renderAppearanceControls(state: MatchState): void {
     select.value = state.appearance.theme;
   }
 
+  const retroColor = document.getElementById('retro-color-select') as HTMLSelectElement;
+  if (document.activeElement !== retroColor && retroColor.value !== state.appearance.retroColor) {
+    retroColor.value = state.appearance.retroColor;
+  }
+  retroColor.disabled = state.appearance.theme !== 'retro';
+
   const switches = document.getElementById('fx-switches') as HTMLFieldSetElement;
   switches.disabled = state.appearance.theme !== 'flutlicht';
   for (const box of switches.querySelectorAll<HTMLInputElement>('input[data-fx]')) {
@@ -997,6 +1012,11 @@ function wireTeamSettings(team: TeamId): void {
     window.api.teamSetShortName(team, shortNameInput.value)
   );
 
+  const retroNameInput = document.getElementById(`${team}-retroname-input`) as HTMLInputElement;
+  retroNameInput.addEventListener('change', () =>
+    window.api.teamSetRetroName(team, retroNameInput.value)
+  );
+
   document
     .getElementById(`${team}-logo-pick`)!
     .addEventListener('click', () => window.api.teamPickLogo(team));
@@ -1084,12 +1104,18 @@ function main(): void {
   const fxBoxes = Array.from(
     document.querySelectorAll<HTMLInputElement>('#fx-switches input[data-fx]')
   );
+  const retroColorSelect = document.getElementById('retro-color-select') as HTMLSelectElement;
   const sendAppearance = () => {
     const effects = {} as FlutlichtEffects;
     for (const box of fxBoxes) effects[box.dataset.fx as keyof FlutlichtEffects] = box.checked;
-    window.api.setAppearance({ theme: themeSelect.value as DisplayTheme, effects });
+    window.api.setAppearance({
+      theme: themeSelect.value as DisplayTheme,
+      effects,
+      retroColor: retroColorSelect.value as RetroColor,
+    });
   };
   themeSelect.addEventListener('change', sendAppearance);
+  retroColorSelect.addEventListener('change', sendAppearance);
   for (const box of fxBoxes) box.addEventListener('change', sendAppearance);
 
   document

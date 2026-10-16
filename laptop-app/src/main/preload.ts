@@ -96,6 +96,8 @@ const api = {
   teamSetName: (team: TeamId, name: string) => ipcRenderer.send(IPC.teamSetName, team, name),
   teamSetShortName: (team: TeamId, shortName: string) =>
     ipcRenderer.send(IPC.teamSetShortName, team, shortName),
+  teamSetRetroName: (team: TeamId, retroName: string) =>
+    ipcRenderer.send(IPC.teamSetRetroName, team, retroName),
   teamPickLogo: (team: TeamId) => ipcRenderer.send(IPC.teamPickLogo, team),
   teamClearLogo: (team: TeamId) => ipcRenderer.send(IPC.teamClearLogo, team),
   showInfo: (overlay: InfoOverlay) => ipcRenderer.send(IPC.showInfo, overlay),

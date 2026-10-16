@@ -21,6 +21,11 @@
        Die Maße kommen als CSS-Variablen aus display.ts; im Stylesheet
        steht bewusst keine Auflösung (Guardrail in DESIGN.md). -->
   <div class="stage" id="stage">
+    <!-- Punktmatrix des Retro-Designs. Liegt in jedem Design im HTML und
+         ist nur im Retro-Design sichtbar; dann treten alle übrigen
+         Flächen zurück (siehe display.css). Gezeichnet wird sie in
+         display.ts aus shared/retroMatrix.ts. -->
+    <canvas class="retro-matrix" id="retro-matrix" aria-hidden="true"></canvas>
     <!-- Vereinsmotiv: diagonale Streifen in zwei gegenüberliegenden Ecken.
          Bewusst als CSS statt im Hintergrundbild -- so lässt sich die
          Position exakt so wählen, dass sie nie mit einem Wappen kollidiert. -->

@@ -48,6 +48,9 @@ Platzhalter mehr.**
 | `--svh-gold-dk` | `#7a5c12` | Text auf `--tint-gold` |
 | `--sponsor-page-off` | `#3b2f7a` | gedämpfte Seitenmarke im Sponsoren-Fenster (Display) |
 | `--flut-hi` / `--flut-mid` / `--flut-lo` | `#2a79c4` / `#124a86` / `#06142e` | Lichtkegel des Flutlicht-Designs, hell → dunkel |
+| `--retro-bg` | `#0a0a08` | Grund der Punktmatrix (Retro) |
+| `--retro-amber-on` / `--retro-amber-off` | `#ffb02e` / `#2a1f0e` | Punkt an/aus, Leuchtfarbe Bernstein (Retro) |
+| `--retro-white-on` / `--retro-white-off` | `#f2efe2` / `#22221f` | Punkt an/aus, Leuchtfarbe Weiß (Retro) |
 | `--flut-beam-hi` / `--flut-beam-lo` / `--flut-source` | Weiß 17 % / 4 % / 28 % | Lichtkegel und Schein der Lichtquelle, **nur Flutlicht** |
 | `--flut-fade` / `--flut-glow` / `--flut-gold-glow` / `--flut-shadow` / `--flut-pulse` | `--flut-lo` 90 % / Hellblau 75 % / Gold 70 % / Schwarz 45 % / `--svh-dk` 45 % | halbtransparente Effekte, **nur Flutlicht**, je einzeln abschaltbar (außer dem Puls des Torjubels) |
 
@@ -199,7 +202,7 @@ gehört also zum Gerät.
 - **Klassisch** – alles in diesem Dokument oberhalb dieses Abschnitts.
   Vorgabe, damit ein Update die Tafel nicht ungefragt umgestaltet.
 - **Flutlicht** – modernes Design (Entwurf vom 16.10.2026), siehe unten.
-- **Retro** – Punktmatrix wie alte Stadiontafeln, geplant (`Backlog.md`).
+- **Retro** – Punktmatrix wie alte Stadiontafeln, siehe unten.
   Modern und Retro bleiben **strikt getrennt**: keine Segmentziffern oder
   Punktraster im modernen Design.
 
@@ -260,6 +263,46 @@ Gast" und wurde deshalb verworfen (Nutzer, 16.10.2026).
   - *Aufstellungsseiten:* Kopfzeile als Indigo-Plakette um Wappen und
     geneigten Titel; die Namen bleiben aufrecht, weil zwölf Einträge in
     kleiner Schrift geneigt schlechter lesbar wären.
+
+### Retro
+
+Vorbilder: die Punktmatrix-Tafeln im Parkstadion und im Olympiastadion
+der 70er/80er (Fotos des Nutzers vom 16.10.2026).
+
+- **Punktraster:** Ein Punkt belegt 4×4 Tafelpixel, 3×3 leuchten, eines
+  bleibt als Lücke dunkel – bei 384×192 also 96×48 Punkte. Erloschene
+  Punkte bleiben als dunkles Raster sichtbar (`--retro-amber-off` bzw.
+  `--retro-white-off`, leicht in der Leuchtfarbe getönt).
+- **Leuchtfarbe** Bernstein (Vorgabe) oder Weiß, einstellbar unter
+  „Anzeige". Sonst keine Farbe: Auch Karten stehen als Wort da
+  („GELBE KARTE").
+- **Zwei Schriften:** groß 5×7, klein 3×5 Punkte. In der kleinen sind M,
+  N und W fünf Punkte breit, sonst waren sie nicht zu unterscheiden; die 2
+  ist eckig, damit sie sich vom Z abhebt.
+- **Umlaute ausgeschrieben** wie auf den Vorbildern: KOELN, MUELLER.
+- **Kurzname statt Wappen** (bewusste Ausnahme der Wappen-Regel): z. B.
+  „ERKENSCHWICK" statt „Spvgg. Erkenschwick", vorgeschlagen durch
+  Weglassen von Vereinsform und Gründungsjahr, unter „Teams & Logos"
+  änderbar. Lange Texte werden abgeschnitten, ohne Auslassungszeichen.
+- **Aufbau Punkt für Punkt:** Wechselt der Inhalt, leuchten die neuen
+  Punkte in zufälliger Folge auf und die alten verlöschen, in gut einer
+  halben Sekunde. Die laufende Uhr und der Anstoß-Countdown springen
+  dagegen einfach um – ein Aufbau jede Sekunde wäre Unruhe.
+- **Aufteilung im Spiel:** Kurznamen oben (Heim links, Gast rechts), der
+  Spielstand groß in der Mitte, darunter die Uhr mit Halbzeit links und
+  Nachspielzeit rechts. Karte und Ecken ersetzen die Uhrzeile für ihre
+  Standzeit. Keine Torschützenliste – dafür ist auf der Matrix kein Platz.
+- **Aufstellung:** einspaltig mit sechs Namen je Bild; eine volle
+  Aufstellung blättert nach der halben Standzeit zur zweiten Hälfte.
+  Zweispaltig wurden Namen wie BRINKMANN auf BRINKMA gekürzt.
+- **Bilder der Diashow** (Sponsoren-Fenster, Highlights) bleiben Bilder
+  und liegen über dem erloschenen Raster. Die endgültige Gestaltung der
+  Sponsoren im Retro-Design ist noch offen (`Backlog.md`).
+- **Technik:** gezeichnet auf einem Canvas (`.retro-matrix`), die
+  Aufteilung steht ohne DOM in `shared/retroMatrix.ts` und ist dort
+  getestet. Was gerade dran ist, liest die Anzeige aus denselben
+  Body-Klassen wie in den anderen Designs – Einblendungen stehen also
+  überall gleich lange.
 
 **Ausnahme von den Guardrails:** Verläufe, Transparenz und Leuchten sind
 im Flutlicht-Design erlaubt – aber **nur** dort, und jeder dieser Effekte

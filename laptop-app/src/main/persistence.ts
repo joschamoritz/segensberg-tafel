@@ -16,6 +16,8 @@ export interface PersistedTeamInfo {
   logoDataUrl?: string;
   /** siehe `LogoVariant` -- entscheidet über die Kontrastfläche */
   logoVariant?: LogoVariant;
+  /** Kurzname für das Retro-Design, leer = automatisch */
+  retroName?: string;
 }
 
 export interface TeamsConfig {

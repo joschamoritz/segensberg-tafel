@@ -21,6 +21,13 @@ export interface TeamState {
   logoVariant?: LogoVariant;
   /** Trainername; erscheint als letzter Eintrag auf der Aufstellungsseite */
   coach: string;
+  /**
+   * Kurzname für das Retro-Design ("Erkenschwick" statt "Spvgg.
+   * Erkenschwick"). Leer = automatisch vorgeschlagen, siehe
+   * `deriveRetroName()`. Wird beim Wechsel des Vereins aus der Bibliothek
+   * geleert -- ein von Hand gesetzter Name gehört zum alten Verein.
+   */
+  retroName?: string;
 }
 
 export type TeamId = 'home' | 'away';
@@ -654,11 +661,23 @@ export const DEFAULT_BOARD_SIZE: BoardSize = { width: 384, height: 192 };
  * - `flutlicht`: modernes Design mit Lichtkegel, großen geneigten
  *   Ziffern und Vereinsstreifen (Entwurf vom 16.10.2026).
  *
- * Retro (Punktmatrix) kommt als eigene Etappe dazu.
+ * - `retro`: Punktmatrix wie alte Stadiontafeln (`shared/retroMatrix.ts`).
  */
-export type DisplayTheme = 'klassisch' | 'flutlicht';
+export type DisplayTheme = 'klassisch' | 'flutlicht' | 'retro';
 
-export const DISPLAY_THEMES: DisplayTheme[] = ['klassisch', 'flutlicht'];
+export const DISPLAY_THEMES: DisplayTheme[] = ['klassisch', 'flutlicht', 'retro'];
+
+/** Leuchtfarbe der Punkte im Retro-Design -- beide Vorbilder gab es. */
+export type RetroColor = 'bernstein' | 'weiss';
+
+export const RETRO_COLORS: RetroColor[] = ['bernstein', 'weiss'];
+
+/**
+ * Obergrenze für den Retro-Kurznamen. Auf eine Zeile der Matrix passen
+ * rund sechzehn Zeichen in großer Schrift; etwas Luft darüber, weil die
+ * kleine Schrift mehr fasst und die Anzeige ohnehin kürzt.
+ */
+export const MAX_RETRO_NAME_LENGTH = 20;
 
 /**
  * Einzeln abschaltbare Effekte des Flutlicht-Designs.
@@ -690,6 +709,7 @@ export const FLUTLICHT_EFFECT_KEYS: (keyof FlutlichtEffects)[] = [
 export interface DisplayAppearance {
   theme: DisplayTheme;
   effects: FlutlichtEffects;
+  retroColor: RetroColor;
 }
 
 /**
@@ -699,6 +719,7 @@ export interface DisplayAppearance {
 export const DEFAULT_APPEARANCE: DisplayAppearance = {
   theme: 'klassisch',
   effects: { verlauf: true, strahlen: true, leuchten: true, schatten: true },
+  retroColor: 'bernstein',
 };
 
 /**
@@ -871,6 +892,7 @@ export const IPC = {
   requestStatus: 'status:request',
   teamSetName: 'team:set-name',
   teamSetShortName: 'team:set-short-name',
+  teamSetRetroName: 'team:set-retro-name',
   teamPickLogo: 'team:pick-logo',
   teamClearLogo: 'team:clear-logo',
   phaseKickoff: 'phase:kickoff',

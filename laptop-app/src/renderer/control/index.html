@@ -82,6 +82,13 @@
     <select id="theme-select">
       <option value="klassisch">Klassisch</option>
       <option value="flutlicht">Flutlicht</option>
+      <option value="retro">Retro</option>
+    </select>
+
+    <label for="retro-color-select">Leuchtfarbe (Retro):</label>
+    <select id="retro-color-select">
+      <option value="bernstein">Bernstein</option>
+      <option value="weiss">Weiß</option>
     </select>
 
     <fieldset class="fx-switches" id="fx-switches">
@@ -135,6 +142,9 @@
         <label>Kürzel (nur ohne Logo sichtbar)
           <input type="text" id="home-shortname-input" maxlength="6" />
         </label>
+        <label>Kurzname im Retro-Design (leer = Vorschlag)
+          <input type="text" id="home-retroname-input" maxlength="20" />
+        </label>
       </div>
       <div class="team-settings-block">
         <h3>Gast</h3>
@@ -151,6 +161,9 @@
         </label>
         <label>Kürzel (nur ohne Logo sichtbar)
           <input type="text" id="away-shortname-input" maxlength="6" />
+        </label>
+        <label>Kurzname im Retro-Design (leer = Vorschlag)
+          <input type="text" id="away-retroname-input" maxlength="20" />
         </label>
       </div>
     </div>

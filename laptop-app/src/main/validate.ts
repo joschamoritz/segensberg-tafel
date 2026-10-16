@@ -16,6 +16,8 @@ import {
   MIN_BOARD_EDGE,
   Player,
   PlayerRole,
+  RETRO_COLORS,
+  RetroColor,
   TeamId,
 } from '../shared/types';
 
@@ -205,7 +207,11 @@ export function sanitizeAppearance(value: unknown): DisplayAppearance {
     if (typeof rawEffects[key] === 'boolean') effects[key] = rawEffects[key] as boolean;
   }
 
-  return { theme, effects: effects as FlutlichtEffects };
+  const retroColor = RETRO_COLORS.includes(raw.retroColor as RetroColor)
+    ? (raw.retroColor as RetroColor)
+    : DEFAULT_APPEARANCE.retroColor;
+
+  return { theme, effects: effects as FlutlichtEffects, retroColor };
 }
 
 /**

@@ -9,6 +9,7 @@ import {
   DEFAULT_HALF_DURATION_MIN,
   IPC,
   MAX_ATTENDANCE_MESSAGE_LENGTH,
+  MAX_RETRO_NAME_LENGTH,
   MediaFolderId,
   MEDIA_FOLDER_IDS,
   Player,
@@ -195,12 +196,14 @@ function persistTeams(): void {
       shortName: state.home.shortName,
       logoDataUrl: state.home.logoDataUrl,
       logoVariant: state.home.logoVariant,
+      retroName: state.home.retroName,
     },
     away: {
       name: state.away.name,
       shortName: state.away.shortName,
       logoDataUrl: state.away.logoDataUrl,
       logoVariant: state.away.logoVariant,
+      retroName: state.away.retroName,
     },
     logoLibraryPath: library.getRootPath(),
     halfDurationMin: store.getState().halfDurationMin,
@@ -856,6 +859,11 @@ app.whenReady().then(() => {
   ipcMain.on(IPC.teamSetShortName, (_event, team: unknown, shortName: unknown) => {
     if (!isTeamId(team)) return;
     store.setTeamShortName(team, sanitizeText(shortName, 6));
+    persistTeams();
+  });
+  ipcMain.on(IPC.teamSetRetroName, (_event, team: unknown, retroName: unknown) => {
+    if (!isTeamId(team)) return;
+    store.setTeamRetroName(team, sanitizeText(retroName, MAX_RETRO_NAME_LENGTH));
     persistTeams();
   });
   ipcMain.on(IPC.teamPickLogo, (_event, team: TeamId) => {

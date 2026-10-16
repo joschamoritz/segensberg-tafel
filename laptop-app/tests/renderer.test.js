@@ -144,7 +144,10 @@ function alleZustaende() {
  */
 function imDesign(theme, alleEffekte) {
   const effects = { verlauf: alleEffekte, strahlen: alleEffekte, leuchten: alleEffekte, schatten: alleEffekte };
-  return alleZustaende().map(([name, state]) => [name, { ...state, appearance: { theme, effects } }]);
+  return alleZustaende().map(([name, state]) => [
+    name,
+    { ...state, appearance: { ...DEFAULT_APPEARANCE, theme, effects } },
+  ]);
 }
 
 // --------------------------------------------------------------------

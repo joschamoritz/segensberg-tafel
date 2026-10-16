@@ -32,6 +32,11 @@ Herstellersoftware. Siehe `../CLAUDE.md` und `../DESIGN.md` für Hintergrund.
   Zeilen in der Torschützenliste. Gestaltungsfragen lassen sich damit am
   Laptop beurteilen, nicht erst an der Wand. Hintergrund und Regeln
   stehen in `../DESIGN.md` unter „Die Bühne".
+- **Retro-Design** als drittes: Punktmatrix wie alte Stadiontafeln,
+  Leuchtfarbe Bernstein oder Weiß. Statt Wappen stehen Kurznamen da
+  („ERKENSCHWICK"), vorgeschlagen aus dem Vereinsnamen und unter
+  „Teams & Logos → Kurzname im Retro-Design" änderbar. Wechselt der
+  Inhalt, baut er sich Punkt für Punkt auf.
 - **Zwei Designs für die Tafel**, umschaltbar unter „Anzeige → Design":
   **Klassisch** (das Design bis Fassung 1.1.0, unverändert und Vorgabe)
   und **Flutlicht** (Lichtkegel von oben, große geneigte Ziffern,
@@ -206,8 +211,8 @@ Pfad wird in `teams.json` gespeichert.
 Im Electron-userData-Ordner (`%APPDATA%/anzeigetafel-laptop-app/`):
 
 - `teams.json` – Stammdaten beider Mannschaften (inklusive Farbvariante
-  des Logos), Pfad zur Logo-Bibliothek, Halbzeitdauer, Tafelauflösung
-  und Design samt Effektschaltern. Die letzten drei gehören zum Verein
+  des Logos und Retro-Kurzname), Pfad zur Logo-Bibliothek, Halbzeitdauer,
+  Tafelauflösung und Design samt Effektschaltern und Leuchtfarbe. Die letzten drei gehören zum Verein
   bzw. zum Gerät und überstehen deshalb „Neues Spiel". Ältere Dateien ohne
   Farbvariante werden weiterhin gelesen – ohne Kontrastfläche, also wie
   bisher.

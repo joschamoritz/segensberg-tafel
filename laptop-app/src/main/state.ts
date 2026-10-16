@@ -318,6 +318,18 @@ export class MatchStateStore {
     this.emit();
   }
 
+  /**
+   * Kurzname für das Retro-Design. Anders als beim Kürzel ist ein leerer
+   * Wert gültig: Er heißt "automatisch vorschlagen".
+   */
+  setTeamRetroName(team: TeamId, retroName: string): void {
+    const trimmed = retroName.trim();
+    if (trimmed === (this.state[team].retroName ?? '')) return;
+    this.state = { ...this.state, [team]: { ...this.state[team], retroName: trimmed } };
+    this.bump('teams');
+    this.emit();
+  }
+
   setTeamLogo(
     team: TeamId,
     logoDataUrl: string | undefined,
@@ -343,6 +355,8 @@ export class MatchStateStore {
         ...this.state[team],
         name,
         shortName: deriveShortName(name),
+        // Ein von Hand gesetzter Retro-Name gehört zum alten Verein.
+        retroName: '',
         logoDataUrl,
         logoVariant,
         coach,
@@ -725,7 +739,11 @@ export class MatchStateStore {
     if (JSON.stringify(appearance) === JSON.stringify(this.state.appearance)) return;
     this.state = {
       ...this.state,
-      appearance: { theme: appearance.theme, effects: { ...appearance.effects } },
+      appearance: {
+        theme: appearance.theme,
+        effects: { ...appearance.effects },
+        retroColor: appearance.retroColor,
+      },
     };
     this.emit();
   }
