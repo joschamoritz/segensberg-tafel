@@ -10,6 +10,12 @@ dem Baudatum. Welche Stelle wann steigt, steht in
 
 ---
 
+## 1.2.2 – 16.10.2026 (Testfassung)
+
+- **Aufstellungsseiten im Flutlicht-Design:** Wappen und Mannschaftsname
+  stehen auf einer Indigo-Plakette, der Name geneigt wie die Ziffern. Die
+  Spielernamen bleiben gerade, damit sie gut lesbar sind.
+
 ## 1.2.1 – 16.10.2026 (Testfassung)
 
 Nur das Flutlicht-Design ändert sich, Klassisch bleibt wie es ist.
