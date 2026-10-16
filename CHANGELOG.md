@@ -10,6 +10,27 @@ dem Baudatum. Welche Stelle wann steigt, steht in
 
 ---
 
+## 1.5.0 – 16.10.2026 (Testfassung)
+
+**Fernsteuerung vom iPad**
+
+- Die Steuerung lässt sich jetzt vom iPad (oder jedem Gerät mit
+  Browser) über das WLAN am Platz bedienen. Der Laptop bleibt per HDMI an
+  der Tafel.
+- Einschalten unter **Anzeige → Fernsteuerung im WLAN**. Dort stehen die
+  Adresse für das iPad und eine sechsstellige **PIN**. Ohne PIN nimmt der
+  Laptop keine Befehle an.
+- Auf dem iPad: Adresse in Safari öffnen, PIN eingeben, über
+  „Teilen → Zum Home-Bildschirm" ein Symbol anlegen.
+- Auf dem iPad sind die Knöpfe größer, für den Finger.
+- **Tormusik** vom iPad aus läuft **am Laptop**.
+- Logo-, Portrait- und Dateiknöpfe fehlen auf dem iPad – sie öffnen ein
+  Fenster am Laptop.
+- Ist die Verbindung weg, zeigt das iPad einen roten Hinweis und
+  verbindet sich selbst neu.
+- **Beim ersten Einschalten fragt die Windows-Firewall:** „Private
+  Netzwerke" erlauben.
+
 ## 1.4.0 – 16.10.2026 (Testfassung)
 
 **Ein- und Auswechslungen**
