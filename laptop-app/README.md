@@ -137,6 +137,9 @@ Electron-Main-Prozess (normaler Node-Kontext) und brauchen das nicht.
 - **Kader & Torschützen**: Spieler pro Mannschaft pflegbar, gespeichert
   **pro Verein** in `squads.json` (beim Rückspiel wieder da). Tore lassen
   sich nachträglich einem Torschützen zuordnen.
+- **Wettbewerbslogo** (Liga, Pokal) über der Begegnung vor dem Anpfiff,
+  gewählt neben „Anstoß“. Bleibt bei „Neues Spiel“ stehen; im
+  Retro-Design steht der Name im Wechsel mit dem Countdown.
 - **Torjubel** bei jedem Tor im laufenden Spiel
 - **Tormusik** aus `Vereinsdaten/Sounds/` (bevorzugt `tor.mp3`, sonst die
   erste Audiodatei im Ordner). Sie läuft über das Windows-Standardgerät –
@@ -219,6 +222,16 @@ ignoriert. Die Bilder werden **nicht** in eine Konfigurationsdatei
 kopiert: Das Anzeigefenster lädt sie über ein eigenes Protokoll
 (`svh-media:`) direkt von der Platte. Findet sich kein Motiv, nennt das
 Steuerungsfenster den Ordner, in dem es gesucht hat.
+
+Die **Wettbewerbslogos** liegen in `Vereinsdaten/Wettbewerbe/` (PNG, JPG,
+WEBP, GIF oder SVG; Illustrator-Dateien kann der Browser nicht anzeigen
+– vorher als PNG exportieren). Der Eintrag in der Auswahl kommt aus dem
+Dateinamen: `03_Krombacher_Pokal.jpg` erscheint als „Krombacher Pokal“,
+die Nummer vorn bestimmt nur die Reihenfolge. Die Tafel hat einen
+dunklen Grund – Logos mit eigenem weißen Hintergrund oder in Weiß
+stehen darauf gut, farbige freigestellte Logos mit dunkler Schrift
+nicht. Fehlt eine gewählte Datei, bleibt der Platz auf der Tafel leer,
+und die Auswahl zeigt „(Datei fehlt)“.
 
 Die **Logo-Bibliothek** sucht die App beim ersten Start der Reihe nach an
 drei Orten: neben der Anwendung (`Vereinsdaten/Liga-Logos` – praktisch für

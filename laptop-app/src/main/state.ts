@@ -89,7 +89,9 @@ function initialState(): MatchState {
       werbung: { rootPath: '', files: [] },
       highlights: { rootPath: '', files: [] },
       sounds: { rootPath: '', files: [] },
+      wettbewerbe: { rootPath: '', files: [] },
     },
+    competition: null,
     slideshowRequest: null,
     sound: { ...DEFAULT_SOUND_SETTINGS },
     revisions: { teams: 0, squads: 0, events: 0 },
@@ -803,6 +805,19 @@ export class MatchStateStore {
     this.emit();
   }
 
+  /**
+   * Wettbewerb wählen (Dateiname im Ordner `Wettbewerbe/`) oder mit `null`
+   * abwählen. Ob die Datei dort liegt, prüft die Anzeige beim Zeichnen
+   * gegen die Medienliste: Fehlt sie, bleibt der Platz leer, statt ein
+   * zerbrochenes Bild zu zeigen -- und die Wahl bleibt erhalten, falls
+   * die Datei nur kurz umbenannt war.
+   */
+  setCompetition(fileName: string | null): void {
+    if (fileName === this.state.competition) return;
+    this.state = { ...this.state, competition: fileName };
+    this.emit();
+  }
+
   /** Abpfiff: Uhr anhalten, Endstand anzeigen. */
   goToFullTime(): void {
     if (this.state.phase !== 'live') return;
@@ -911,12 +926,14 @@ export class MatchStateStore {
     this.secondHalfResumeMs = null;
     // Kader, Spielzeit-Einstellung, Tafelmaße und der Dankestext sind
     // Konfiguration, keine Spieldaten -- sie gehören zum Verein bzw. zum
-    // Gerät, nicht zur einzelnen Begegnung.
+    // Gerät, nicht zur einzelnen Begegnung. Der Wettbewerb bleibt ebenfalls:
+    // Auf ein Ligaspiel folgt meist das nächste.
     const {
       squads,
       halfDurationMin,
       board,
       appearance,
+      competition,
       attendanceMessage,
       announcements,
       media,
@@ -931,6 +948,7 @@ export class MatchStateStore {
       halfDurationMin,
       board,
       appearance,
+      competition,
       attendanceMessage,
       announcements,
       media,

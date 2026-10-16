@@ -34,6 +34,8 @@ const FOLDERS: Record<MediaFolderId, { dir: string; extensions: string[] }> = {
   werbung: { dir: 'Werbung', extensions: IMAGE_EXTENSIONS },
   highlights: { dir: 'Highlights', extensions: IMAGE_EXTENSIONS },
   sounds: { dir: 'Sounds', extensions: AUDIO_EXTENSIONS },
+  // Wettbewerbslogos gibt es oft nur als Vektordatei -- deshalb auch SVG.
+  wettbewerbe: { dir: 'Wettbewerbe', extensions: [...IMAGE_EXTENSIONS, '.svg'] },
 };
 
 export class MediaLibrary {
@@ -42,6 +44,7 @@ export class MediaLibrary {
     werbung: [],
     highlights: [],
     sounds: [],
+    wettbewerbe: [],
   };
 
   /**
@@ -56,6 +59,7 @@ export class MediaLibrary {
       werbung: roots?.werbung ?? resolveDataFolder(FOLDERS.werbung.dir),
       highlights: roots?.highlights ?? resolveDataFolder(FOLDERS.highlights.dir),
       sounds: roots?.sounds ?? resolveDataFolder(FOLDERS.sounds.dir),
+      wettbewerbe: roots?.wettbewerbe ?? resolveDataFolder(FOLDERS.wettbewerbe.dir),
     };
     this.scan();
   }
@@ -82,6 +86,7 @@ export class MediaLibrary {
       werbung: info('werbung'),
       highlights: info('highlights'),
       sounds: info('sounds'),
+      wettbewerbe: info('wettbewerbe'),
     };
   }
 

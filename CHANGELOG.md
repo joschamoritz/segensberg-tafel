@@ -10,6 +10,19 @@ dem Baudatum. Welche Stelle wann steigt, steht in
 
 ---
 
+## Noch nicht ausgeliefert
+
+**Wettbewerbslogo**
+
+- Über der Begegnung vor dem Anpfiff kann jetzt das Logo des
+  Wettbewerbs stehen (Kreisliga, Bezirksliga, Pokal …). Gewählt wird
+  neben „Anstoß“ unter **Wettbewerb**; die Wahl bleibt bei „Neues Spiel“
+  stehen.
+- Die Logos liegen in `Vereinsdaten/Wettbewerbe/`. Der Name in der
+  Auswahl kommt aus dem Dateinamen.
+- Im Retro-Design steht der Name des Wettbewerbs in der Kopfzeile, im
+  Wechsel mit dem Countdown.
+
 ## 1.5.0 – 16.10.2026 (Testfassung)
 
 **Fernsteuerung vom iPad**

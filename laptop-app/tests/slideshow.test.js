@@ -231,6 +231,7 @@ test('"Neues Spiel" behält Medien und Ankündigungen', () => {
   store.setMedia({
     werbung: { rootPath: 'C:/x', files: ['01.png'] },
     highlights: { rootPath: 'C:/y', files: [] },
+    wettbewerbe: { rootPath: 'W', files: [] },
     sounds: { rootPath: 'C:/z', files: ['tor.mp3'] },
   });
 

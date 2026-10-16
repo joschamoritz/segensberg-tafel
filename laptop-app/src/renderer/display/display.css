@@ -451,6 +451,30 @@ body[data-phase='live'] .phase-label {
   text-align: center;
 }
 
+/* Wettbewerbslogo über der Begegnung. Feste Höchstmaße statt einer
+   festen Größe: Ligalogos sind quadratisch, Pokallogos breit -- beide
+   sollen ganz zu sehen sein, ohne die Wappen zu verdrängen. Mit Logo
+   rücken die Wappen etwas zusammen, damit Name und Anstoß darunter
+   Platz behalten. */
+.pre-competition {
+  flex: 0 0 auto;
+  max-height: 22cqh;
+  max-width: 46cqw;
+  object-fit: contain;
+}
+
+body.has-competition .pre-page[data-page='matchup'] {
+  gap: 2cqh;
+}
+
+body.has-competition .pre-page[data-page='matchup'] .crest-xl .crest-img {
+  max-height: 34cqh;
+}
+
+body.has-competition .pre-page[data-page='matchup'] .crest-xl .crest-text {
+  font-size: 13cqh;
+}
+
 /* --- Ansicht während/nach dem Spiel ------------------------------------ */
 /* Aufbau nach Stadion-Vorbild: Spielstand groß in der Mitte, Wappen
    flankierend, Uhr abgesetzt darunter. Alle Spaltenbreiten sind fest,

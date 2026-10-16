@@ -44,6 +44,7 @@ import {
   sanitizeAnnouncements,
   sanitizeAttendance,
   sanitizeAppearance,
+  sanitizeCompetition,
   sanitizeBoardSize,
   sanitizeImportedPlayers,
   sanitizeKickoffTime,
@@ -339,6 +340,7 @@ function persistTeams(): void {
     halfDurationMin: store.getState().halfDurationMin,
     board: store.getState().board,
     appearance: store.getState().appearance,
+    competition: store.getState().competition,
   });
 }
 
@@ -659,6 +661,7 @@ app.whenReady().then(() => {
   // ist eine Datei auf der Platte und kann von Hand bearbeitet worden sein.
   store.setBoardSize(sanitizeBoardSize(teamsConfig.board));
   store.setAppearance(sanitizeAppearance(teamsConfig.appearance));
+  store.setCompetition(sanitizeCompetition(teamsConfig.competition));
 
   const content = loadContentConfig();
   store.setAttendanceMessage(content.attendanceMessage);
@@ -974,6 +977,10 @@ app.whenReady().then(() => {
   });
   onIpc(IPC.setAppearance, (_event, appearance: unknown) => {
     store.setAppearance(sanitizeAppearance(appearance));
+    persistTeams();
+  });
+  onIpc(IPC.setCompetition, (_event, fileName: unknown) => {
+    store.setCompetition(sanitizeCompetition(fileName));
     persistTeams();
   });
 

@@ -100,6 +100,7 @@ function mitMedien(store) {
   store.setMedia({
     werbung: { rootPath: 'C:\\Test\\Werbung', files: ['01_sponsor.jpg', '02_sponsor.jpg'] },
     highlights: { rootPath: 'C:\\Test\\Highlights', files: ['01_bild.jpg'] },
+    wettbewerbe: { rootPath: 'W', files: [] },
     sounds: { rootPath: 'C:\\Test\\Sounds', files: [] },
   });
   return store;
@@ -404,6 +405,7 @@ test('der Schnellknopf am Torknopf verändert den Spielstand nicht', (t) => {
   store.setMedia({
     werbung: { rootPath: 'C:\\Test\\Werbung', files: [] },
     highlights: { rootPath: 'C:\\Test\\Highlights', files: [] },
+    wettbewerbe: { rootPath: 'W', files: [] },
     sounds: { rootPath: 'C:\\Test\\Sounds', files: [] },
   });
   const r = fensterMit(store, t);
@@ -429,6 +431,7 @@ test('der Schnellknopf ist ohne Tondatei gesperrt und mit Tondatei nutzbar', (t)
   ohne.setMedia({
     werbung: { rootPath: 'C:\\Test\\Werbung', files: [] },
     highlights: { rootPath: 'C:\\Test\\Highlights', files: [] },
+    wettbewerbe: { rootPath: 'W', files: [] },
     sounds: { rootPath: 'C:\\Test\\Sounds', files: [] },
   });
   const r = fensterMit(ohne, t);

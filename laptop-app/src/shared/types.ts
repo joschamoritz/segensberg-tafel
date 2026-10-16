@@ -399,6 +399,13 @@ export interface MatchState {
   /** Gestaltung der Anzeige, siehe `DisplayAppearance`. Gehört wie die
       Tafelmaße zum Gerät -- "Neues Spiel" lässt sie stehen. */
   appearance: DisplayAppearance;
+  /**
+   * Logo des Wettbewerbs (Dateiname im Ordner `Wettbewerbe/`), `null` =
+   * keines. Steht auf der Begegnung vor dem Anpfiff. Überdauert "Neues
+   * Spiel": Meist folgt Ligaspiel auf Ligaspiel, umgestellt wird nur für
+   * den Pokal.
+   */
+  competition: string | null;
   /** Geplanter Anstoß als "HH:MM"; leer = keine Angabe. Nur informativ --
       der Anpfiff wird weiterhin manuell ausgelöst. */
   kickoffTime: string;
@@ -470,9 +477,23 @@ export interface LiveMatchSnapshot {
  * zweiter Weg für Dateien von der Platte ins Fenster wäre eine zweite
  * Stelle, an der die Pfadprüfung sitzen müsste.
  */
-export type MediaFolderId = 'werbung' | 'highlights' | 'sounds';
+export type MediaFolderId = 'werbung' | 'highlights' | 'sounds' | 'wettbewerbe';
 
-export const MEDIA_FOLDER_IDS: MediaFolderId[] = ['werbung', 'highlights', 'sounds'];
+export const MEDIA_FOLDER_IDS: MediaFolderId[] = ['werbung', 'highlights', 'sounds', 'wettbewerbe'];
+
+/**
+ * Lesbarer Name eines Wettbewerbs aus seinem Dateinamen:
+ * "02_Krombacher_Westfalenpokal.png" -> "Krombacher Westfalenpokal".
+ * Ohne eigenes Namensfeld -- der Ordner ist die Verwaltung, wie bei der
+ * Diashow. Dient als Eintrag der Auswahl und als Text im Retro-Design.
+ */
+export function competitionLabel(fileName: string): string {
+  return fileName
+    .replace(/\.[^.]+$/, '')
+    .replace(/^\d+[_\s-]+/, '')
+    .replace(/[_]+/g, ' ')
+    .trim();
+}
 
 /**
  * Ein Medienordner: wo er liegt und was drinsteht -- **nur die
@@ -996,6 +1017,7 @@ export const IPC = {
   setHalfDuration: 'match:set-half-duration',
   setBoardSize: 'display:set-board-size',
   setAppearance: 'display:set-appearance',
+  setCompetition: 'match:set-competition',
   goalSetScorer: 'goal:set-scorer',
   /** einmalig abgefragt, liefert `AppInfo` -- siehe dort */
   appInfo: 'app:info',

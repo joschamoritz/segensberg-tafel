@@ -272,6 +272,7 @@ function mitTormusik() {
   store.setMedia({
     werbung: { rootPath: 'W', files: [] },
     highlights: { rootPath: 'H', files: [] },
+    wettbewerbe: { rootPath: 'W', files: [] },
     sounds: { rootPath: 'S', files: ['tor.mp3'] },
   });
   return store;

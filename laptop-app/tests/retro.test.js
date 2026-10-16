@@ -341,6 +341,7 @@ test('display: Bilder der Diashow liegen im Retro-Design über dem Raster', asyn
   store.setMedia({
     werbung: { rootPath: 'W', files: ['01_a.png'] },
     highlights: { rootPath: 'H', files: [] },
+    wettbewerbe: { rootPath: 'W', files: [] },
     sounds: { rootPath: 'S', files: [] },
   });
   r.emit('onStateUpdated', store.getState());
@@ -396,6 +397,7 @@ test('display: die Sponsoren-Folie zeigt den Titel als Punktschrift', async (t) 
   store.setMedia({
     werbung: { rootPath: 'W', files: ['1.png', '2.png', '3.png', '4.png', '5.png'] },
     highlights: { rootPath: 'H', files: [] },
+    wettbewerbe: { rootPath: 'W', files: [] },
     sounds: { rootPath: 'S', files: [] },
   });
   const r = openRenderer('display', t);

@@ -187,6 +187,20 @@ export function sanitizeBoardSize(value: unknown): BoardSize {
 }
 
 /**
+ * Gewählter Wettbewerb: ein reiner Dateiname oder `null`. Alles mit
+ * Pfadanteil wird verworfen -- der Name landet in einer `svh-media:`-URL,
+ * und auch wenn `MediaLibrary.resolveFile()` dort noch einmal prüft, soll
+ * so etwas gar nicht erst in Zustand und `teams.json` stehen.
+ */
+export function sanitizeCompetition(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const name = value.trim();
+  if (name === '' || name.length > 200) return null;
+  if (/[\\/]/.test(name) || name === '.' || name === '..') return null;
+  return name;
+}
+
+/**
  * Gestaltung der Anzeige. Kommt aus dem Steuerungsfenster und aus
  * `teams.json`, die von Hand bearbeitet worden sein kann.
  *

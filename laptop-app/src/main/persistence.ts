@@ -32,6 +32,8 @@ export interface TeamsConfig {
   board?: BoardSize;
   /** Gestaltung der Anzeige, siehe `DisplayAppearance`. Gerät, nicht Spiel. */
   appearance?: DisplayAppearance;
+  /** Gewählter Wettbewerb, siehe `MatchState.competition`. */
+  competition?: string | null;
 }
 
 /**
@@ -141,6 +143,7 @@ export function loadTeamsConfig(): TeamsConfig {
       halfDurationMin: parsed.halfDurationMin ?? fallback.halfDurationMin,
       board: parsed.board ?? fallback.board,
       appearance: parsed.appearance ?? fallback.appearance,
+      competition: parsed.competition ?? null,
     };
   } catch {
     return fallback;

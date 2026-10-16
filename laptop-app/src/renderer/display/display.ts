@@ -15,6 +15,7 @@ import {
   BoardSize,
   ClockState,
   clockView,
+  competitionLabel,
   DEFAULT_BOARD_SIZE,
   DEFAULT_HALF_DURATION_MIN,
   DisplayAppearance,
@@ -44,6 +45,9 @@ import {
 } from '../../shared/types';
 
 let currentState: MatchState | null = null;
+
+/** Retro: Kopfzeile der Begegnung wechselt zwischen Countdown und Wettbewerb. */
+const RETRO_LINE_SWITCH_MS = 4000;
 
 /**
  * Maße der Bühne, also der Fläche, in der das Layout gerechnet wird.
@@ -300,14 +304,17 @@ function currentRetroScene(state: MatchState): RetroScene {
   if (state.phase === 'pre-match') {
     const page = document.querySelector<HTMLElement>('.pre-page.is-active')?.dataset.page ?? 'matchup';
     if (page !== 'matchup') return retroLineup(state, page);
-    return {
-      kind: 'matchup',
-      home,
-      away,
-      // Derselbe Countdown wie in den anderen Designs, nur ohne "UHR ·":
-      // So passt "ANSTOSS 15:00 NOCH 12:34" genau in eine Zeile.
-      line: (document.getElementById('pre-kickoff')!.textContent ?? '').replace(' UHR · ', ' '),
-    };
+    // Derselbe Countdown wie in den anderen Designs, nur ohne "UHR ·":
+    // So passt "ANSTOSS 15:00 NOCH 12:34" genau in eine Zeile.
+    const countdown = (document.getElementById('pre-kickoff')!.textContent ?? '').replace(' UHR · ', ' ');
+    // Ein Logo gibt es in der Punktmatrix nicht. Der Wettbewerb steht
+    // deshalb als Name in der Kopfzeile, im Wechsel mit dem Countdown --
+    // für eine eigene Zeile reicht die Höhe nicht.
+    const competition = document.body.classList.contains('has-competition') && state.competition
+      ? competitionLabel(state.competition)
+      : '';
+    const showCompetition = competition !== '' && Math.floor(Date.now() / RETRO_LINE_SWITCH_MS) % 2 === 1;
+    return { kind: 'matchup', home, away, line: showCompetition ? competition : countdown };
   }
 
   return {
@@ -643,6 +650,29 @@ function renderTeam(team: TeamId, state: MatchState): void {
   // Ansicht vor dem Anpfiff: größere Wappen plus ausgeschriebene Namen
   renderCrest(`pre-${team}-logo`, `pre-${team}-fallback`, teamState);
   document.getElementById(`pre-${team}-name`)!.textContent = teamState.name;
+}
+
+/**
+ * Wettbewerbslogo über der Begegnung. Nur wenn die Datei auch im Ordner
+ * liegt -- ein zerbrochenes Bild wäre schlimmer als keines. `src` wird
+ * nur bei einem Wechsel neu gesetzt, sonst lüde das Bild bei jedem
+ * Zustands-Update neu.
+ */
+function renderCompetition(state: MatchState): void {
+  const img = document.getElementById('pre-competition') as HTMLImageElement;
+  const file = state.competition;
+  const available = file !== null && state.media.wettbewerbe.files.includes(file);
+  img.hidden = !available;
+  document.body.classList.toggle('has-competition', available);
+  if (!available) {
+    img.removeAttribute('src');
+    delete img.dataset.file;
+    return;
+  }
+  if (img.dataset.file !== file) {
+    img.dataset.file = file;
+    img.src = mediaUrl('wettbewerbe', file);
+  }
 }
 
 /**
@@ -1037,6 +1067,8 @@ function renderState(state: MatchState): void {
     renderTeam('home', state);
     renderTeam('away', state);
   });
+
+  step('Wettbewerb', () => renderCompetition(state));
 
   step('Uhr', () => renderClock(state.clock));
 

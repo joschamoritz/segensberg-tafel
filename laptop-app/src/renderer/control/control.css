@@ -664,7 +664,8 @@ body.is-remote .goal-remove {
   color: var(--svh-mut);
 }
 
-.kickoff-field input {
+.kickoff-field input,
+.kickoff-field select {
   font-family: 'Oswald', sans-serif;
   font-size: 14px;
   padding: 4px 6px;
@@ -675,6 +676,11 @@ body.is-remote .goal-remove {
 
 #half-duration-input {
   width: 56px;
+}
+
+#competition-select {
+  background: var(--svh-wh);
+  max-width: 220px;
 }
 
 .clock .stoppage {

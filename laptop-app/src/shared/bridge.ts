@@ -105,6 +105,7 @@ export function createApi(t: Transport) {
     setBoardSize: (board: BoardSize) => t.send(IPC.setBoardSize, board),
     setAppearance: (appearance: DisplayAppearance) =>
       t.send(IPC.setAppearance, appearance),
+    setCompetition: (fileName: string | null) => t.send(IPC.setCompetition, fileName),
     phaseKickoff: () => t.send(IPC.phaseKickoff),
     phaseHalfTime: () => t.send(IPC.phaseHalfTime),
     phaseSecondHalf: () => t.send(IPC.phaseSecondHalf),

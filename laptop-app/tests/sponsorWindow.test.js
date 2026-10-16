@@ -25,6 +25,7 @@ function medien(werbung, highlights = []) {
   return {
     werbung: { rootPath: 'W', files: werbung },
     highlights: { rootPath: 'H', files: highlights },
+    wettbewerbe: { rootPath: 'W', files: [] },
     sounds: { rootPath: 'S', files: [] },
   };
 }

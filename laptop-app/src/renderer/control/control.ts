@@ -5,6 +5,7 @@ import { lineupNow } from '../../shared/substitutions';
 import {
   AppStatus,
   audioMimeType,
+  competitionLabel,
   pickGoalSound,
   CARD_LABEL,
   CardColor,
@@ -1061,6 +1062,35 @@ function renderStoppageControls(state: MatchState): void {
   updateInputIfNotFocused(input, current === 0 ? '' : String(current));
 }
 
+/**
+ * Auswahl des Wettbewerbs aus dem Ordner `Wettbewerbe/`. Neu aufgebaut
+ * wird nur, wenn sich Dateien oder Wahl geändert haben -- sonst klappte
+ * eine offene Liste bei jedem Zustands-Update zu.
+ *
+ * Liegt die gewählte Datei nicht (mehr) im Ordner, bleibt sie als
+ * markierter Eintrag stehen: Die Tafel zeigt dann kein Logo, und das soll
+ * hier sichtbar sein, statt dass die Auswahl still auf "keiner" springt.
+ */
+let competitionSignature = '';
+
+function renderCompetitionSelect(state: MatchState): void {
+  const select = document.getElementById('competition-select') as HTMLSelectElement;
+  const files = state.media.wettbewerbe.files;
+  const signature = JSON.stringify([files, state.competition]);
+  if (signature === competitionSignature) return;
+  competitionSignature = signature;
+
+  const options: HTMLOptionElement[] = [new Option('– keiner –', '')];
+  for (const file of files) options.push(new Option(competitionLabel(file), file));
+  if (state.competition !== null && !files.includes(state.competition)) {
+    options.push(new Option(`${competitionLabel(state.competition)} (Datei fehlt)`, state.competition));
+  }
+  select.replaceChildren(...options);
+  select.value = state.competition ?? '';
+  select.title =
+    files.length === 0 ? `Keine Logos gefunden in "${state.media.wettbewerbe.rootPath}".` : '';
+}
+
 function renderState(state: MatchState): void {
   lastRenderedState = state;
   document.getElementById('home-score')!.textContent = String(state.home.score);
@@ -1077,6 +1107,8 @@ function renderState(state: MatchState): void {
 
   const halfDurationInput = document.getElementById('half-duration-input') as HTMLInputElement;
   updateInputIfNotFocused(halfDurationInput, String(state.halfDurationMin));
+
+  renderCompetitionSelect(state);
 
   const boardWidthInput = document.getElementById('board-width-input') as HTMLInputElement;
   const boardHeightInput = document.getElementById('board-height-input') as HTMLInputElement;
@@ -1251,6 +1283,11 @@ function main(): void {
   const halfDurationInput = document.getElementById('half-duration-input') as HTMLInputElement;
   halfDurationInput.addEventListener('change', () =>
     window.api.setHalfDuration(Number(halfDurationInput.value))
+  );
+
+  const competitionSelect = document.getElementById('competition-select') as HTMLSelectElement;
+  competitionSelect.addEventListener('change', () =>
+    window.api.setCompetition(competitionSelect.value === '' ? null : competitionSelect.value)
   );
 
   // Beide Maße gehen immer gemeinsam raus: Die Prüfschicht behandelt einen

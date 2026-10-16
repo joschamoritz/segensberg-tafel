@@ -76,6 +76,12 @@ Vom Verein gepflegt, **außerhalb** der App unter `Vereinsdaten/`:
   auf weißem Grund ist auf der Tafel ein weißer Kasten – besser sind
   Motive, die im Vereinsblau oder auf dunklem Grund angelegt sind.
   Sinnvolles Seitenverhältnis ist 2:1 (wie die Tafel).
+- `Wettbewerbe/` – Liga- und Pokallogos für die Begegnung vor dem
+  Anpfiff. Sie stehen mittig über den Wappen, höchstens 22cqh hoch und
+  46cqw breit, ohne Kontrastfläche. Geeignet sind Logos mit eigenem
+  weißen Grund (wie die Verbandslogos) oder in Weiß; ein freigestelltes
+  Logo mit dunkler Schrift verschwindet auf dem Vereinsblau. Im
+  Retro-Design erscheint statt des Logos der Name als Punktschrift.
 
 Im Repo unter `laptop-app/src/renderer/` bzw. `laptop-app/assets/`:
 
