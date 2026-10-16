@@ -10,7 +10,7 @@ dem Baudatum. Welche Stelle wann steigt, steht in
 
 ---
 
-## Noch nicht ausgeliefert
+## 1.6.0 – 16.10.2026 (Testfassung)
 
 **Wettbewerbslogo**
 
