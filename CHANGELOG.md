@@ -10,6 +10,38 @@ dem Baudatum. Welche Stelle wann steigt, steht in
 
 ---
 
+## 1.2.0 – 16.10.2026 (Testfassung)
+
+Diese Fassung bringt ein **zweites Design für die Tafel**. Sie ist für
+den Test an der echten LED-Wand gebaut; das bisherige Design bleibt
+voreingestellt, die Tafel sieht nach dem Update also aus wie vorher.
+
+**Design umschalten**
+
+- Unter **Anzeige → Design** gibt es jetzt **Klassisch** (wie bisher)
+  und **Flutlicht**.
+- Flutlicht: Lichtkegel von oben, große nach rechts geneigte Ziffern,
+  goldene Rauten als Trenner, weiße Vereinsstreifen in den oberen Ecken
+  und die Uhr auf einer weißen Plakette – links daneben die Halbzeit
+  („1. HZ"), rechts die Nachspielzeit in Gold.
+- Die Effekte des Flutlicht-Designs lassen sich **einzeln abschalten**:
+  Farbverlauf, Lichtstrahlen, Leuchten hinter den Wappen und Schatten.
+  Wenn einer davon auf der Tafel Streifen oder Flimmern zeigt, dort
+  abschalten.
+- Torjubel und die übrigen Einblendungen sehen in beiden Designs noch
+  gleich aus.
+- Die Wahl bleibt nach „Neues Spiel" und nach einem Neustart erhalten.
+
+**Sponsoren im Fenster**
+
+- Die Diashow zeigt Sponsorenlogos jetzt **zu viert** in gleich großen
+  weißen Kacheln unter der Überschrift „Unsere Partner", statt jedes
+  Logo einzeln über das ganze Bild. Bei mehr als vier Logos folgen
+  weitere Seiten, kleine Quadrate oben rechts zeigen die Seite an.
+- Highlights und Termine laufen wie bisher im Vollbild.
+- Die Folienzahl im Hinweis unter „Diashow" zählt jetzt Seiten statt
+  einzelner Logos.
+
 ## 1.1.0 – 20.08.2026
 
 Diese Fassung ändert nichts an dem, was auf der Tafel steht – sie
