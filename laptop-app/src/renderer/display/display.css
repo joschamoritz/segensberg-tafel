@@ -11,6 +11,8 @@
   /* Vereins-Indigo aus der Website (--svh / --svh-dk) */
   --svh: #29166f;
   --svh-dk: #1d0f52;
+  /* helleres Indigo -- Lichtkegel des Torjubels im Flutlicht-Design */
+  --svh-lt: #3a2490;
   --svh-gold: #d4a843;
   --svh-wh: #ffffff;
   /* Kartenfarben als Token statt als Hex in den Komponenten -- siehe
@@ -39,7 +41,11 @@
   /* Halbtransparente Töne -- im klassischen Design verboten, im
      Flutlicht-Design bewusst erlaubt und einzeln abschaltbar (siehe
      `FlutlichtEffects`). */
-  --flut-beam: rgb(255 255 255 / 0.06);
+  --flut-beam-hi: rgb(255 255 255 / 0.17);
+  --flut-beam-lo: rgb(255 255 255 / 0.04);
+  --flut-source: rgb(255 255 255 / 0.28);
+  --flut-pulse: rgb(29 15 82 / 0.45);
+  --flut-gold-glow: rgb(212 168 67 / 0.7);
   --flut-fade: rgb(6 20 46 / 0.9);
   --flut-glow: rgb(79 168 255 / 0.75);
   --flut-shadow: rgb(0 0 0 / 0.45);
@@ -1355,13 +1361,21 @@ body[data-theme='flutlicht'][data-fx~='verlauf'] .stage {
 
 /* Lichtstrahlen. z-index -1 legt sie unter alle Inhalte, aber über den
    Bühnenhintergrund: Die Bühne ist durch ihr `transform` selbst ein
-   Stapelkontext, tiefer kommen sie also nicht. */
+   Stapelkontext, tiefer kommen sie also nicht.
+
+   Fünf Kegel aus einer Lichtquelle knapp über dem Bildrand. Jeder ist
+   oben hell und läuft nach unten aus, wie Licht, das sich verliert --
+   flache Dreiecke gleicher Helligkeit wirkten wie ausgeschnitten. Die
+   weichen Kanten kommen aus einer Unschärfe am GANZEN Bündel: An den
+   einzelnen Kegeln schnitte `clip-path` sie gleich wieder hart ab, weil
+   es nach dem Filter wirkt. Über der Quelle liegt ein heller Schein. */
 .beams {
   display: none;
   position: absolute;
   inset: 0;
   z-index: -1;
   pointer-events: none;
+  filter: blur(0.9cqh);
 }
 
 body[data-theme='flutlicht'][data-fx~='strahlen'] .beams {
@@ -1371,19 +1385,39 @@ body[data-theme='flutlicht'][data-fx~='strahlen'] .beams {
 .beams i {
   position: absolute;
   inset: 0;
-  background: var(--flut-beam);
+  background: linear-gradient(
+    to bottom,
+    var(--flut-beam-hi) 0%,
+    var(--flut-beam-lo) 60%,
+    transparent 92%
+  );
+}
+
+.beams::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 26% 20% at 50% 0%, var(--flut-source), transparent);
 }
 
 .beams i:nth-child(1) {
-  clip-path: polygon(50% -5%, 8% 100%, 28.6% 100%);
+  clip-path: polygon(49% -8%, 51% -8%, 20% 100%, 2% 100%);
 }
 
 .beams i:nth-child(2) {
-  clip-path: polygon(50% -5%, 39% 100%, 61% 100%);
+  clip-path: polygon(49% -8%, 51% -8%, 39% 100%, 27% 100%);
 }
 
 .beams i:nth-child(3) {
-  clip-path: polygon(50% -5%, 71.4% 100%, 92% 100%);
+  clip-path: polygon(49% -8%, 51% -8%, 57% 100%, 43% 100%);
+}
+
+.beams i:nth-child(4) {
+  clip-path: polygon(49% -8%, 51% -8%, 73% 100%, 61% 100%);
+}
+
+.beams i:nth-child(5) {
+  clip-path: polygon(49% -8%, 51% -8%, 98% 100%, 80% 100%);
 }
 
 /* Die Folien liegen direkt auf dem Lichtkegel statt auf eigener Fläche. */
@@ -1547,4 +1581,153 @@ body[data-theme='flutlicht'] .stoppage {
   line-height: 1.25;
   background: none;
   color: var(--svh-gold);
+}
+
+/* --- Einblendungen im Flutlicht-Look ------------------------------------ */
+/* Dieselben Mittel wie in der Spielansicht: große geneigte Schrift, Gold
+   als Akzent, Leuchten, weiße Plaketten. Die ruhigen Einblendungen
+   (Torschütze, Danksagung) liegen direkt auf dem Lichtkegel statt auf
+   einer eigenen Indigofläche -- sie gehören damit sichtbar zur selben
+   Tafel. Aufbau, Dauer und Ablauf bleiben wie im klassischen Design;
+   hier ändert sich nur die Erscheinung. */
+
+/* Vor dem Anpfiff: "VS" geneigt wie die Ziffern */
+body[data-theme='flutlicht'] .pre-vs {
+  font-size: 14cqh;
+  transform: skewX(-12deg);
+}
+
+/* Torschütze: Portrait links, Name groß und geneigt daneben. */
+body[data-theme='flutlicht'] .board-scorer {
+  background: transparent;
+}
+
+body[data-theme='flutlicht'] .spotlight-name {
+  font-size: 19cqh;
+  line-height: 1.15;
+  transform: skewX(-12deg);
+  transform-origin: left center;
+}
+
+body[data-theme='flutlicht'] .spotlight-label {
+  font-size: 10cqh;
+  letter-spacing: 0.14em;
+}
+
+body[data-theme='flutlicht'][data-fx~='leuchten'] .spotlight-photo {
+  filter: drop-shadow(0 0 1.8cqh var(--flut-glow));
+}
+
+body[data-theme='flutlicht'][data-fx~='schatten'] .spotlight-body {
+  filter: drop-shadow(0 0.6cqh 1.4cqh var(--flut-shadow));
+}
+
+/* Danksagung: die Zahl geneigt und noch größer, auf dem Lichtkegel. */
+body[data-theme='flutlicht'] .board-thanks {
+  background: transparent;
+}
+
+body[data-theme='flutlicht'] .thanks-number {
+  font-size: 40cqh;
+  transform: skewX(-12deg);
+}
+
+body[data-theme='flutlicht'][data-fx~='schatten'] .board-thanks {
+  filter: drop-shadow(0 0.8cqh 1.6cqh var(--flut-shadow));
+}
+
+/* Info-Leiste (Karte, Ecken): wird zur Plakette in der Form der Uhr und
+   liegt an derselben Stelle, verdeckt sie also wie bisher. Indigo statt
+   Weiß: Eine gelbe Karte stünde auf Weiß fast ohne Kontrast (~1,6), und
+   der Wert soll in Gold bleiben wie überall sonst. */
+body[data-theme='flutlicht'] .info-bar {
+  left: 8cqw;
+  right: 8cqw;
+  bottom: 2.5cqh;
+  height: 19cqh;
+  isolation: isolate;
+  background: none;
+}
+
+body[data-theme='flutlicht'] .info-bar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--svh-dk);
+  clip-path: polygon(0 0, 100% 0, 96% 100%, 4% 100%);
+}
+
+body[data-theme='flutlicht'][data-fx~='schatten'] .info-bar {
+  filter: drop-shadow(0 0.6cqh 1.2cqh var(--flut-shadow));
+}
+
+/* Torjubel, eigenes Tor: Indigo mit Lichtkegel statt einer flachen
+   Fläche. Der Puls bleibt -- als halbtransparente Abdunklung über dem
+   Verlauf, weil sich ein Verlauf nicht über `background-color`
+   animieren lässt. Gleiche Frequenz und gleich geringer Kontrast wie im
+   klassischen Design (Guardrail "pulsen, nicht flackern"). */
+@keyframes flut-goal-pulse {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+body[data-theme='flutlicht'] .board-goal {
+  isolation: isolate;
+  background-color: var(--svh);
+  background-image: radial-gradient(
+    ellipse 80% 130% at 50% -10%,
+    var(--svh-lt) 0%,
+    var(--svh) 50%,
+    var(--svh-dk) 100%
+  );
+}
+
+body[data-theme='flutlicht'] .board-goal::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--flut-pulse);
+  opacity: 0;
+}
+
+body[data-theme='flutlicht'][data-goal-stage='word'] .board-goal {
+  animation: none;
+}
+
+body[data-theme='flutlicht'][data-goal-stage='word'] .board-goal::before {
+  animation: flut-goal-pulse 0.7s steps(1, end) infinite;
+}
+
+/* Gegentor: ruhig und dunkel, ohne Puls -- wie im klassischen Design. */
+body[data-theme='flutlicht'][data-goal-stage='plain'] .board-goal {
+  background-image: radial-gradient(
+    ellipse 80% 130% at 50% -10%,
+    var(--flut-mid) 0%,
+    var(--svh-dk) 60%,
+    var(--flut-lo) 100%
+  );
+}
+
+body[data-theme='flutlicht'] .goal-word {
+  transform: skewX(-12deg);
+}
+
+body[data-theme='flutlicht'][data-goal-stage='word'] .goal-word {
+  font-size: 46cqh;
+  line-height: 1.05;
+}
+
+body[data-theme='flutlicht'][data-fx~='leuchten'][data-goal-stage='word'] .goal-word {
+  text-shadow: 0 0 2.4cqh var(--flut-gold-glow);
+}
+
+body[data-theme='flutlicht'][data-fx~='leuchten'] .goal-crest {
+  filter: drop-shadow(0 0 1.8cqh var(--flut-glow));
 }

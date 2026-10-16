@@ -48,7 +48,8 @@ Platzhalter mehr.**
 | `--svh-gold-dk` | `#7a5c12` | Text auf `--tint-gold` |
 | `--sponsor-page-off` | `#3b2f7a` | gedämpfte Seitenmarke im Sponsoren-Fenster (Display) |
 | `--flut-hi` / `--flut-mid` / `--flut-lo` | `#2a79c4` / `#124a86` / `#06142e` | Lichtkegel des Flutlicht-Designs, hell → dunkel |
-| `--flut-beam` / `--flut-fade` / `--flut-glow` / `--flut-shadow` | Weiß 6 % / `--flut-lo` 90 % / Hellblau 75 % / Schwarz 45 % | halbtransparente Effekte, **nur Flutlicht**, je einzeln abschaltbar |
+| `--flut-beam-hi` / `--flut-beam-lo` / `--flut-source` | Weiß 17 % / 4 % / 28 % | Lichtkegel und Schein der Lichtquelle, **nur Flutlicht** |
+| `--flut-fade` / `--flut-glow` / `--flut-gold-glow` / `--flut-shadow` / `--flut-pulse` | `--flut-lo` 90 % / Hellblau 75 % / Gold 70 % / Schwarz 45 % / `--svh-dk` 45 % | halbtransparente Effekte, **nur Flutlicht**, je einzeln abschaltbar (außer dem Puls des Torjubels) |
 
 Die Tönungen (`--tint-*`) gehören zu je einer Signalfarbe darüber und
 stehen deshalb als Token da – als Hex in den Komponenten liefen sie beim
@@ -211,10 +212,15 @@ Gast" und wurde deshalb verworfen (Nutzer, 16.10.2026).
 
 - **Hintergrund:** radialer Lichtkegel von oben Mitte (`--flut-hi` →
   `--flut-mid` → `--flut-lo`), unten zum Fuß hin abgedunkelt
-  (`--flut-fade`), dazu drei weiche Lichtstrahlen (`.beams`,
-  `--flut-beam`). Beides liegt **unter** allen Inhalten: der Verlauf als
-  Hintergrund der Bühne, die Strahlen mit `z-index: -1` – die Bühne ist
-  durch ihr `transform` ein Stapelkontext.
+  (`--flut-fade`), dazu fünf Lichtkegel aus einer Quelle knapp über dem
+  Bildrand (`.beams`). Jeder Kegel ist oben hell und läuft nach unten aus
+  (`--flut-beam-hi` → `--flut-beam-lo` → durchsichtig), über der Quelle
+  liegt ein heller Schein (`--flut-source`). Die weichen Kanten kommen
+  aus einer Unschärfe am **ganzen Bündel** – an einem einzelnen Kegel
+  schnitte `clip-path` sie wieder hart ab, weil es nach dem Filter wirkt.
+  Beides liegt **unter** allen Inhalten: der Verlauf als Hintergrund der
+  Bühne, die Strahlen mit `z-index: -1` – die Bühne ist durch ihr
+  `transform` ein Stapelkontext.
 - **Vereinsstreifen** in **beiden oberen Ecken**, je ein breiter und ein
   schmaler. Abweichend vom Entwurf (dort oben links und unten rechts):
   Unten rechts läge ein großer Streifen in der Torschützenliste der Gäste.
@@ -235,9 +241,22 @@ Gast" und wurde deshalb verworfen (Nutzer, 16.10.2026).
 - **Effektschalter:** Verlauf, Lichtstrahlen, Leuchten und Schatten hängen
   an `body[data-fx~='…']` und lassen sich im Steuerungsfenster einzeln
   abschalten. Ohne Verlauf steht eine ruhige Fläche in `--flut-mid` da.
-- **Noch im klassischen Look:** Torjubel, Info-Leiste, Torschützen-
-  Einblendung, Danksagung, Aufstellung. Für sie ist eine eigene
-  Skizzenrunde vorgesehen (`Backlog.md`).
+- **Einblendungen** – Aufbau, Dauer und Ablauf wie im klassischen
+  Design, nur die Erscheinung folgt dem Flutlicht:
+  - *Torschütze* und *Danksagung* liegen direkt auf dem Lichtkegel statt
+    auf einer Indigofläche; Name bzw. Zuschauerzahl groß und geneigt.
+  - *Info-Leiste* (Karte, Ecken) wird zur **Indigo-Plakette in der Form
+    der Uhr** an deren Stelle. Indigo und nicht Weiß wie die Uhr: Eine
+    gelbe Karte stünde auf Weiß fast ohne Kontrast (~1,6).
+  - *Torjubel, eigenes Tor:* Indigo mit eigenem Lichtkegel
+    (`--svh-lt` → `--svh` → `--svh-dk`), „TOR!" geneigt, Gold mit
+    Leuchten (`--flut-gold-glow`). Der Puls bleibt, aber als
+    halbtransparente Abdunklung (`--flut-pulse`) über dem Verlauf –
+    einen Verlauf kann `background-color` nicht animieren. Frequenz und
+    geringer Kontrast wie im klassischen Design.
+  - *Gegentor:* dunkler Kegel ohne Puls, „TOR" in Weiß.
+  - *Vor dem Anpfiff:* „VS" geneigt wie die Ziffern.
+  - *Aufstellungsseiten:* unverändert, nur auf dem neuen Hintergrund.
 
 **Ausnahme von den Guardrails:** Verläufe, Transparenz und Leuchten sind
 im Flutlicht-Design erlaubt – aber **nur** dort, und jeder dieser Effekte
