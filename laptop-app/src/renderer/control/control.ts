@@ -890,8 +890,17 @@ function wireSoundDiagnostics(): void {
   });
 }
 
-/** Spielt die Tormusik von vorn -- auch wenn sie noch läuft. */
+/**
+ * Spielt die Tormusik von vorn -- auch wenn sie noch läuft.
+ *
+ * Auf dem iPad schickt der Knopf nur einen Befehl: Die Musik gehört aus
+ * den Lautsprechern am Laptop, nicht aus dem Tablet in der Hand.
+ */
 function playGoalSound(): void {
+  if (isRemote()) {
+    window.api.soundCommand('play');
+    return;
+  }
   const audio = goalSoundElement();
   if (!audio.getAttribute('src')) return;
   audio.currentTime = 0;
@@ -905,6 +914,10 @@ function playGoalSound(): void {
 
 /** Hält die Musik an und setzt sie auf den Anfang zurück. */
 function stopGoalSound(): void {
+  if (isRemote()) {
+    window.api.soundCommand('stop');
+    return;
+  }
   const audio = goalSoundElement();
   audio.pause();
   audio.currentTime = 0;
@@ -916,7 +929,8 @@ function renderSoundControls(state: MatchState): void {
   const datei = pickGoalSound(state.media.sounds.files);
   // Nur bei echter Änderung neu laden -- sonst risse jedes
   // Zustands-Update die laufende Musik ab.
-  if (goalSoundFile !== (datei ?? '')) {
+  // Auf dem iPad wird die Datei nicht geladen: Gespielt wird am Laptop.
+  if (goalSoundFile !== (datei ?? '') && !isRemote()) {
     goalSoundFile = datei ?? '';
     void loadGoalSound(goalSoundFile);
   }
@@ -1120,6 +1134,35 @@ function renderStatus(status: AppStatus): void {
   }
 
   select.value = status.previewMode ? '' : String(status.selectedDisplayId ?? '');
+
+  renderRemoteStatus(status.remote);
+}
+
+/** Läuft diese Steuerung auf einem Gerät im WLAN statt am Laptop? */
+function isRemote(): boolean {
+  return document.body.classList.contains('is-remote');
+}
+
+/**
+ * Fernsteuerung im WLAN: Schalter, Adresse und PIN. Am iPad selbst ist
+ * der Abschnitt ausgeblendet -- dort hat er nichts zu suchen, und
+ * abschalten ließe sich die Fernsteuerung von dort ohnehin nicht.
+ */
+function renderRemoteStatus(remote: AppStatus['remote']): void {
+  const toggle = document.getElementById('remote-enabled') as HTMLInputElement;
+  if (document.activeElement !== toggle) toggle.checked = remote.enabled;
+
+  const details = document.getElementById('remote-details')!;
+  details.hidden = !remote.enabled;
+  document.getElementById('remote-urls')!.textContent =
+    remote.urls.length > 0 ? remote.urls.join('  ·  ') : 'kein WLAN gefunden';
+  document.getElementById('remote-pin')!.textContent = remote.pin;
+  document.getElementById('remote-clients')!.textContent =
+    remote.clients === 1 ? '1 Gerät verbunden' : `${remote.clients} Geräte verbunden`;
+
+  const error = document.getElementById('remote-error')!;
+  error.textContent = remote.error;
+  error.hidden = remote.error === '';
 }
 
 function wireTeamSettings(team: TeamId): void {
@@ -1188,6 +1231,15 @@ function main(): void {
   window.api.onStateUpdated(renderState);
   window.api.onClockTick(renderClock);
   window.api.onStatusUpdated(renderStatus);
+
+  // Tormusik, ausgelöst an einem Gerät im WLAN -- gespielt wird hier.
+  window.api.onSoundCommand((command) => {
+    if (command === 'play') playGoalSound();
+    else stopGoalSound();
+  });
+
+  const remoteToggle = document.getElementById('remote-enabled') as HTMLInputElement;
+  remoteToggle.addEventListener('change', () => window.api.remoteSetEnabled(remoteToggle.checked));
   window.api.onLibraryUpdated(renderLibrary);
   window.api.requestState();
   window.api.requestStatus();

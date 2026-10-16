@@ -386,6 +386,7 @@ body[data-setup='kader'] #setup-kader {
 }
 
 .setup-panel > .display-picker,
+.setup-panel > .remote-settings,
 .setup-panel > .appearance-settings,
 .setup-panel > .team-settings,
 .setup-panel > .squad-settings {
@@ -440,6 +441,100 @@ body[data-setup='kader'] #setup-kader {
 
 .board-size-x {
   color: var(--svh-mut);
+}
+
+/* ═══ Fernsteuerung im WLAN ═══ */
+
+.remote-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--svh-brd);
+  font-size: 14px;
+}
+
+.remote-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.remote-details p,
+.remote-error {
+  margin: 0;
+}
+
+/* Die PIN wird vom Bildschirm abgetippt -- groß und gesperrt gesetzt,
+   damit sich keine Ziffer verliest. */
+.remote-pin {
+  font-family: 'Oswald', sans-serif;
+  font-size: 18px;
+  letter-spacing: 0.12em;
+}
+
+.remote-hint {
+  font-size: 12px;
+  color: var(--svh-mut);
+}
+
+.remote-error {
+  color: var(--svh-loss);
+}
+
+/* ═══ Steuerung auf dem iPad (body.is-remote) ═══ */
+/* Dieselbe Seite wie am Laptop, ausgeliefert über das WLAN. Maßstab ist
+   hier der Finger, nicht die Maus (DESIGN.md: 44 px). */
+
+/* Ohne Verbindung zum Laptop tun die Knöpfe nichts -- das muss man sehen. */
+.remote-offline {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  padding: 10px;
+  background: var(--svh-loss);
+  color: var(--svh-wh);
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Safari rechnet 100vh einschließlich der Adressleiste -- die untere
+   Werkzeugzeile läge dann dahinter. */
+body.is-remote {
+  height: 100dvh;
+}
+
+/* Was am iPad keinen Sinn hat: Dateidialoge öffneten sich am Laptop, und
+   die Fernsteuerung soll sich nicht selbst abschalten. */
+body.is-remote .remote-settings,
+body.is-remote #library-folder,
+body.is-remote #home-logo-pick,
+body.is-remote #away-logo-pick,
+body.is-remote [id$='-paste-file'],
+body.is-remote .squad-photo {
+  display: none !important;
+}
+
+/* Unter 16 px Schrift zoomt Safari beim Antippen eines Feldes ins Bild
+   und bleibt dort stehen. */
+body.is-remote input,
+body.is-remote select,
+body.is-remote textarea {
+  font-size: 16px;
+}
+
+body.is-remote .btn,
+body.is-remote .goal-log select {
+  min-height: 44px;
+}
+
+body.is-remote .corner-row .btn,
+body.is-remote .goal-remove {
+  min-width: 44px;
+  min-height: 44px;
 }
 
 /* ═══ Tafeldarstellung ═══ */

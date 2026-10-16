@@ -104,6 +104,24 @@
       Erzeugt einer davon Streifen oder Flimmern, hier einzeln abschalten.
     </p>
   </section>
+
+  <!-- Fernsteuerung im WLAN. Am iPad selbst ausgeblendet (body.is-remote). -->
+  <section class="remote-settings">
+    <label class="remote-toggle">
+      <input type="checkbox" id="remote-enabled" />
+      Fernsteuerung im WLAN (z. B. vom iPad)
+    </label>
+    <div class="remote-details" id="remote-details" hidden>
+      <p>Im Browser des iPads öffnen: <strong id="remote-urls"></strong></p>
+      <p>PIN: <strong class="remote-pin" id="remote-pin"></strong> · <span id="remote-clients"></span></p>
+      <p class="remote-hint">
+        iPad und Laptop müssen im selben WLAN sein. Beim ersten Einschalten
+        fragt Windows nach der Firewall – „Private Netzwerke" erlauben.
+        Auf dem iPad über „Teilen → Zum Home-Bildschirm" ein Symbol anlegen.
+      </p>
+    </div>
+    <p class="remote-error" id="remote-error" hidden></p>
+  </section>
   </div>
 
   <div class="setup-panel" id="setup-teams">

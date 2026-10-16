@@ -31,11 +31,23 @@ async function build() {
       bundle: true,
       platform: 'browser',
       format: 'iife',
-      target: 'chrome120',
+      // Safari dazu: Das Steuerungsskript läuft auch auf dem iPad (Fernsteuerung).
+      target: ['chrome120', 'safari15'],
     });
   }
 
-  console.log('esbuild: preload.js, control.js, display.js gebündelt');
+  // Brücke der Fernsteuerung im WLAN -- wird vom Laptop an das iPad
+  // ausgeliefert, siehe main/remoteServer.ts.
+  await esbuild.build({
+    entryPoints: [path.join(ROOT, 'src/renderer/remote/remote.ts')],
+    outfile: path.join(ROOT, 'dist/renderer/remote/remote.js'),
+    bundle: true,
+    platform: 'browser',
+    format: 'iife',
+    target: 'safari15',
+  });
+
+  console.log('esbuild: preload.js, control.js, display.js, remote.js gebündelt');
 }
 
 build().catch((err) => {

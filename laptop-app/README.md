@@ -32,6 +32,19 @@ Herstellersoftware. Siehe `../CLAUDE.md` und `../DESIGN.md` für Hintergrund.
   Zeilen in der Torschützenliste. Gestaltungsfragen lassen sich damit am
   Laptop beurteilen, nicht erst an der Wand. Hintergrund und Regeln
   stehen in `../DESIGN.md` unter „Die Bühne".
+- **Fernsteuerung vom iPad** (oder jedem Gerät mit Browser) über das
+  WLAN am Platz. Der Laptop bleibt per HDMI an der Tafel. Einschalten
+  unter **Anzeige → Fernsteuerung im WLAN**; dort stehen Adresse und PIN.
+  Auf dem iPad die Adresse in Safari öffnen, PIN eingeben und über
+  „Teilen → Zum Home-Bildschirm" ein Symbol anlegen – beim nächsten Spiel
+  genügt ein Tippen. Die Steuerung ist dieselbe wie am Laptop, mit
+  Knöpfen in Fingergröße. **Tormusik** startet vom iPad aus **am Laptop**.
+  Ausgeblendet sind dort nur die Knöpfe, die ein Dateifenster öffnen
+  (Logo, Portrait, Logo-Ordner, Kader-Datei) – das ginge am Laptop auf.
+  Mehrere Geräte gleichzeitig sind möglich. Fällt die Verbindung weg,
+  zeigt das iPad einen roten Hinweis und verbindet sich selbst neu.
+  **Beim ersten Einschalten fragt die Windows-Firewall** – dort
+  „Private Netzwerke" erlauben, sonst erreicht das iPad den Laptop nicht.
 - **Ein- und Auswechslungen** für beide Mannschaften: Knopf
   **„⇄ Wechsel"** neben den Ecken, danach im Spielverlauf wählen, wer
   raus und wer rein geht (zur Wahl stehen die Spieler auf dem Platz bzw.
@@ -224,6 +237,8 @@ Im Electron-userData-Ordner (`%APPDATA%/anzeigetafel-laptop-app/`):
   bzw. zum Gerät und überstehen deshalb „Neues Spiel". Ältere Dateien ohne
   Farbvariante werden weiterhin gelesen – ohne Kontrastfläche, also wie
   bisher.
+- `remote.json` – Fernsteuerung an/aus und ihre PIN. Bewusst nicht in
+  `teams.json`: Die PIN gehört zu diesem Laptop.
 - `squads.json` – Kader, nach Vereinsnamen abgelegt
 - `content.json` – Einstellungen, die weder zu einer Mannschaft noch zu
   einem einzelnen Spiel gehören: der Dankestext an die Zuschauer, die

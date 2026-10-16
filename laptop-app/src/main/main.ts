@@ -10,6 +10,8 @@ import {
   IPC,
   MAX_ATTENDANCE_MESSAGE_LENGTH,
   MAX_RETRO_NAME_LENGTH,
+  REMOTE_PORT,
+  RemoteStatus,
   MediaFolderId,
   MEDIA_FOLDER_IDS,
   Player,
@@ -17,6 +19,14 @@ import {
 } from '../shared/types';
 import { loadContentConfig, saveContentConfig } from './content';
 import { MediaLibrary } from './media';
+import {
+  generatePin,
+  InvokeHandler,
+  localUrls,
+  REMOTE_DENIED,
+  RemoteServer,
+  SendHandler,
+} from './remoteServer';
 import { detectLogoVariant, readImageAsDataUrl } from './images';
 import {
   clearLiveMatch,
@@ -136,7 +146,117 @@ function currentStatus(): AppStatus {
     selectedDisplayId: target ? selectedDisplayId : null,
     previewMode: target === null,
     displayOpen: displayWindow !== null && !displayWindow.isDestroyed(),
+    remote: remoteStatus(),
   };
+}
+
+// --------------------------------------------------------------------
+// Fernsteuerung im WLAN
+// --------------------------------------------------------------------
+
+/**
+ * Alle Handler, die das Steuerungsfenster erreichen kann -- einmal für
+ * ipcMain, einmal für die Fernsteuerung. `onIpc()`/`handleIpc()` tragen in
+ * beide ein, sodass ein neuer Knopf automatisch auch auf dem iPad
+ * funktioniert.
+ */
+const sendHandlers = new Map<string, SendHandler>();
+const invokeHandlers = new Map<string, InvokeHandler>();
+
+function onIpc(channel: string, handler: SendHandler): void {
+  sendHandlers.set(channel, handler);
+  ipcMain.on(channel, handler);
+}
+
+function handleIpc(channel: string, handler: InvokeHandler): void {
+  invokeHandlers.set(channel, handler);
+  ipcMain.handle(channel, handler);
+}
+
+
+
+interface RemoteConfig {
+  enabled: boolean;
+  pin: string;
+}
+
+let remote: RemoteServer | null = null;
+let remoteConfig: RemoteConfig = { enabled: false, pin: generatePin() };
+let remoteError = '';
+
+function remoteConfigPath(): string {
+  return path.join(app.getPath('userData'), 'remote.json');
+}
+
+/**
+ * Gerät und Laptop gehören zusammen: Die PIN liegt deshalb in einer
+ * eigenen Datei im userData-Ordner, nicht in `teams.json`, die auf einen
+ * anderen Rechner mitwandern darf.
+ */
+function loadRemoteConfig(): RemoteConfig {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(remoteConfigPath(), 'utf-8')) as Partial<RemoteConfig>;
+    return {
+      enabled: parsed.enabled === true,
+      pin: typeof parsed.pin === 'string' && /^\d{6}$/.test(parsed.pin) ? parsed.pin : generatePin(),
+    };
+  } catch {
+    return { enabled: false, pin: generatePin() };
+  }
+}
+
+function saveRemoteConfig(): void {
+  try {
+    fs.writeFileSync(remoteConfigPath(), JSON.stringify(remoteConfig, null, 2));
+  } catch (error) {
+    logFatal('remote.json', error);
+  }
+}
+
+function remoteStatus(): RemoteStatus {
+  return {
+    enabled: remote !== null,
+    urls: remote ? localUrls(remote.port ?? REMOTE_PORT) : [],
+    pin: remoteConfig.pin,
+    clients: remote?.clientCount ?? 0,
+    error: remoteError,
+  };
+}
+
+async function startRemote(): Promise<void> {
+  if (remote) return;
+  const server = new RemoteServer({
+    rendererRoot: path.join(__dirname, '..', 'renderer'),
+    sendHandlers,
+    invokeHandlers,
+    denied: REMOTE_DENIED,
+    pin: remoteConfig.pin,
+    onClientsChanged: broadcastStatus,
+  });
+  try {
+    await server.start(REMOTE_PORT);
+    remote = server;
+    remoteError = '';
+  } catch (error) {
+    // Meist ist der Port belegt, etwa weil die App ein zweites Mal läuft.
+    remoteError = `Fernsteuerung ließ sich nicht starten: ${String(error)}`;
+  }
+  broadcastStatus();
+}
+
+async function stopRemote(): Promise<void> {
+  const server = remote;
+  remote = null;
+  if (server) await server.stop();
+  broadcastStatus();
+}
+
+async function setRemoteEnabled(enabled: boolean): Promise<void> {
+  remoteConfig = { ...remoteConfig, enabled };
+  saveRemoteConfig();
+  remoteError = '';
+  if (enabled) await startRemote();
+  else await stopRemote();
 }
 
 /** Sendet nur an Fenster, die es noch gibt -- sonst wirft `send()`. */
@@ -144,14 +264,24 @@ function sendTo(win: BrowserWindow | null, channel: string, ...args: unknown[]):
   if (win && !win.isDestroyed()) win.webContents.send(channel, ...args);
 }
 
+/**
+ * Schickt an das Steuerungsfenster UND an alle per WLAN verbundenen Geräte
+ * -- die Fernsteuerung ist eine zweite Steuerung und braucht dieselben
+ * Nachrichten. Nicht für das Anzeigefenster.
+ */
+function toControl(channel: string, ...args: unknown[]): void {
+  sendTo(controlWindow, channel, ...args);
+  remote?.broadcast(channel, ...args);
+}
+
 function broadcastState(): void {
   const state = store.getState();
-  sendTo(controlWindow, IPC.stateUpdated, state);
+  toControl(IPC.stateUpdated, state);
   sendTo(displayWindow, IPC.stateUpdated, state);
 }
 
 function broadcastStatus(): void {
-  sendTo(controlWindow, IPC.statusUpdated, currentStatus());
+  toControl(IPC.statusUpdated, currentStatus());
 }
 
 /**
@@ -234,7 +364,7 @@ function updateSquad(team: TeamId, players: Player[]): void {
 }
 
 function broadcastLibrary(): void {
-  sendTo(controlWindow, IPC.libraryUpdated, {
+  toControl(IPC.libraryUpdated, {
     teams: library.list(),
     rootPath: library.getRootPath(),
     squadNames: squads.listNames(),
@@ -512,6 +642,13 @@ app.whenReady().then(() => {
   // dann nichts mehr zu tun.
   if (!isFirstInstance) return;
 
+  // Die Fernsteuerung startet, wenn sie beim letzten Mal an war. Ihre
+  // Handler trägt der Rest dieser Funktion ein -- der Server schlägt sie
+  // erst bei einer Anfrage nach, die Reihenfolge ist also egal.
+  remoteConfig = loadRemoteConfig();
+  saveRemoteConfig();
+  if (remoteConfig.enabled) void startRemote();
+
   const teamsConfig = loadTeamsConfig();
   store = new MatchStateStore(teamsConfig);
   library = new TeamLibrary(teamsConfig.logoLibraryPath ?? resolveDefaultLibraryPath());
@@ -586,7 +723,7 @@ app.whenReady().then(() => {
 
   // Uhr läuft über einen eigenen, schlanken Kanal -- siehe IPC.stateUpdated.
   store.onClockTick((clock) => {
-    sendTo(controlWindow, IPC.clockTick, clock);
+    toControl(IPC.clockTick, clock);
     sendTo(displayWindow, IPC.clockTick, clock);
     // Auch ohne Tor oder Karte muss der Uhrstand in die Sicherung wandern,
     // sonst fehlten nach einem Absturz alle Minuten seit dem letzten
@@ -594,41 +731,51 @@ app.whenReady().then(() => {
     scheduleLiveMatchSave();
   });
 
-  ipcMain.on(IPC.requestState, (event) => {
+  // Fernsteuerung ein/aus -- nur am Laptop (siehe REMOTE_DENIED).
+  onIpc(IPC.remoteSetEnabled, (_event, enabled: unknown) => {
+    void setRemoteEnabled(enabled === true);
+  });
+  // Tormusik von der Fernsteuerung: läuft am Laptop, also nur an dessen
+  // Steuerungsfenster -- nicht zurück an die Geräte.
+  onIpc(IPC.soundCommand, (_event, command: unknown) => {
+    if (command === 'play' || command === 'stop') sendTo(controlWindow, IPC.soundCommand, command);
+  });
+
+  onIpc(IPC.requestState, (event) => {
     event.sender.send(IPC.stateUpdated, store.getState());
   });
-  ipcMain.on(IPC.requestStatus, (event) => {
+  onIpc(IPC.requestStatus, (event) => {
     event.sender.send(IPC.statusUpdated, currentStatus());
   });
-  ipcMain.on(IPC.scoreIncrement, (_event, team: unknown, delta: unknown) => {
+  onIpc(IPC.scoreIncrement, (_event, team: unknown, delta: unknown) => {
     if (!isTeamId(team) || typeof delta !== 'number' || !Number.isFinite(delta)) return;
     store.incrementScore(team, delta);
   });
-  ipcMain.on(IPC.clockStart, () => store.startClock());
-  ipcMain.on(IPC.clockStop, () => store.stopClock());
-  ipcMain.on(IPC.clockReset, () => store.resetClock());
-  ipcMain.on(IPC.setStoppage, (_event, minutes: unknown) => {
+  onIpc(IPC.clockStart, () => store.startClock());
+  onIpc(IPC.clockStop, () => store.stopClock());
+  onIpc(IPC.clockReset, () => store.resetClock());
+  onIpc(IPC.setStoppage, (_event, minutes: unknown) => {
     if (typeof minutes !== 'number' || !Number.isFinite(minutes)) return;
     store.setStoppage(minutes);
     flushLiveMatchSave();
   });
-  ipcMain.on(IPC.clockSet, (_event, elapsedMs: unknown) => {
+  onIpc(IPC.clockSet, (_event, elapsedMs: unknown) => {
     if (typeof elapsedMs !== 'number' || !Number.isFinite(elapsedMs)) return;
     store.setClock(elapsedMs);
     flushLiveMatchSave();
   });
-  ipcMain.on(IPC.selectDisplay, (_event, id: number | null) => openDisplayWindow(id));
+  onIpc(IPC.selectDisplay, (_event, id: number | null) => openDisplayWindow(id));
 
-  ipcMain.on(IPC.requestLibrary, () => {
+  onIpc(IPC.requestLibrary, () => {
     // Bei jeder Anfrage neu einlesen -- so tauchen zwischenzeitlich
     // hinzugefügte Vereinslogos ohne Neustart auf.
     library.reload();
     broadcastLibrary();
   });
-  ipcMain.on(IPC.libraryChooseFolder, () => {
+  onIpc(IPC.libraryChooseFolder, () => {
     void chooseLibraryFolder();
   });
-  ipcMain.on(IPC.libraryPick, (_event, team: TeamId, id: string) => {
+  onIpc(IPC.libraryPick, (_event, team: TeamId, id: string) => {
     const name = library.getName(id);
     if (!name) return;
     const stored = squads.get(name);
@@ -644,48 +791,48 @@ app.whenReady().then(() => {
     persistTeams();
   });
 
-  ipcMain.on(IPC.squadPickFile, (_event, team: TeamId) => {
+  onIpc(IPC.squadPickFile, (_event, team: TeamId) => {
     void pickSquadFile(team);
   });
-  ipcMain.on(IPC.squadLoadByName, (_event, team: TeamId, name: string) => {
+  onIpc(IPC.squadLoadByName, (_event, team: TeamId, name: string) => {
     const stored = squads.get(name);
     // Name der Mannschaft mitziehen -- sonst stünde auf der Tafel die
     // 1. Mannschaft, während der Kader der U19 geladen ist.
     store.applyLibraryTeam(team, name, store.getState()[team].logoDataUrl, stored.players, stored.coach);
     persistTeams();
   });
-  ipcMain.on(IPC.showLineup, (_event, team: TeamId) => store.showLineup(team));
-  ipcMain.on(IPC.hideLineup, () => store.hideLineup());
-  ipcMain.on(IPC.showScorer, (_event, eventId: unknown) => {
+  onIpc(IPC.showLineup, (_event, team: TeamId) => store.showLineup(team));
+  onIpc(IPC.hideLineup, () => store.hideLineup());
+  onIpc(IPC.showScorer, (_event, eventId: unknown) => {
     if (!isEventId(eventId)) return;
     store.showScorer(eventId);
   });
-  ipcMain.on(IPC.hideScorer, () => store.hideScorer());
+  onIpc(IPC.hideScorer, () => store.hideScorer());
 
-  ipcMain.on(IPC.showInfo, (_event, overlay: unknown) => {
+  onIpc(IPC.showInfo, (_event, overlay: unknown) => {
     if (!isInfoOverlay(overlay)) return;
     store.showInfo(overlay);
   });
-  ipcMain.on(IPC.hideInfo, () => store.hideInfo());
+  onIpc(IPC.hideInfo, () => store.hideInfo());
 
-  ipcMain.on(IPC.cornerAdjust, (_event, team: unknown, delta: unknown) => {
+  onIpc(IPC.cornerAdjust, (_event, team: unknown, delta: unknown) => {
     if (!isTeamId(team) || typeof delta !== 'number' || !Number.isFinite(delta)) return;
     store.adjustCorners(team, delta);
   });
 
-  ipcMain.on(IPC.setAttendance, (_event, value: unknown) => {
+  onIpc(IPC.setAttendance, (_event, value: unknown) => {
     store.setAttendance(sanitizeAttendance(value));
   });
 
-  ipcMain.on(IPC.setAnnouncements, (_event, value: unknown) => {
+  onIpc(IPC.setAnnouncements, (_event, value: unknown) => {
     store.setAnnouncements(sanitizeAnnouncements(value));
     persistContent();
   });
 
-  ipcMain.on(IPC.slideshowStart, () => store.startSlideshow());
-  ipcMain.on(IPC.slideshowStop, () => store.stopSlideshow());
+  onIpc(IPC.slideshowStart, () => store.startSlideshow());
+  onIpc(IPC.slideshowStop, () => store.stopSlideshow());
 
-  ipcMain.on(IPC.mediaReload, () => {
+  onIpc(IPC.mediaReload, () => {
     media.scan();
     store.setMedia(media.getLists());
   });
@@ -699,7 +846,7 @@ app.whenReady().then(() => {
    * Einmal geladen liegt die Datei als Blob im Fenster -- der Aufruf
    * passiert nur, wenn sich der Dateiname ändert, nicht bei jedem Tor.
    */
-  ipcMain.handle(IPC.soundRead, (_event, fileName: unknown) => {
+  handleIpc(IPC.soundRead, (_event, fileName: unknown) => {
     if (typeof fileName !== 'string') return null;
     // Dieselbe Pfadprüfung wie beim Protokoll -- eine zweite Stelle mit
     // eigener Logik wäre eine zweite Stelle zum Übersehen.
@@ -714,36 +861,36 @@ app.whenReady().then(() => {
   });
 
   // Fassung und Baudatum für die Kopfzeile des Steuerungsfensters.
-  ipcMain.handle(IPC.appInfo, () => readAppInfo());
+  handleIpc(IPC.appInfo, () => readAppInfo());
 
-  ipcMain.on(IPC.setSound, (_event, volume: unknown, muted: unknown) => {
+  onIpc(IPC.setSound, (_event, volume: unknown, muted: unknown) => {
     if (typeof volume !== 'number' || !Number.isFinite(volume)) return;
     store.setSound({ volume, muted: muted === true });
     persistContent();
   });
 
-  ipcMain.on(IPC.setAttendanceMessage, (_event, value: unknown) => {
+  onIpc(IPC.setAttendanceMessage, (_event, value: unknown) => {
     // sanitizeText() nimmt auch Zeilenumbrüche aus eingefügtem Text heraus
     // -- die zerrissen sonst das Layout der Tafel.
     store.setAttendanceMessage(sanitizeText(value, MAX_ATTENDANCE_MESSAGE_LENGTH));
     persistContent();
   });
 
-  ipcMain.on(IPC.playerPickPhoto, (_event, team: TeamId, playerId: string) => {
+  onIpc(IPC.playerPickPhoto, (_event, team: TeamId, playerId: string) => {
     void pickPlayerPhoto(team, playerId);
   });
-  ipcMain.on(IPC.playerClearPhoto, (_event, team: TeamId, playerId: string) => {
+  onIpc(IPC.playerClearPhoto, (_event, team: TeamId, playerId: string) => {
     store.setPlayerPhoto(team, playerId, undefined);
     persistSquad(team);
   });
 
-  ipcMain.on(IPC.teamSetCoach, (_event, team: unknown, coach: unknown) => {
+  onIpc(IPC.teamSetCoach, (_event, team: unknown, coach: unknown) => {
     if (!isTeamId(team)) return;
     store.setCoach(team, sanitizeText(coach));
     persistSquad(team);
   });
 
-  ipcMain.on(IPC.squadAddPlayer, (_event, team: TeamId) => {
+  onIpc(IPC.squadAddPlayer, (_event, team: TeamId) => {
     const player: Player = {
       id: randomUUID(),
       number: null,
@@ -758,7 +905,7 @@ app.whenReady().then(() => {
     };
     updateSquad(team, [...store.getState().squads[team], player]);
   });
-  ipcMain.on(IPC.squadUpdatePlayer, (_event, team: unknown, raw: unknown) => {
+  onIpc(IPC.squadUpdatePlayer, (_event, team: unknown, raw: unknown) => {
     if (!isTeamId(team)) return;
     const player = sanitizePlayer(raw);
     if (!player) return;
@@ -767,7 +914,7 @@ app.whenReady().then(() => {
       store.getState().squads[team].map((p) => (p.id === player.id ? player : p))
     );
   });
-  ipcMain.on(
+  onIpc(
     IPC.squadImport,
     (_event, team: unknown, entries: unknown, replace: unknown, coach: unknown) => {
       if (!isTeamId(team)) return;
@@ -783,106 +930,106 @@ app.whenReady().then(() => {
       updateSquad(team, [...existing, ...imported]);
     }
   );
-  ipcMain.on(IPC.squadRemovePlayer, (_event, team: TeamId, playerId: string) => {
+  onIpc(IPC.squadRemovePlayer, (_event, team: TeamId, playerId: string) => {
     updateSquad(
       team,
       store.getState().squads[team].filter((p) => p.id !== playerId)
     );
   });
-  ipcMain.on(IPC.goalSetScorer, (_event, eventId: unknown, scorerId: unknown) => {
+  onIpc(IPC.goalSetScorer, (_event, eventId: unknown, scorerId: unknown) => {
     if (!isEventId(eventId)) return;
     store.setGoalScorer(eventId, sanitizeOptionalId(scorerId));
   });
-  ipcMain.on(IPC.cardAdd, (_event, team: unknown, card: unknown) => {
+  onIpc(IPC.cardAdd, (_event, team: unknown, card: unknown) => {
     if (!isTeamId(team) || !isCardColor(card)) return;
     store.addCard(team, card);
   });
-  ipcMain.on(IPC.cardSetPlayer, (_event, eventId: unknown, playerId: unknown) => {
+  onIpc(IPC.cardSetPlayer, (_event, eventId: unknown, playerId: unknown) => {
     if (!isEventId(eventId)) return;
     store.setCardPlayer(eventId, sanitizeOptionalId(playerId));
   });
-  ipcMain.on(IPC.subAdd, (_event, team: unknown) => {
+  onIpc(IPC.subAdd, (_event, team: unknown) => {
     if (!isTeamId(team)) return;
     store.addSubstitution(team);
   });
-  ipcMain.on(IPC.subSetPlayers, (_event, eventId: unknown, outId: unknown, inId: unknown) => {
+  onIpc(IPC.subSetPlayers, (_event, eventId: unknown, outId: unknown, inId: unknown) => {
     if (!isEventId(eventId)) return;
     store.setSubstitutionPlayers(eventId, sanitizeOptionalId(outId), sanitizeOptionalId(inId));
   });
-  ipcMain.on(IPC.eventRemove, (_event, eventId: unknown) => {
+  onIpc(IPC.eventRemove, (_event, eventId: unknown) => {
     if (!isEventId(eventId)) return;
     store.removeEvent(eventId);
   });
-  ipcMain.on(IPC.setKickoffTime, (_event, value: unknown) => {
+  onIpc(IPC.setKickoffTime, (_event, value: unknown) => {
     store.setKickoffTime(sanitizeKickoffTime(value));
   });
-  ipcMain.on(IPC.setHalfDuration, (_event, minutes: unknown) => {
+  onIpc(IPC.setHalfDuration, (_event, minutes: unknown) => {
     if (typeof minutes !== 'number' || !Number.isFinite(minutes)) return;
     store.setHalfDuration(minutes);
     persistTeams();
   });
-  ipcMain.on(IPC.setBoardSize, (_event, board: unknown) => {
+  onIpc(IPC.setBoardSize, (_event, board: unknown) => {
     store.setBoardSize(sanitizeBoardSize(board));
     persistTeams();
   });
-  ipcMain.on(IPC.setAppearance, (_event, appearance: unknown) => {
+  onIpc(IPC.setAppearance, (_event, appearance: unknown) => {
     store.setAppearance(sanitizeAppearance(appearance));
     persistTeams();
   });
 
   // Phasenwechsel sind die Momente, an denen ein Verlust am meisten weh
   // täte -- hier wird nicht auf das Drosselfenster gewartet.
-  ipcMain.on(IPC.phaseKickoff, () => {
+  onIpc(IPC.phaseKickoff, () => {
     store.kickoff();
     flushLiveMatchSave();
   });
-  ipcMain.on(IPC.phaseHalfTime, () => {
+  onIpc(IPC.phaseHalfTime, () => {
     store.goToHalfTime();
     flushLiveMatchSave();
   });
-  ipcMain.on(IPC.phaseSecondHalf, () => {
+  onIpc(IPC.phaseSecondHalf, () => {
     store.startSecondHalf();
     flushLiveMatchSave();
   });
-  ipcMain.on(IPC.phaseFullTime, () => {
+  onIpc(IPC.phaseFullTime, () => {
     store.goToFullTime();
     flushLiveMatchSave();
   });
-  ipcMain.on(IPC.matchReset, () => {
+  onIpc(IPC.matchReset, () => {
     store.resetMatch();
     // Sicherung mitentfernen: Sonst böte der nächste Start an, das gerade
     // bewusst verworfene Spiel fortzusetzen.
     discardLiveMatch();
   });
-  ipcMain.on(IPC.phaseRevert, () => {
+  onIpc(IPC.phaseRevert, () => {
     store.revertPhase();
     flushLiveMatchSave();
   });
 
-  ipcMain.on(IPC.teamSetName, (_event, team: unknown, name: unknown) => {
+  onIpc(IPC.teamSetName, (_event, team: unknown, name: unknown) => {
     if (!isTeamId(team)) return;
     store.setTeamName(team, sanitizeText(name));
     persistTeams();
   });
-  ipcMain.on(IPC.teamSetShortName, (_event, team: unknown, shortName: unknown) => {
+  onIpc(IPC.teamSetShortName, (_event, team: unknown, shortName: unknown) => {
     if (!isTeamId(team)) return;
     store.setTeamShortName(team, sanitizeText(shortName, 6));
     persistTeams();
   });
-  ipcMain.on(IPC.teamSetRetroName, (_event, team: unknown, retroName: unknown) => {
+  onIpc(IPC.teamSetRetroName, (_event, team: unknown, retroName: unknown) => {
     if (!isTeamId(team)) return;
     store.setTeamRetroName(team, sanitizeText(retroName, MAX_RETRO_NAME_LENGTH));
     persistTeams();
   });
-  ipcMain.on(IPC.teamPickLogo, (_event, team: TeamId) => {
+  onIpc(IPC.teamPickLogo, (_event, team: TeamId) => {
     void pickLogo(team);
   });
-  ipcMain.on(IPC.teamClearLogo, (_event, team: TeamId) => {
+  onIpc(IPC.teamClearLogo, (_event, team: TeamId) => {
     store.setTeamLogo(team, undefined);
     persistTeams();
   });
 
-  ipcMain.on(IPC.reopenDisplay, () => openDisplayWindow(selectedDisplayId));
+  onIpc(IPC.reopenDisplay, () => openDisplayWindow(selectedDisplayId));
 
   // Falls sich die Monitor-Konfiguration während der Laufzeit ändert
   // (Kabel gezogen/gesteckt), Status neu melden und das Anzeigefenster
@@ -921,7 +1068,10 @@ app.whenReady().then(() => {
 });
 
 // Letzte Sicherung, egal auf welchem Weg die App endet.
-app.on('before-quit', () => flushLiveMatchSave());
+app.on('before-quit', () => {
+  flushLiveMatchSave();
+  void remote?.stop();
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();

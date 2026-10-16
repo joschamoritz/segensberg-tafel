@@ -1,4 +1,4 @@
-import type { LibraryPayload, PreloadApi } from '../main/preload';
+import type { LibraryPayload, PreloadApi } from '../shared/bridge';
 
 /**
  * Schnittstelle zum Hauptprozess, wie sie im Renderer sichtbar ist.

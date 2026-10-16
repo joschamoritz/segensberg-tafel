@@ -881,7 +881,35 @@ export interface AppStatus {
   /** false, wenn das Anzeigefenster geschlossen wurde -- dann hilft nur
       der Knopf "Anzeigefenster neu öffnen" */
   displayOpen: boolean;
+  /** Fernsteuerung im WLAN, siehe `RemoteStatus` */
+  remote: RemoteStatus;
 }
+
+/**
+ * Fernsteuerung im WLAN: Ein iPad (oder jedes andere Gerät mit Browser)
+ * öffnet die Steuerung über die Adresse des Laptops. Der Laptop bleibt an
+ * der Tafel und bespielt sie weiter per HDMI.
+ *
+ * Steht im `AppStatus`, weil sich die Zahl der verbundenen Geräte im
+ * Betrieb ändert und das Steuerungsfenster sie anzeigen soll.
+ */
+export interface RemoteStatus {
+  enabled: boolean;
+  /** Adressen, unter denen der Laptop im WLAN erreichbar ist */
+  urls: string[];
+  /** Zugangs-PIN -- ohne sie nimmt der Laptop keine Befehle an */
+  pin: string;
+  /** verbundene Geräte */
+  clients: number;
+  /** Fehlermeldung, falls der Port belegt war o. Ä.; sonst leer */
+  error: string;
+}
+
+/** Port der Fernsteuerung. 28 wie im Vereinsnamen. */
+export const REMOTE_PORT = 8028;
+
+/** Tormusik-Befehl von der Fernsteuerung an den Laptop. */
+export type SoundCommand = 'play' | 'stop';
 
 /**
  * Fassung und Baudatum der laufenden App.
@@ -971,4 +999,7 @@ export const IPC = {
   goalSetScorer: 'goal:set-scorer',
   /** einmalig abgefragt, liefert `AppInfo` -- siehe dort */
   appInfo: 'app:info',
+  /** Tormusik von der Fernsteuerung am Laptop abspielen, siehe `SoundCommand` */
+  soundCommand: 'sound:command',
+  remoteSetEnabled: 'remote:set-enabled',
 } as const;
