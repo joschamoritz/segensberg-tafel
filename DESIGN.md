@@ -46,6 +46,9 @@ Platzhalter mehr.**
 | `--stage-void` | `#000000` | Fläche neben der Bühne (Display) |
 | `--tint-gold` / `--tint-warn` / `--tint-loss` | `#fdf6e3` / `#fff1e6` / `#fef2f2` | blasse Hinweisflächen, **nur Control** |
 | `--svh-gold-dk` | `#7a5c12` | Text auf `--tint-gold` |
+| `--sponsor-page-off` | `#3b2f7a` | gedämpfte Seitenmarke im Sponsoren-Fenster (Display) |
+| `--flut-hi` / `--flut-mid` / `--flut-lo` | `#2a79c4` / `#124a86` / `#06142e` | Lichtkegel des Flutlicht-Designs, hell → dunkel |
+| `--flut-beam` / `--flut-fade` / `--flut-glow` / `--flut-shadow` | Weiß 6 % / `--flut-lo` 90 % / Hellblau 75 % / Schwarz 45 % | halbtransparente Effekte, **nur Flutlicht**, je einzeln abschaltbar |
 
 Die Tönungen (`--tint-*`) gehören zu je einer Signalfarbe darüber und
 stehen deshalb als Token da – als Hex in den Komponenten liefen sie beim
@@ -136,10 +139,21 @@ damit sie beim Hochzählen nicht springen.
   Kartenfarben kommen aus den Tokens `--card-yellow`/`--card-red`,
   Gelb-Rot als hart geteilte Fläche aus beiden.
 - **Diashow-Folie** (`.board-slides`, Display): Vollbild auf
-  `--svh-blue`. Bilder werden mit `object-fit: contain` vollständig
-  gezeigt, nie beschnitten – ein angeschnittenes Sponsorenlogo wäre
-  schlimmer als ein Rand. Textfolien (Termine) mit Überschrift in
-  `--svh-gold` und höchstens fünf Zeilen in Weiß.
+  `--svh-blue` (im Flutlicht-Design durchsichtig auf dem Lichtkegel).
+  Bilder werden mit `object-fit: contain` vollständig gezeigt, nie
+  beschnitten – ein angeschnittenes Sponsorenlogo wäre schlimmer als ein
+  Rand. Textfolien (Termine) mit Überschrift in `--svh-gold` und
+  höchstens fünf Zeilen in Weiß.
+- **Sponsoren-Fenster** (`.sponsor-window`, Display, alle Designs):
+  Titelleiste „UNSERE PARTNER" in `--svh-gold` auf `--svh-dk`, darunter
+  **2×2 gleich große weiße Kacheln**, Logo eingepasst (`contain`). Ab
+  zwei Seiten zeigen kleine gefüllte Quadrate rechts in der Titelleiste
+  die Seite an (aktive weiß, übrige `--sponsor-page-off`). Fehlen auf
+  einer Seite Logos, bleiben Kacheln **leer** statt zu verschwinden –
+  sonst würden die übrigen größer, und gleich große Partner sind der
+  Zweck. Weiße Kacheln, weil Sponsorenlogos fast immer für hellen Grund
+  gezeichnet sind; die frühere Regel „Motive im Vereinsblau anlegen"
+  gilt damit nur noch für Highlights.
 - **Torjubel** (`.board-goal` + `.goal-confetti`, Display): zwei Akte,
   gesteuert über `body[data-goal-stage]`.
   1. **Vollbild, für beide Mannschaften gleich aufgebaut:** das Wappen
@@ -173,6 +187,65 @@ damit sie beim Hochzählen nicht springen.
   kein Blinken, kein Farbwechsel wie beim Torjubel. Eine Vollbildfläche
   statt einer Leiste, weil sie pro Spiel nur einmal erscheint und eher
   eine Geste ans Publikum ist als eine Zusatzinformation nebenher.
+
+## Designs der Anzeige
+
+Die Anzeige hat zwei Designs, umschaltbar im Steuerungsfenster unter
+„Anzeige → Design" (`body[data-theme]`). Die Wahl liegt in `teams.json`,
+gehört also zum Gerät.
+
+- **Klassisch** – alles in diesem Dokument oberhalb dieses Abschnitts.
+  Vorgabe, damit ein Update die Tafel nicht ungefragt umgestaltet.
+- **Flutlicht** – modernes Design (Entwurf vom 16.10.2026), siehe unten.
+- **Retro** – Punktmatrix wie alte Stadiontafeln, geplant (`Backlog.md`).
+  Modern und Retro bleiben **strikt getrennt**: keine Segmentziffern oder
+  Punktraster im modernen Design.
+
+**Für alle Designs gilt: nur Vereinsfarben.** Die Tafel ist eine Heimtafel.
+Indigo, Blau, Gold, Weiß – Gäste erscheinen ausschließlich über ihr Wappen,
+nie über eine Farbfläche, und beide Spielstandseiten sind gleich gestaltet.
+Ein Entwurf mit Indigo links und Blau rechts las sich als „Heim gegen
+Gast" und wurde deshalb verworfen (Nutzer, 16.10.2026).
+
+### Flutlicht
+
+- **Hintergrund:** radialer Lichtkegel von oben Mitte (`--flut-hi` →
+  `--flut-mid` → `--flut-lo`), unten zum Fuß hin abgedunkelt
+  (`--flut-fade`), dazu drei weiche Lichtstrahlen (`.beams`,
+  `--flut-beam`). Beides liegt **unter** allen Inhalten: der Verlauf als
+  Hintergrund der Bühne, die Strahlen mit `z-index: -1` – die Bühne ist
+  durch ihr `transform` ein Stapelkontext.
+- **Vereinsstreifen** in **beiden oberen Ecken**, je ein breiter und ein
+  schmaler. Abweichend vom Entwurf (dort oben links und unten rechts):
+  Unten rechts läge ein großer Streifen in der Torschützenliste der Gäste.
+  Sie sind so bemessen, dass sie über dem Wappen enden, und erscheinen nur
+  im laufenden Spiel – in Halbzeit und Endstand rückt das Wappen nach oben.
+- **Spielstand:** 52cqh (Pause/Endstand 38cqh), um 12° nach rechts geneigt
+  wie in einer Fernseheinblendung. Die Mittelspalte ist dafür 48 statt
+  40cqw breit; die Mannschaftsspalten verlieren je 15 px, die
+  Torschützenliste kürzt lange Namen also etwas früher als im klassischen
+  Design. Trenner: zwei goldene **Rauten**.
+- **Keine Umrandungen** an Spielstand und Wappen (Nutzer, 16.10.2026) –
+  abgesetzt wird über Helligkeit und Fläche.
+- **Wappen** mit blauem Schein (`--flut-glow`).
+- **Uhr-Plakette:** weißes Trapez, nach unten schmaler, Zeit in
+  `--svh-dk`. Links daneben die Halbzeit („1. HZ") in Weiß, rechts die
+  Nachspielzeit („+3") in Gold. Beide hängen absolut an der Plakette,
+  damit die Uhr mittig bleibt, wenn „+3" dazukommt.
+- **Effektschalter:** Verlauf, Lichtstrahlen, Leuchten und Schatten hängen
+  an `body[data-fx~='…']` und lassen sich im Steuerungsfenster einzeln
+  abschalten. Ohne Verlauf steht eine ruhige Fläche in `--flut-mid` da.
+- **Noch im klassischen Look:** Torjubel, Info-Leiste, Torschützen-
+  Einblendung, Danksagung, Aufstellung. Für sie ist eine eigene
+  Skizzenrunde vorgesehen (`Backlog.md`).
+
+**Ausnahme von den Guardrails:** Verläufe, Transparenz und Leuchten sind
+im Flutlicht-Design erlaubt – aber **nur** dort, und jeder dieser Effekte
+muss einzeln abschaltbar sein. Ob sie auf der echten Wand tragen, zeigt
+erst der Test am Gerät; wer einen neuen solchen Effekt einführt, braucht
+einen eigenen Schalter (`FlutlichtEffects` in `shared/types.ts`). Ein Test
+prüft, dass jeder Schalter eine Regel im Stylesheet hat. Alle übrigen
+Guardrails gelten unverändert, auch für Flutlicht.
 
 ## Layout
 
@@ -232,7 +305,14 @@ für Kartentrennung, aber kein Muss.
   ein `position: fixed` außerhalb säße im Fenster statt auf der Tafel.
 - Farbverläufe/Transparenzen im Display-Content vermeiden – LED-Wände stellen
   das oft schlecht dar. Harte, gesättigte Flächenfarben und harte Kanten sind
-  dagegen unproblematisch (auch für Animationen)
+  dagegen unproblematisch (auch für Animationen). **Ausnahme:** das
+  Flutlicht-Design, mit einzeln abschaltbaren Effekten (siehe „Designs der
+  Anzeige")
+- **Theme-Regeln immer an `body[data-theme='…']` hängen** und Sichtbarkeit
+  dort über `visibility` oder ein eigenes Element steuern, nicht über
+  `display` an Elementen, die schon eine Ausblende-Regel haben. Gleiche
+  Spezifität, spätere Regel gewinnt – eine Theme-Regel mit `display`
+  holte etwa die Vereinsstreifen über den Vollbild-Einblendungen zurück.
 - Jede Textgröße auf der Display-Ansicht relativ in `vw`/`vh` angeben, nie in
   festen `px`
 - Eckenradien klein halten (max. ~1–1,5vh) – große Rundungen wirken auf

@@ -3,6 +3,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import {
   BoardSize,
+  DEFAULT_APPEARANCE,
+  DisplayAppearance,
   DEFAULT_BOARD_SIZE,
   DEFAULT_HALF_DURATION_MIN,
   LogoVariant,
@@ -26,6 +28,8 @@ export interface TeamsConfig {
   /** Auflösung der Anzeigefläche, siehe `BoardSize`. Gehört zum Gerät --
       deshalb hier und nicht in `live-match.json`. */
   board?: BoardSize;
+  /** Gestaltung der Anzeige, siehe `DisplayAppearance`. Gerät, nicht Spiel. */
+  appearance?: DisplayAppearance;
 }
 
 /**
@@ -110,6 +114,7 @@ function defaults(): TeamsConfig {
     logoLibraryPath: resolveDefaultLibraryPath(),
     halfDurationMin: DEFAULT_HALF_DURATION_MIN,
     board: { ...DEFAULT_BOARD_SIZE },
+    appearance: { ...DEFAULT_APPEARANCE, effects: { ...DEFAULT_APPEARANCE.effects } },
   };
 }
 
@@ -133,6 +138,7 @@ export function loadTeamsConfig(): TeamsConfig {
       logoLibraryPath: parsed.logoLibraryPath ?? fallback.logoLibraryPath,
       halfDurationMin: parsed.halfDurationMin ?? fallback.halfDurationMin,
       board: parsed.board ?? fallback.board,
+      appearance: parsed.appearance ?? fallback.appearance,
     };
   } catch {
     return fallback;

@@ -1,7 +1,13 @@
 import {
   BoardSize,
   CardColor,
+  DEFAULT_APPEARANCE,
   DEFAULT_BOARD_SIZE,
+  DISPLAY_THEMES,
+  DisplayAppearance,
+  DisplayTheme,
+  FLUTLICHT_EFFECT_KEYS,
+  FlutlichtEffects,
   InfoOverlay,
   MAX_ANNOUNCEMENT_LENGTH,
   MAX_ANNOUNCEMENTS,
@@ -176,6 +182,30 @@ export function sanitizeBoardSize(value: unknown): BoardSize {
     width: sanitizeBoardEdge(raw.width, DEFAULT_BOARD_SIZE.width),
     height: sanitizeBoardEdge(raw.height, DEFAULT_BOARD_SIZE.height),
   };
+}
+
+/**
+ * Gestaltung der Anzeige. Kommt aus dem Steuerungsfenster und aus
+ * `teams.json`, die von Hand bearbeitet worden sein kann.
+ *
+ * Ein unbekanntes Design fällt auf Klassisch zurück, ein fehlender oder
+ * unbrauchbarer Effektschalter auf "an". So bleibt eine ältere
+ * `teams.json` ohne dieses Feld gültig, und ein Tippfehler im Namen
+ * eines Effekts schaltet nicht still die übrigen ab.
+ */
+export function sanitizeAppearance(value: unknown): DisplayAppearance {
+  const raw = (value ?? {}) as Record<string, unknown>;
+  const theme = DISPLAY_THEMES.includes(raw.theme as DisplayTheme)
+    ? (raw.theme as DisplayTheme)
+    : DEFAULT_APPEARANCE.theme;
+
+  const rawEffects = (raw.effects ?? {}) as Record<string, unknown>;
+  const effects = { ...DEFAULT_APPEARANCE.effects };
+  for (const key of FLUTLICHT_EFFECT_KEYS) {
+    if (typeof rawEffects[key] === 'boolean') effects[key] = rawEffects[key] as boolean;
+  }
+
+  return { theme, effects: effects as FlutlichtEffects };
 }
 
 /**

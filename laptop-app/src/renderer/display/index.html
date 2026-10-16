@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="../fonts/fonts.css" />
   <link rel="stylesheet" href="display.css" />
 </head>
-<body data-phase="pre-match">
+<body data-phase="pre-match" data-theme="klassisch">
   <!-- Die Bühne: Alles Sichtbare liegt hierin, und sie ist exakt so groß
        wie die Anzeigefläche der LED-Wand (Standardmaß 384x192, in den
        Einstellungen änderbar). Das Layout wird also in der Zielauflösung
@@ -26,6 +26,11 @@
          Position exakt so wählen, dass sie nie mit einem Wappen kollidiert. -->
     <div class="deco deco-tl" aria-hidden="true"><i></i><i></i></div>
     <div class="deco deco-br" aria-hidden="true"><i></i><i></i></div>
+
+    <!-- Lichtstrahlen des Flutlicht-Designs. Liegen in jedem Design im HTML
+         und sind nur im klassischen ausgeblendet -- so bleibt jede
+         Element-Id unabhängig vom Design vorhanden. -->
+    <div class="beams" aria-hidden="true"><i></i><i></i><i></i></div>
 
 
     <!-- Vor dem Anpfiff: die Begegnung als Plakat.
@@ -121,6 +126,9 @@
 
       <div class="match-footer">
         <div class="clock-pill">
+          <!-- Halbzeit neben der Uhr. Nur im Flutlicht-Design sichtbar;
+               im klassischen ausgeblendet, damit es dort bleibt wie es war. -->
+          <span class="clock-half" id="clock-half"></span>
           <span class="clock" id="clock-display"></span>
           <span class="stoppage" id="stoppage-display" hidden></span>
         </div>
@@ -142,6 +150,21 @@
          Läuft nur auf Knopfdruck (Nutzerwunsch) und rotiert dann Seite für
          Seite; die normale Ansicht ist selbst eine Station der Rotation. -->
     <div class="board board-slides">
+      <!-- Sponsoren: vier gleich große Kacheln in einem Fenster. Feste
+           Kacheln statt im Lauf erzeugter Knoten -- fehlen Logos, bleiben
+           Kacheln leer, damit alle gleich groß bleiben. -->
+      <div class="sponsor-window" id="sponsor-window" hidden>
+        <div class="sponsor-head">
+          <span class="sponsor-title" id="sponsor-title"></span>
+          <span class="sponsor-pages" id="sponsor-pages"></span>
+        </div>
+        <div class="sponsor-grid">
+          <div class="sponsor-tile"><img class="sponsor-logo" id="sponsor-logo-0" alt="" hidden /></div>
+          <div class="sponsor-tile"><img class="sponsor-logo" id="sponsor-logo-1" alt="" hidden /></div>
+          <div class="sponsor-tile"><img class="sponsor-logo" id="sponsor-logo-2" alt="" hidden /></div>
+          <div class="sponsor-tile"><img class="sponsor-logo" id="sponsor-logo-3" alt="" hidden /></div>
+        </div>
+      </div>
       <img class="slide-image" id="slide-image" alt="" hidden />
       <div class="slide-text" id="slide-text" hidden>
         <div class="slide-title" id="slide-title"></div>

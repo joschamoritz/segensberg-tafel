@@ -1,5 +1,7 @@
 import {
   BoardSize,
+  DEFAULT_APPEARANCE,
+  DisplayAppearance,
   CardColor,
   CardEvent,
   ClockState,
@@ -74,6 +76,7 @@ function initialState(): MatchState {
     infoRequest: null,
     halfDurationMin: DEFAULT_HALF_DURATION_MIN,
     board: { ...DEFAULT_BOARD_SIZE },
+    appearance: { ...DEFAULT_APPEARANCE, effects: { ...DEFAULT_APPEARANCE.effects } },
     kickoffTime: '',
     stoppageMinutes: 0,
     corners: { home: 0, away: 0 },
@@ -713,6 +716,20 @@ export class MatchStateStore {
     this.emit();
   }
 
+  /**
+   * Gestaltung der Anzeige setzen. Kommt bereits geprüft aus
+   * `sanitizeAppearance()`. Verglichen wird, damit ein erneutes Setzen
+   * desselben Werts kein Zustands-Update durch die Brücke schickt.
+   */
+  setAppearance(appearance: DisplayAppearance): void {
+    if (JSON.stringify(appearance) === JSON.stringify(this.state.appearance)) return;
+    this.state = {
+      ...this.state,
+      appearance: { theme: appearance.theme, effects: { ...appearance.effects } },
+    };
+    this.emit();
+  }
+
   /** Abpfiff: Uhr anhalten, Endstand anzeigen. */
   goToFullTime(): void {
     if (this.state.phase !== 'live') return;
@@ -822,8 +839,16 @@ export class MatchStateStore {
     // Kader, Spielzeit-Einstellung, Tafelmaße und der Dankestext sind
     // Konfiguration, keine Spieldaten -- sie gehören zum Verein bzw. zum
     // Gerät, nicht zur einzelnen Begegnung.
-    const { squads, halfDurationMin, board, attendanceMessage, announcements, media, sound } =
-      this.state;
+    const {
+      squads,
+      halfDurationMin,
+      board,
+      appearance,
+      attendanceMessage,
+      announcements,
+      media,
+      sound,
+    } = this.state;
     const previous = this.state.revisions;
     this.state = initialState();
     this.applyTeams();
@@ -832,6 +857,7 @@ export class MatchStateStore {
       squads,
       halfDurationMin,
       board,
+      appearance,
       attendanceMessage,
       announcements,
       media,

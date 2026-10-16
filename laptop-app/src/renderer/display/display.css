@@ -28,6 +28,21 @@
      Uhr-Panel und Wappen springen. */
   --digit-w: 0.62em;
   --digit-sep-w: 0.3em;
+
+  /* Sponsoren-Fenster: gedämpfte Seitenmarke auf der Indigo-Titelleiste */
+  --sponsor-page-off: #3b2f7a;
+
+  /* Flutlicht-Design: Lichtkegel von hell (oben Mitte) nach dunkel */
+  --flut-hi: #2a79c4;
+  --flut-mid: #124a86;
+  --flut-lo: #06142e;
+  /* Halbtransparente Töne -- im klassischen Design verboten, im
+     Flutlicht-Design bewusst erlaubt und einzeln abschaltbar (siehe
+     `FlutlichtEffects`). */
+  --flut-beam: rgb(255 255 255 / 0.06);
+  --flut-fade: rgb(6 20 46 / 0.9);
+  --flut-glow: rgb(79 168 255 / 0.75);
+  --flut-shadow: rgb(0 0 0 / 0.45);
 }
 
 * {
@@ -1214,4 +1229,322 @@ body[data-goal-stage='boost'].goal-home .goal-confetti {
 body.goal-lead-change .goal-frame {
   display: block;
   animation: goal-frame-pulse 0.4s steps(1, end) 3;
+}
+
+/* ═══════════════════════════════════════════
+   Sponsoren-Fenster (alle Designs)
+   ═══════════════════════════════════════════ */
+/* Vier gleich große weiße Kacheln unter einer Titelleiste. Weiß, weil
+   Sponsorenlogos fast immer für hellen Grund gezeichnet sind -- im
+   Vollbild auf Blau wäre so ein Logo ein weißer Kasten mit wechselnder
+   Größe, hier ist es eine Kachel unter gleich großen. */
+
+.sponsor-window {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 3cqh;
+  padding: 0 2cqw 3cqh;
+}
+
+.sponsor-window[hidden] {
+  display: none;
+}
+
+.sponsor-head {
+  flex: 0 0 15.5cqh;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* Die Leiste läuft über die volle Breite, die Kacheln darunter haben
+     einen Rand. */
+  margin: 0 -2cqw;
+  padding: 0 3cqw;
+  background: var(--svh-dk);
+}
+
+.sponsor-title {
+  font-weight: 700;
+  font-size: 9cqh;
+  line-height: 1.25;
+  letter-spacing: 0.06em;
+  color: var(--svh-gold);
+}
+
+/* Seitenanzeige als gefüllte Quadrate -- Punkte wären bei dieser Größe
+   auf der LED-Matrix weg (Guardrail "kleine Zeichen als Fläche"). */
+.sponsor-pages {
+  display: flex;
+  gap: 1.6cqw;
+}
+
+.sponsor-pages i {
+  display: block;
+  width: 3.6cqh;
+  height: 3.6cqh;
+  background: var(--sponsor-page-off);
+}
+
+.sponsor-pages i.is-current {
+  background: var(--svh-wh);
+}
+
+.sponsor-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 3cqh 1.6cqw;
+}
+
+.sponsor-tile {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3.5cqh 3cqw;
+  background: var(--svh-wh);
+  border-radius: 0.6cqh;
+}
+
+/* Eingepasst, nie beschnitten und nie gestreckt -- ein angeschnittenes
+   Sponsorenlogo wäre schlimmer als ein Rand. */
+.sponsor-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* ═══════════════════════════════════════════
+   Design "Flutlicht"
+   ═══════════════════════════════════════════ */
+/* Modernes Design (Entwurf 16.10.2026): Lichtkegel von oben, große
+   geneigte Ziffern, Vereinsstreifen, weiße Uhr-Plakette. Nur
+   Vereinsfarben -- die Tafel ist eine Heimtafel, Gäste erscheinen
+   ausschließlich über ihr Wappen.
+
+   Alles hier hängt an body[data-theme='flutlicht']. Das klassische Design
+   bleibt dadurch unangetastet. Die Effekte mit Verlauf, Transparenz und
+   Leuchten hängen zusätzlich an body[data-fx~='...'] und lassen sich im
+   Steuerungsfenster einzeln abschalten -- ob sie auf der echten Wand
+   tragen, zeigt erst der Test am Gerät. */
+
+/* --- Hintergrund ------------------------------------------------------- */
+
+body[data-theme='flutlicht'] .stage {
+  background-color: var(--flut-mid);
+  background-image: none;
+}
+
+/* Lichtkegel von oben Mitte, unten zum Fuß hin abgedunkelt. Beides als
+   Hintergrund der Bühne statt als eigene Fläche: Ein positioniertes
+   Element läge über dem Spielstand. */
+body[data-theme='flutlicht'][data-fx~='verlauf'] .stage {
+  background-image:
+    linear-gradient(to bottom, transparent 66%, var(--flut-fade)),
+    radial-gradient(
+      ellipse 75% 140% at 50% -15%,
+      var(--flut-hi) 0%,
+      var(--flut-mid) 45%,
+      var(--flut-lo) 100%
+    );
+}
+
+/* Lichtstrahlen. z-index -1 legt sie unter alle Inhalte, aber über den
+   Bühnenhintergrund: Die Bühne ist durch ihr `transform` selbst ein
+   Stapelkontext, tiefer kommen sie also nicht. */
+.beams {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+body[data-theme='flutlicht'][data-fx~='strahlen'] .beams {
+  display: block;
+}
+
+.beams i {
+  position: absolute;
+  inset: 0;
+  background: var(--flut-beam);
+}
+
+.beams i:nth-child(1) {
+  clip-path: polygon(50% -5%, 8% 100%, 28.6% 100%);
+}
+
+.beams i:nth-child(2) {
+  clip-path: polygon(50% -5%, 39% 100%, 61% 100%);
+}
+
+.beams i:nth-child(3) {
+  clip-path: polygon(50% -5%, 71.4% 100%, 92% 100%);
+}
+
+/* Die Folien liegen direkt auf dem Lichtkegel statt auf eigener Fläche. */
+body[data-theme='flutlicht'] .board-slides {
+  background: transparent;
+}
+
+/* --- Vereinsstreifen ---------------------------------------------------- */
+/* Größer als im klassischen Design und in BEIDEN oberen Ecken statt in
+   zwei gegenüberliegenden: Unten rechts läge ein großer Streifen in der
+   Torschützenliste der Gäste, und beide Seiten gleich zu gestalten passt
+   zur Heimtafel. Die Flächen sind so bemessen, dass sie über dem Wappen
+   enden.
+
+   Nur im laufenden Spiel. In Halbzeit und Endstand rückt das Wappen
+   nach oben (--crest-top 24 %) und stünde im Streifen. Ausgeblendet wird
+   über `visibility`, nicht über `display` -- eine `display`-Regel hier
+   schlüge die Ausblendung über den Vollbild-Einblendungen (gleiche
+   Spezifität, die spätere gewinnt). */
+
+body[data-theme='flutlicht'] .deco {
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: auto;
+  gap: 0;
+}
+
+body[data-theme='flutlicht']:not([data-phase='live']) .deco {
+  visibility: hidden;
+}
+
+body[data-theme='flutlicht'] .deco i {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  transform: none;
+}
+
+body[data-theme='flutlicht'] .deco-tl i:first-child {
+  clip-path: polygon(0 13.5%, 6.8% 0, 10.4% 0, 0 20.8%);
+}
+
+body[data-theme='flutlicht'] .deco-tl i:last-child {
+  clip-path: polygon(0 26%, 13% 0, 14.6% 0, 0 29.2%);
+}
+
+body[data-theme='flutlicht'] .deco-br i:first-child {
+  clip-path: polygon(100% 26%, 87% 0, 85.4% 0, 100% 29.2%);
+}
+
+body[data-theme='flutlicht'] .deco-br i:last-child {
+  clip-path: polygon(100% 13.5%, 93.2% 0, 89.6% 0, 100% 20.8%);
+}
+
+/* --- Spielstand --------------------------------------------------------- */
+/* Größer und nach rechts geneigt wie in einer Fernseheinblendung. Die
+   Mittelspalte wird dafür breiter (48 statt 40 cqw), sonst stießen die
+   Ziffern an die Wappen. Die Mannschaftsspalten verlieren dabei je
+   15 px -- die Torschützenliste kürzt lange Namen früher. */
+
+body[data-theme='flutlicht'] .match-main {
+  grid-template-columns: 1fr 48cqw 1fr;
+}
+
+body[data-theme='flutlicht'] .score {
+  font-size: 52cqh;
+  transform: skewX(-12deg);
+}
+
+body[data-theme='flutlicht'][data-phase='half-time'] .score,
+body[data-theme='flutlicht'][data-phase='full-time'] .score {
+  font-size: 38cqh;
+}
+
+/* Schatten als Filter an der Zeile, nicht als text-shadow an den
+   Ziffern: `.score` schneidet mit `overflow: hidden` knapp unter der
+   Ziffer ab und hätte den Schatten unten gerade gekappt. */
+body[data-theme='flutlicht'][data-fx~='schatten'] .scoreline {
+  filter: drop-shadow(0 0.8cqh 1.6cqh var(--flut-shadow));
+}
+
+/* Rauten statt Quadrate als Trenner */
+body[data-theme='flutlicht'] .score-sep {
+  gap: 9cqh;
+}
+
+body[data-theme='flutlicht'] .score-sep i {
+  width: 3.6cqh;
+  height: 3.6cqh;
+  transform: rotate(45deg);
+}
+
+/* --- Wappen ------------------------------------------------------------- */
+
+body[data-theme='flutlicht'][data-fx~='leuchten'] .crest-img {
+  filter: drop-shadow(0 0 1.6cqh var(--flut-glow));
+}
+
+/* --- Uhr-Plakette ------------------------------------------------------- */
+/* Weißes Trapez, nach unten schmaler, Zeit in Indigo. Die Form sitzt in
+   einem Pseudo-Element: `clip-path` am Panel selbst schnitte auch dessen
+   Schatten ab. */
+
+body[data-theme='flutlicht'] .clock-pill {
+  position: relative;
+  isolation: isolate;
+  background: none;
+  border-radius: 0;
+}
+
+body[data-theme='flutlicht'] .clock-pill::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--svh-wh);
+  clip-path: polygon(0 0, 100% 0, 93% 100%, 7% 100%);
+}
+
+body[data-theme='flutlicht'][data-fx~='schatten'] .clock-pill {
+  filter: drop-shadow(0 0.6cqh 1.2cqh var(--flut-shadow));
+}
+
+body[data-theme='flutlicht'] .clock {
+  color: var(--svh-dk);
+}
+
+/* Halbzeit links neben der Plakette, Nachspielzeit rechts daneben in
+   Gold. Beide hängen absolut an der Plakette, damit deren Breite fest
+   bleibt und die Uhr exakt mittig steht -- auch wenn "+3" erscheint. Sie
+   liegen im Panel und verschwinden deshalb mit ihm in Pause und Endstand. */
+.clock-half {
+  display: none;
+}
+
+body[data-theme='flutlicht'] .clock-half {
+  display: block;
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  margin-right: 2.5cqw;
+  transform: translateY(-50%);
+  font-weight: 600;
+  font-size: 6.5cqh;
+  line-height: 1.25;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  color: var(--svh-wh);
+}
+
+body[data-theme='flutlicht'] .stoppage {
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  margin-left: 2.5cqw;
+  transform: translateY(-50%);
+  padding: 0;
+  font-size: 10cqh;
+  line-height: 1.25;
+  background: none;
+  color: var(--svh-gold);
 }

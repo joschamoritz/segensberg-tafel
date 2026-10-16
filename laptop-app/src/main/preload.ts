@@ -3,6 +3,7 @@ import {
   AppInfo,
   AppStatus,
   BoardSize,
+  DisplayAppearance,
   CardColor,
   ClockState,
   InfoOverlay,
@@ -84,6 +85,8 @@ const api = {
   setKickoffTime: (value: string) => ipcRenderer.send(IPC.setKickoffTime, value),
   setHalfDuration: (minutes: number) => ipcRenderer.send(IPC.setHalfDuration, minutes),
   setBoardSize: (board: BoardSize) => ipcRenderer.send(IPC.setBoardSize, board),
+  setAppearance: (appearance: DisplayAppearance) =>
+    ipcRenderer.send(IPC.setAppearance, appearance),
   phaseKickoff: () => ipcRenderer.send(IPC.phaseKickoff),
   phaseHalfTime: () => ipcRenderer.send(IPC.phaseHalfTime),
   phaseSecondHalf: () => ipcRenderer.send(IPC.phaseSecondHalf),

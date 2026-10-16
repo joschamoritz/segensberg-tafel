@@ -386,6 +386,7 @@ body[data-setup='kader'] #setup-kader {
 }
 
 .setup-panel > .display-picker,
+.setup-panel > .appearance-settings,
 .setup-panel > .team-settings,
 .setup-panel > .squad-settings {
   border-bottom: none;
@@ -438,6 +439,62 @@ body[data-setup='kader'] #setup-kader {
 }
 
 .board-size-x {
+  color: var(--svh-mut);
+}
+
+/* ═══ Tafeldarstellung ═══ */
+/* Gleicher Aufbau wie der Abschnitt darüber, damit die Einrichtungsfläche
+   wie aus einem Guss wirkt. */
+.appearance-settings {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--svh-brd);
+  font-size: 14px;
+}
+
+.appearance-settings select {
+  min-width: 180px;
+  padding: 6px 8px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.fx-switches {
+  flex-basis: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--svh-brd);
+  border-radius: 6px;
+}
+
+.fx-switches legend {
+  padding: 0 4px;
+  color: var(--svh-mut);
+  font-size: 12px;
+}
+
+.fx-switches label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Im klassischen Design wirken die Schalter nicht -- sie bleiben sichtbar,
+   damit klar ist, dass es sie gibt, aber erkennbar ohne Funktion. */
+.fx-switches:disabled {
+  color: var(--svh-mut);
+}
+
+.appearance-hint {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 12px;
   color: var(--svh-mut);
 }
 

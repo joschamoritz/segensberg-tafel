@@ -32,6 +32,7 @@ import {
   isTeamId,
   sanitizeAnnouncements,
   sanitizeAttendance,
+  sanitizeAppearance,
   sanitizeBoardSize,
   sanitizeImportedPlayers,
   sanitizeKickoffTime,
@@ -204,6 +205,7 @@ function persistTeams(): void {
     logoLibraryPath: library.getRootPath(),
     halfDurationMin: store.getState().halfDurationMin,
     board: store.getState().board,
+    appearance: store.getState().appearance,
   });
 }
 
@@ -516,6 +518,7 @@ app.whenReady().then(() => {
   // Auch die gespeicherte Fassung läuft durch die Prüfschicht: teams.json
   // ist eine Datei auf der Platte und kann von Hand bearbeitet worden sein.
   store.setBoardSize(sanitizeBoardSize(teamsConfig.board));
+  store.setAppearance(sanitizeAppearance(teamsConfig.appearance));
 
   const content = loadContentConfig();
   store.setAttendanceMessage(content.attendanceMessage);
@@ -809,6 +812,10 @@ app.whenReady().then(() => {
   });
   ipcMain.on(IPC.setBoardSize, (_event, board: unknown) => {
     store.setBoardSize(sanitizeBoardSize(board));
+    persistTeams();
+  });
+  ipcMain.on(IPC.setAppearance, (_event, appearance: unknown) => {
+    store.setAppearance(sanitizeAppearance(appearance));
     persistTeams();
   });
 

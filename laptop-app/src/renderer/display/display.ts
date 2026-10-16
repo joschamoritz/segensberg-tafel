@@ -9,6 +9,8 @@ import {
   clockView,
   DEFAULT_BOARD_SIZE,
   DEFAULT_HALF_DURATION_MIN,
+  DisplayAppearance,
+  FLUTLICHT_EFFECT_KEYS,
   formatClock,
   formatEventMinute,
   goalStagesFor,
@@ -28,6 +30,8 @@ import {
   slideFoldersForPhase,
   sortPlayersByNumber,
   splitAttendanceMessage,
+  SPONSORS_PER_PAGE,
+  SPONSORS_TITLE,
   TeamId,
 } from '../../shared/types';
 
@@ -66,6 +70,19 @@ function applyBoardSize(): void {
   // Ein Fenster mit Höhe oder Breite 0 gibt es beim Minimieren tatsächlich
   // -- ohne diesen Deckel stünde dort eine 0 oder ein NaN im Stylesheet.
   stage.style.setProperty('--board-scale', String(Number.isFinite(scale) && scale > 0 ? scale : 1));
+}
+
+/**
+ * Schaltet das Design um. Alles Weitere entscheidet das Stylesheet über
+ * `body[data-theme]` und `body[data-fx]` -- der Renderer baut dafür keine
+ * Knoten um, weil sämtliche Verdrahtung einmal in `main()` läuft.
+ *
+ * `data-fx` ist eine Liste der EINGESCHALTETEN Effekte, damit das
+ * Stylesheet sie mit `[data-fx~='verlauf']` einzeln abfragen kann.
+ */
+function applyAppearance(appearance: DisplayAppearance): void {
+  document.body.dataset.theme = appearance.theme;
+  document.body.dataset.fx = FLUTLICHT_EFFECT_KEYS.filter((key) => appearance.effects[key]).join(' ');
 }
 
 /** Zuletzt verarbeitetes Ereignis. Verhindert, dass der Jubel bei jedem
@@ -129,6 +146,7 @@ let infoTimer: ReturnType<typeof setTimeout> | null = null;
 type Slide =
   | { kind: 'base' }
   | { kind: 'image'; url: string }
+  | { kind: 'sponsors'; urls: string[]; page: number; pages: number }
   | { kind: 'text'; lines: string[] };
 
 let lastSlideshowId = 0;
@@ -630,6 +648,8 @@ function renderState(state: MatchState): void {
     applyBoardSize();
   });
 
+  step('Darstellung', () => applyAppearance(state.appearance));
+
   step('Mannschaften', () => {
     renderTeam('home', state);
     renderTeam('away', state);
@@ -639,6 +659,7 @@ function renderState(state: MatchState): void {
 
   step('Phase', () => {
     document.getElementById('phase-label')!.textContent = displayPhaseLabel(state.phase);
+    document.getElementById('clock-half')!.textContent = `${state.half}. HZ`;
   });
 
   step('Aufstellungen', () => renderLineupPages(state));
@@ -677,9 +698,25 @@ function buildSlideDeck(state: MatchState): Slide[] {
   const slides: Slide[] = [{ kind: 'base' }];
 
   for (const folder of slideFoldersForPhase(state.phase)) {
-    for (const fileName of state.media[folder].files) {
-      slides.push({ kind: 'image', url: mediaUrl(folder, fileName) });
+    const urls = state.media[folder].files.map((fileName) => mediaUrl(folder, fileName));
+
+    // Sponsoren zu viert im Fenster, alles andere einzeln im Vollbild.
+    // Die Zählung muss zu slideCount() passen -- danach richtet sich der
+    // Hinweis im Steuerungsfenster.
+    if (folder === 'werbung') {
+      const pages = Math.ceil(urls.length / SPONSORS_PER_PAGE);
+      for (let page = 0; page < pages; page++) {
+        slides.push({
+          kind: 'sponsors',
+          urls: urls.slice(page * SPONSORS_PER_PAGE, (page + 1) * SPONSORS_PER_PAGE),
+          page,
+          pages,
+        });
+      }
+      continue;
     }
+
+    for (const url of urls) slides.push({ kind: 'image', url });
   }
 
   // Welche Phasen Ankündigungen zeigen, entscheidet announcementsVisible()
@@ -696,6 +733,38 @@ function buildSlideDeck(state: MatchState): Slide[] {
   return slides;
 }
 
+/**
+ * Füllt das Sponsoren-Fenster. Nicht belegte Kacheln bleiben leer statt zu
+ * verschwinden: Sonst würden die übrigen größer, und gerade das soll das
+ * Fenster verhindern -- alle Partner gleich groß.
+ *
+ * Die Seitenanzeige (kleine Quadrate) erscheint erst ab zwei Seiten; bei
+ * einer einzigen wäre sie ein Zeichen ohne Aussage.
+ */
+function renderSponsorWindow(urls: string[], page: number, pages: number): void {
+  document.getElementById('sponsor-title')!.textContent = SPONSORS_TITLE;
+
+  for (let i = 0; i < SPONSORS_PER_PAGE; i++) {
+    const logo = document.getElementById(`sponsor-logo-${i}`) as HTMLImageElement;
+    const url = urls[i];
+    logo.hidden = url === undefined;
+    if (url === undefined) {
+      logo.removeAttribute('src');
+    } else if (logo.getAttribute('src') !== url) {
+      logo.src = url;
+    }
+  }
+
+  const marks = document.getElementById('sponsor-pages')!;
+  marks.textContent = '';
+  if (pages < 2) return;
+  for (let i = 0; i < pages; i++) {
+    const mark = document.createElement('i');
+    if (i === page) mark.className = 'is-current';
+    marks.appendChild(mark);
+  }
+}
+
 /** Zeigt eine Station. `base` blendet die Folienfläche einfach aus. */
 function showSlide(slide: Slide): void {
   if (slide.kind === 'base') {
@@ -705,14 +774,17 @@ function showSlide(slide: Slide): void {
 
   const image = document.getElementById('slide-image') as HTMLImageElement;
   const text = document.getElementById('slide-text')!;
+  const sponsors = document.getElementById('sponsor-window')!;
+
+  image.hidden = slide.kind !== 'image';
+  text.hidden = slide.kind !== 'text';
+  sponsors.hidden = slide.kind !== 'sponsors';
 
   if (slide.kind === 'image') {
     image.src = slide.url;
-    image.hidden = false;
-    text.hidden = true;
+  } else if (slide.kind === 'sponsors') {
+    renderSponsorWindow(slide.urls, slide.page, slide.pages);
   } else {
-    image.hidden = true;
-    text.hidden = false;
     document.getElementById('slide-title')!.textContent = ANNOUNCEMENTS_TITLE;
 
     const list = document.getElementById('slide-lines')!;

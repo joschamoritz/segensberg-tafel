@@ -73,6 +73,30 @@
       goracon-Anleitung: 384 × 192.
     </p>
   </section>
+
+  <!-- Gestaltung der Tafel. Hier in der Einrichtung und nicht im Spielteil:
+       Das Design wählt man einmal pro Aufbau, und ein versehentlicher
+       Klick mitten im Spiel ließe die Tafel vor dem Publikum umspringen. -->
+  <section class="appearance-settings">
+    <label for="theme-select">Design:</label>
+    <select id="theme-select">
+      <option value="klassisch">Klassisch</option>
+      <option value="flutlicht">Flutlicht</option>
+    </select>
+
+    <fieldset class="fx-switches" id="fx-switches">
+      <legend>Effekte im Flutlicht-Design:</legend>
+      <label><input type="checkbox" id="fx-verlauf" data-fx="verlauf" /> Farbverlauf</label>
+      <label><input type="checkbox" id="fx-strahlen" data-fx="strahlen" /> Lichtstrahlen</label>
+      <label><input type="checkbox" id="fx-leuchten" data-fx="leuchten" /> Leuchten hinter Wappen</label>
+      <label><input type="checkbox" id="fx-schatten" data-fx="schatten" /> Schatten</label>
+    </fieldset>
+
+    <p class="appearance-hint">
+      Verläufe und Leuchteffekte stellt nicht jede LED-Wand sauber dar.
+      Erzeugt einer davon Streifen oder Flimmern, hier einzeln abschalten.
+    </p>
+  </section>
   </div>
 
   <div class="setup-panel" id="setup-teams">

@@ -32,6 +32,15 @@ Herstellersoftware. Siehe `../CLAUDE.md` und `../DESIGN.md` für Hintergrund.
   Zeilen in der Torschützenliste. Gestaltungsfragen lassen sich damit am
   Laptop beurteilen, nicht erst an der Wand. Hintergrund und Regeln
   stehen in `../DESIGN.md` unter „Die Bühne".
+- **Zwei Designs für die Tafel**, umschaltbar unter „Anzeige → Design":
+  **Klassisch** (das Design bis Fassung 1.1.0, unverändert und Vorgabe)
+  und **Flutlicht** (Lichtkegel von oben, große geneigte Ziffern,
+  Vereinsstreifen, weiße Uhr-Plakette mit Halbzeit und Nachspielzeit
+  daneben). Die Effekte des Flutlicht-Designs – Farbverlauf,
+  Lichtstrahlen, Leuchten hinter den Wappen, Schatten – lassen sich
+  einzeln abschalten, falls einer davon auf der LED-Wand Streifen oder
+  Flimmern erzeugt. Die Wahl gehört zum Gerät und übersteht „Neues
+  Spiel".
 - Spielstand Heim/Gast (+/-), Spieluhr (Start/Stop/Reset), Halbzeit-Anzeige
 - **Torjubel je nach treffender Mannschaft**, in zwei Akten. Zuerst ein
   Vollbild mit dem Wappen der treffenden Mannschaft, dann zurück auf die
@@ -134,11 +143,14 @@ Electron-Main-Prozess (normaler Node-Kontext) und brauchen das nicht.
   Zeile, ohne dem Uhr-Panel etwas wegzunehmen.
 - **Diashow** für Werbung/Sponsoren, Vereinshighlights und Termine.
   Läuft **nur auf Knopfdruck** („Diashow → Starten"), nie von selbst –
-  vor dem Anpfiff und in der Halbzeitpause. Jede Folie füllt das ganze
-  Bild; die normale Ansicht (Begegnung bzw. Zwischenstand) ist selbst
-  eine Station der Rotation, der Spielstand ist also nie länger als eine
-  Folie weg. Standzeit 8 Sekunden. Vor dem Anpfiff läuft nur die
-  Werbung, in der Pause zusätzlich Highlights und Termine. „Medien neu
+  vor dem Anpfiff und in der Halbzeitpause. **Sponsoren erscheinen zu
+  viert in einem Fenster** aus gleich großen weißen Kacheln unter der
+  Titelleiste „Unsere Partner"; bei mehr als vier Logos folgen weitere
+  Seiten, kleine Quadrate zeigen die Seite an. Highlights und Termine
+  füllen weiterhin das ganze Bild. Die normale Ansicht (Begegnung bzw.
+  Zwischenstand) ist selbst eine Station der Rotation, der Spielstand
+  ist also nie länger als eine Folie weg. Standzeit 8 Sekunden. Vor dem
+  Anpfiff läuft nur die Werbung, in der Pause zusätzlich Highlights und Termine. „Medien neu
   einlesen" liest die Ordner erneut ein, ohne die App neu zu starten.
 - **Termine & Ankündigungen** werden im Steuerungsfenster als Textfeld
   gepflegt (eine Zeile je Ankündigung, höchstens fünf Zeilen je Folie)
@@ -194,9 +206,9 @@ Pfad wird in `teams.json` gespeichert.
 Im Electron-userData-Ordner (`%APPDATA%/anzeigetafel-laptop-app/`):
 
 - `teams.json` – Stammdaten beider Mannschaften (inklusive Farbvariante
-  des Logos), Pfad zur Logo-Bibliothek, Halbzeitdauer und
-  Tafelauflösung. Die beiden letzten gehören zum Verein bzw. zum Gerät
-  und überstehen deshalb „Neues Spiel". Ältere Dateien ohne
+  des Logos), Pfad zur Logo-Bibliothek, Halbzeitdauer, Tafelauflösung
+  und Design samt Effektschaltern. Die letzten drei gehören zum Verein
+  bzw. zum Gerät und überstehen deshalb „Neues Spiel". Ältere Dateien ohne
   Farbvariante werden weiterhin gelesen – ohne Kontrastfläche, also wie
   bisher.
 - `squads.json` – Kader, nach Vereinsnamen abgelegt

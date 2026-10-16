@@ -1,8 +1,6 @@
 import { parseLineup, ParsedPlayer } from '../../shared/lineupParser';
 import { controlPhaseLabel, revertTargetLabel } from '../../shared/phaseLabels';
 import {
-  ANNOUNCEMENTS_PER_SLIDE,
-  announcementsVisible,
   AppStatus,
   audioMimeType,
   pickGoalSound,
@@ -11,13 +9,15 @@ import {
   ClockState,
   clockView,
   DEFAULT_HALF_DURATION_MIN,
+  DisplayTheme,
+  FlutlichtEffects,
   formatClock,
   formatEventMinute,
   MatchState,
   parseClockInput,
   Player,
   playerLabel,
-  slideFoldersForPhase,
+  slideCount,
   slideshowAvailable,
   sortPlayersByNumber,
   TeamId,
@@ -828,16 +828,30 @@ function renderSoundControls(state: MatchState): void {
  * gesucht wurde: Bei der Logo-Bibliothek war ein wortlos leeres Ergebnis
  * der schlechteste Fall.
  */
+/**
+ * Design-Auswahl und Effektschalter. Die Schalter wirken nur im
+ * Flutlicht-Design und sind im klassischen deshalb gesperrt.
+ */
+function renderAppearanceControls(state: MatchState): void {
+  const select = document.getElementById('theme-select') as HTMLSelectElement;
+  if (document.activeElement !== select && select.value !== state.appearance.theme) {
+    select.value = state.appearance.theme;
+  }
+
+  const switches = document.getElementById('fx-switches') as HTMLFieldSetElement;
+  switches.disabled = state.appearance.theme !== 'flutlicht';
+  for (const box of switches.querySelectorAll<HTMLInputElement>('input[data-fx]')) {
+    box.checked = state.appearance.effects[box.dataset.fx as keyof FlutlichtEffects];
+  }
+}
+
 function renderSlideshowControls(state: MatchState): void {
   const available = slideshowAvailable(state.phase);
   const running = state.slideshowRequest !== null;
 
-  const folders = slideFoldersForPhase(state.phase);
-  const bilder = folders.reduce((sum, folder) => sum + state.media[folder].files.length, 0);
-  const termine = announcementsVisible(state.phase)
-    ? Math.ceil(state.announcements.length / ANNOUNCEMENTS_PER_SLIDE)
-    : 0;
-  const folien = bilder + termine;
+  // Dieselbe Zählung wie in der Anzeige: Sponsoren stehen dort zu viert
+  // auf einer Folie, eine eigene Rechnung hier kündigte sonst mehr an.
+  const folien = slideCount(state.phase, state.media, state.announcements.length);
 
   const start = document.getElementById('slideshow-start') as HTMLButtonElement;
   const stop = document.getElementById('slideshow-stop') as HTMLButtonElement;
@@ -921,6 +935,7 @@ function renderState(state: MatchState): void {
   updateInputIfNotFocused(boardWidthInput, String(state.board.width));
   updateInputIfNotFocused(boardHeightInput, String(state.board.height));
 
+  renderAppearanceControls(state);
   renderStoppageControls(state);
   renderPhaseControls(state);
   renderLineupControls(state);
@@ -1061,6 +1076,21 @@ function main(): void {
     });
   boardWidthInput.addEventListener('change', sendBoardSize);
   boardHeightInput.addEventListener('change', sendBoardSize);
+
+  // Design und Effekte gehen immer gemeinsam raus, aus dem Stand der
+  // Bedienelemente -- so kann ein Schalter nie einen veralteten Wert der
+  // übrigen mitschicken.
+  const themeSelect = document.getElementById('theme-select') as HTMLSelectElement;
+  const fxBoxes = Array.from(
+    document.querySelectorAll<HTMLInputElement>('#fx-switches input[data-fx]')
+  );
+  const sendAppearance = () => {
+    const effects = {} as FlutlichtEffects;
+    for (const box of fxBoxes) effects[box.dataset.fx as keyof FlutlichtEffects] = box.checked;
+    window.api.setAppearance({ theme: themeSelect.value as DisplayTheme, effects });
+  };
+  themeSelect.addEventListener('change', sendAppearance);
+  for (const box of fxBoxes) box.addEventListener('change', sendAppearance);
 
   document
     .getElementById('library-folder')!

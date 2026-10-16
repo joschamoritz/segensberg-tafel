@@ -360,6 +360,9 @@ export interface MatchState {
   /** Auflösung der Anzeigefläche, siehe `BoardSize`. Gehört zum Gerät,
       nicht zum Spiel -- "Neues Spiel" lässt den Wert unangetastet. */
   board: BoardSize;
+  /** Gestaltung der Anzeige, siehe `DisplayAppearance`. Gehört wie die
+      Tafelmaße zum Gerät -- "Neues Spiel" lässt sie stehen. */
+  appearance: DisplayAppearance;
   /** Geplanter Anstoß als "HH:MM"; leer = keine Angabe. Nur informativ --
       der Anpfiff wird weiterhin manuell ausgelöst. */
   kickoffTime: string;
@@ -485,6 +488,41 @@ export const ANNOUNCEMENTS_PER_SLIDE = 5;
 export const ANNOUNCEMENTS_TITLE = 'TERMINE';
 
 /**
+ * Sponsoren erscheinen nicht einzeln als Vollbild, sondern zu viert in
+ * einem Fenster aus gleich großen Kacheln (Nutzerwunsch 16.10.2026). Ein
+ * Logo im Vollbild wirkte je nach Seitenverhältnis riesig oder verloren;
+ * in gleichen Kacheln stehen alle Partner gleichwertig nebeneinander.
+ */
+export const SPONSORS_PER_PAGE = 4;
+
+/** Titelzeile des Sponsoren-Fensters. */
+export const SPONSORS_TITLE = 'UNSERE PARTNER';
+
+/**
+ * Zahl der Folien einer Diashow, ohne die normale Ansicht.
+ *
+ * Gemeinsam für Anzeige und Steuerungsfenster: Die Anzeige baut daraus
+ * ihre Folge, das Steuerungsfenster nennt die Zahl im Hinweis. Liefen die
+ * beiden auseinander, kündigte der Hinweis eine andere Schau an, als
+ * dann tatsächlich läuft.
+ */
+export function slideCount(
+  phase: MatchPhase,
+  media: MediaLists,
+  announcementCount: number
+): number {
+  let count = 0;
+  for (const folder of slideFoldersForPhase(phase)) {
+    const files = media[folder].files.length;
+    count += folder === 'werbung' ? Math.ceil(files / SPONSORS_PER_PAGE) : files;
+  }
+  if (announcementsVisible(phase)) {
+    count += Math.ceil(announcementCount / ANNOUNCEMENTS_PER_SLIDE);
+  }
+  return count;
+}
+
+/**
  * Welche Medienordner in welcher Phase laufen.
  *
  * Vor dem Anpfiff nur Werbung -- Highlights und Termine gehören in die
@@ -607,6 +645,61 @@ export interface BoardSize {
 
 /** Offizielle Herstellerangabe aus der goracon-Anleitung. */
 export const DEFAULT_BOARD_SIZE: BoardSize = { width: 384, height: 192 };
+
+/**
+ * Gestaltung der Anzeige.
+ *
+ * - `klassisch`: das Design bis Fassung 1.1.0, unverändert. Bleibt als
+ *   Rückfall und zum Vergleich an der echten Tafel erhalten.
+ * - `flutlicht`: modernes Design mit Lichtkegel, großen geneigten
+ *   Ziffern und Vereinsstreifen (Entwurf vom 16.10.2026).
+ *
+ * Retro (Punktmatrix) kommt als eigene Etappe dazu.
+ */
+export type DisplayTheme = 'klassisch' | 'flutlicht';
+
+export const DISPLAY_THEMES: DisplayTheme[] = ['klassisch', 'flutlicht'];
+
+/**
+ * Einzeln abschaltbare Effekte des Flutlicht-Designs.
+ *
+ * Verläufe, Transparenz und Leuchten verbietet `DESIGN.md` für das
+ * klassische Design, weil LED-Wände sie oft schlecht darstellen. Ob sie
+ * auf DIESER Wand tragen, zeigt erst der Test am Gerät -- deshalb lässt
+ * sich jeder Effekt dort einzeln abschalten, statt das Design umbauen zu
+ * müssen, wenn einer Banding oder Flimmern erzeugt.
+ */
+export interface FlutlichtEffects {
+  /** Lichtkegel als Farbverlauf; aus = eine ruhige Blaufläche */
+  verlauf: boolean;
+  /** drei weiche Lichtstrahlen von oben */
+  strahlen: boolean;
+  /** blauer Schein hinter den Wappen */
+  leuchten: boolean;
+  /** weicher Schatten unter Ziffern und Uhr-Plakette */
+  schatten: boolean;
+}
+
+export const FLUTLICHT_EFFECT_KEYS: (keyof FlutlichtEffects)[] = [
+  'verlauf',
+  'strahlen',
+  'leuchten',
+  'schatten',
+];
+
+export interface DisplayAppearance {
+  theme: DisplayTheme;
+  effects: FlutlichtEffects;
+}
+
+/**
+ * Klassisch als Vorgabe: Ein Update soll die Tafel nicht ungefragt
+ * umgestalten. Das neue Design wird bewusst eingeschaltet.
+ */
+export const DEFAULT_APPEARANCE: DisplayAppearance = {
+  theme: 'klassisch',
+  effects: { verlauf: true, strahlen: true, leuchten: true, schatten: true },
+};
 
 /**
  * Grenzen der Tafelmaße. Großzügig gewählt -- die Werte werden von Hand
@@ -821,6 +914,7 @@ export const IPC = {
   squadFileLoaded: 'squad:file-loaded',
   setHalfDuration: 'match:set-half-duration',
   setBoardSize: 'display:set-board-size',
+  setAppearance: 'display:set-appearance',
   goalSetScorer: 'goal:set-scorer',
   /** einmalig abgefragt, liefert `AppInfo` -- siehe dort */
   appInfo: 'app:info',
