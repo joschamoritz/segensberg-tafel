@@ -50,9 +50,9 @@ Herstellersoftware. Siehe `../CLAUDE.md` und `../DESIGN.md` für Hintergrund.
 - **Torjubel je nach treffender Mannschaft**, in zwei Akten. Zuerst ein
   Vollbild mit dem Wappen der treffenden Mannschaft, dann zurück auf die
   Spielansicht, wo sich die neue Ziffer von oben in den Spielstand
-  schiebt. Beim eigenen Verein 1,8 s mit „TOR!" in Gold auf pulsender
+  schiebt. Beim eigenen Verein 4 s mit „TOR!" in Gold auf pulsender
   Fläche, Konfetti über dem Spielstand und – bei einem eigenen
-  Führungswechsel – einem goldenen Rahmenpuls. Beim Gegentor 2,2 s
+  Führungswechsel – einem goldenen Rahmenpuls. Beim Gegentor 3 s
   sachlich: derselbe Aufbau, aber „TOR" kleiner und in Weiß, ruhige
   Fläche, kein Blinken, kein Konfetti. Details und Begründungen in
   `../DESIGN.md`.

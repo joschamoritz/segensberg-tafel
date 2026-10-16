@@ -1,7 +1,7 @@
 import { displayPhaseLabel } from '../../shared/phaseLabels';
 import {
   composeRetro,
-  RETRO_CELL,
+  retroGrid,
   retroSceneKey,
   RetroScene,
   retroTeamName,
@@ -182,6 +182,33 @@ function retroFooter(state: MatchState): Extract<RetroScene, { kind: 'match' }>[
   };
 }
 
+/**
+ * Tore und Platzverweise für die Matrix, in zeitlicher Reihenfolge -- eine
+ * Zeile je Ereignis, wie auf den alten Tafeln. Anders als im klassischen
+ * Design stehen Mehrfachtorschützen deshalb mehrmals da: Die Zeilen der
+ * beiden Mannschaften wechseln sich ab, und eine zusammengefasste Zeile
+ * hätte keinen Platz in der Abfolge.
+ *
+ * Eine Karte steht als Wort, weil die Tafel einfarbig ist. Gelbe Karten
+ * fehlen wie in der Torschützenliste der anderen Designs.
+ */
+function retroScorerLines(state: MatchState): { side: TeamId; text: string }[] {
+  const lines: { side: TeamId; text: string }[] = [];
+  for (const event of state.events) {
+    const isGoal = event.type === 'goal';
+    if (!isGoal && event.card === 'yellow') continue;
+
+    const playerId = isGoal ? event.scorerId : event.playerId;
+    const player = playerId ? state.squads[event.team].find((p) => p.id === playerId) : undefined;
+    const name = player ? player.lastName || player.firstName : '';
+
+    const what = isGoal ? (name ? '' : 'TOR') : event.card === 'red' ? 'ROT' : 'GELB-ROT';
+    const text = [formatEventMinute(event), what, name].filter(Boolean).join(' ');
+    lines.push({ side: event.team, text });
+  }
+  return lines;
+}
+
 function retroLineup(state: MatchState, pageName: string): RetroScene {
   const team: TeamId = pageName.endsWith('home') ? 'home' : 'away';
   const isBench = pageName.startsWith('bench');
@@ -250,6 +277,9 @@ function currentRetroScene(state: MatchState): RetroScene {
     if (activeSlide.kind === 'text') {
       return { kind: 'text', title: ANNOUNCEMENTS_TITLE, lines: activeSlide.lines };
     }
+    if (activeSlide.kind === 'sponsors') {
+      return { kind: 'sponsors', title: SPONSORS_TITLE, page: activeSlide.page, pages: activeSlide.pages };
+    }
     if (activeSlide.kind !== 'base') return { kind: 'blank' };
   }
 
@@ -271,14 +301,16 @@ function currentRetroScene(state: MatchState): RetroScene {
     home,
     away,
     homeScore: state.home.score,
+    scorers: retroScorerLines(state),
     awayScore: state.away.score,
     footer: retroFooter(state),
   };
 }
 
 /**
- * Zeichnet den sichtbaren Stand. Ein Punkt belegt RETRO_CELL Tafelpixel:
- * drei leuchten, das vierte bleibt als Lücke im Raster dunkel.
+ * Zeichnet den sichtbaren Stand. Punktgröße und Lücke kommen aus
+ * `retroGrid()` -- bei 384×192 belegt ein Punkt 4 Tafelpixel, drei davon
+ * leuchten.
  *
  * Gezeichnet wird nur, wenn die Fläche wirklich Platz einnimmt. Außerhalb
  * des Retro-Designs ist sie ausgeblendet -- und in jsdom, wo die Tests
@@ -290,9 +322,10 @@ function drawRetro(cols: number, rows: number): void {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
-  if (canvas.width !== cols * RETRO_CELL || canvas.height !== rows * RETRO_CELL) {
-    canvas.width = cols * RETRO_CELL;
-    canvas.height = rows * RETRO_CELL;
+  const { cell, dot } = retroGrid(boardSize.width, boardSize.height);
+  if (canvas.width !== cols * cell || canvas.height !== rows * cell) {
+    canvas.width = cols * cell;
+    canvas.height = rows * cell;
   }
 
   // Farben aus dem Stylesheet -- Hex-Werte stehen nur dort im :root.
@@ -303,7 +336,6 @@ function drawRetro(cols: number, rows: number): void {
 
   ctx.fillStyle = background;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  const dot = RETRO_CELL - 1;
   for (const [color, lit] of [
     [off, 0],
     [on, 1],
@@ -311,7 +343,7 @@ function drawRetro(cols: number, rows: number): void {
     ctx.fillStyle = color;
     for (let y = 0; y < rows; y++) {
       for (let x = 0; x < cols; x++) {
-        if (retroShown[y * cols + x] === lit) ctx.fillRect(x * RETRO_CELL, y * RETRO_CELL, dot, dot);
+        if (retroShown[y * cols + x] === lit) ctx.fillRect(x * cell, y * cell, dot, dot);
       }
     }
   }
@@ -357,13 +389,12 @@ function paintRetro(): void {
     return;
   }
 
-  const cols = Math.floor(boardSize.width / RETRO_CELL);
-  const rows = Math.floor(boardSize.height / RETRO_CELL);
+  const { cols, rows } = retroGrid(boardSize.width, boardSize.height);
   const scene = currentRetroScene(currentState);
 
   // Bilder der Diashow (Sponsoren-Fenster, Highlights) bleiben Bilder --
   // sie liegen über dem erloschenen Raster, das dann als Hintergrund dient.
-  const overlay = scene.kind === 'blank' ? 'slide' : '';
+  const overlay = scene.kind === 'blank' || scene.kind === 'sponsors' ? 'slide' : '';
   if ((body.dataset.retroOverlay ?? '') !== overlay) {
     if (overlay) body.dataset.retroOverlay = overlay;
     else delete body.dataset.retroOverlay;
@@ -371,6 +402,11 @@ function paintRetro(): void {
 
   const target = composeRetro(scene, cols, rows).dots;
   const key = `${cols}x${rows}|${body.dataset.retroColor}|${retroSceneKey(scene)}`;
+
+  // Die Szene steht zusätzlich am Element: Das Canvas selbst kann in den
+  // Tests (jsdom) nicht gelesen werden, die Szene schon. So lässt sich
+  // prüfen, was die Anzeige aus dem Spielzustand macht.
+  (document.getElementById('retro-matrix') as HTMLCanvasElement).dataset.scene = JSON.stringify(scene);
   retroTarget = target;
 
   // Erster Stand, andere Tafelgröße oder nur die Uhr hat sich bewegt:

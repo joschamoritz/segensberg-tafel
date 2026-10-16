@@ -1811,6 +1811,14 @@ body[data-theme='retro'][data-retro-overlay='slide'] .board-slides {
   background: transparent;
 }
 
+/* Die Titelleiste des Sponsoren-Fensters zeichnet die Matrix selbst, als
+   Punktschrift ohne Farbfläche (Nutzerwunsch 16.10.2026). Die Leiste
+   bleibt als Platzhalter stehen, damit die Kacheln dort liegen, wo die
+   Matrix den Streifen freilässt. */
+body[data-theme='retro'] .sponsor-head {
+  visibility: hidden;
+}
+
 /* Leuchtfarbe. Bernstein ist die Vorgabe. */
 body {
   --retro-on: var(--retro-amber-on);

@@ -163,9 +163,9 @@ damit sie beim Hochzählen nicht springen.
   gesteuert über `body[data-goal-stage]`.
   1. **Vollbild, für beide Mannschaften gleich aufgebaut:** das Wappen
      der treffenden Mannschaft über dem Schriftzug. Beim eigenen Tor
-     (`word`, 1,8 s) „TOR!" in `--svh-gold`, 40cqh, und die Fläche pulst
+     (`word`, 4 s) „TOR!" in `--svh-gold`, 40cqh, und die Fläche pulst
      mit ~1,4 Hz zwischen `--svh` und `--svh-dk`. Beim Gegentor
-     (`plain`, 2,2 s) „TOR" in Weiß, 20cqh, auf **ruhiger Fläche in
+     (`plain`, 3 s) „TOR" in Weiß, 20cqh, auf **ruhiger Fläche in
      `--svh-dk` ohne Wechsel**. Der Unterschied zwischen Feier und
      Meldung liegt in Farbe, Größe und Fläche – nicht im Aufbau.
      Der ausgeschriebene Vereinsname springt nur ein, wenn für den Verein
@@ -269,8 +269,11 @@ Gast" und wurde deshalb verworfen (Nutzer, 16.10.2026).
 Vorbilder: die Punktmatrix-Tafeln im Parkstadion und im Olympiastadion
 der 70er/80er (Fotos des Nutzers vom 16.10.2026).
 
-- **Punktraster:** Ein Punkt belegt 4×4 Tafelpixel, 3×3 leuchten, eines
-  bleibt als Lücke dunkel – bei 384×192 also 96×48 Punkte. Erloschene
+- **Punktraster:** Rund 96×48 Punkte, unabhängig von der eingestellten
+  Tafelauflösung (`retroGrid()`). Bei 384×192 belegt ein Punkt 4×4
+  Tafelpixel, 3×3 leuchten. Bei größeren Auflösungen wachsen Punkt und
+  Lücke mit – eine feste Punktgröße ergab bei Bildschirmgröße ein
+  riesiges Raster mit winzigem Inhalt. Erloschene
   Punkte bleiben als dunkles Raster sichtbar (`--retro-amber-off` bzw.
   `--retro-white-off`, leicht in der Leuchtfarbe getönt).
 - **Leuchtfarbe** Bernstein (Vorgabe) oder Weiß, einstellbar unter
@@ -289,15 +292,25 @@ der 70er/80er (Fotos des Nutzers vom 16.10.2026).
   halben Sekunde. Die laufende Uhr und der Anstoß-Countdown springen
   dagegen einfach um – ein Aufbau jede Sekunde wäre Unruhe.
 - **Aufteilung im Spiel:** Kurznamen oben (Heim links, Gast rechts), der
-  Spielstand groß in der Mitte, darunter die Uhr mit Halbzeit links und
-  Nachspielzeit rechts. Karte und Ecken ersetzen die Uhrzeile für ihre
-  Standzeit. Keine Torschützenliste – dafür ist auf der Matrix kein Platz.
+  Spielstand doppelt groß in der Mitte, darunter die **letzten drei Tore
+  und Platzverweise in zeitlicher Reihenfolge** – eine Zeile je
+  Ereignis über die volle Breite, Heim links, Gast rechts. In einer
+  halben Zeile je Mannschaft wurden Namen auf sieben Zeichen gekürzt.
+  Ganz unten die Uhr in einfacher Größe mit Halbzeit links und
+  Nachspielzeit rechts, in Pause und Endstand „HALBZEIT"/„ENDSTAND".
+  Karte und Ecken nehmen sich für ihre Standzeit den unteren Teil.
+  (Die erste Fassung hatte einen dreifach großen Spielstand, eine doppelt
+  große Uhr und keine Torschützen – Uhr zu groß, Torschützen fehlten,
+  Befund des Nutzers 16.10.2026.)
+- **Null ohne Schrägstrich** – mit sah sie im Spielstand aus wie „Ø".
 - **Aufstellung:** einspaltig mit sechs Namen je Bild; eine volle
   Aufstellung blättert nach der halben Standzeit zur zweiten Hälfte.
   Zweispaltig wurden Namen wie BRINKMANN auf BRINKMA gekürzt.
-- **Bilder der Diashow** (Sponsoren-Fenster, Highlights) bleiben Bilder
-  und liegen über dem erloschenen Raster. Die endgültige Gestaltung der
-  Sponsoren im Retro-Design ist noch offen (`Backlog.md`).
+- **Sponsoren-Fenster:** Die Titelzeile „UNSERE PARTNER" zeichnet die
+  Matrix als Punktschrift, ohne Indigofläche und ohne Gold (Nutzerwunsch
+  16.10.2026); die Seitenmarken als Punkte daneben. Die Logos liegen
+  weiter als Bilder in ihren weißen Kacheln über dem erloschenen Raster.
+  Highlight-Bilder ebenso.
 - **Technik:** gezeichnet auf einem Canvas (`.retro-matrix`), die
   Aufteilung steht ohne DOM in `shared/retroMatrix.ts` und ist dort
   getestet. Was gerade dran ist, liest die Anzeige aus denselben

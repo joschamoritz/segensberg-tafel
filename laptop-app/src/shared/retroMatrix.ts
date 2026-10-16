@@ -16,12 +16,39 @@
  * bleibt als Lücke dunkel. Bei 384×192 ergibt das 96×48 Punkte.
  */
 
-/** Tafelpixel je Punkt (Kantenlänge). */
-export const RETRO_CELL = 4;
-
-/** Bezugsraster der Seitenaufteilung -- 384×192 geteilt durch `RETRO_CELL`. */
+/** Bezugsraster der Seitenaufteilung: 96×48 Punkte. */
 const BASE_COLS = 96;
 const BASE_ROWS = 48;
+
+/**
+ * Punktgröße für eine Tafel.
+ *
+ * Bei 384×192 belegt ein Punkt 4×4 Tafelpixel. Eine feste Punktgröße
+ * ging aber schief, sobald die Tafelauflösung anders eingestellt war --
+ * etwa auf die Bildschirmgröße eines Laptops: Dort entstand ein Raster
+ * aus 480 Punkten, und der Inhalt stand winzig in der Mitte (Befund des
+ * Nutzers, 16.10.2026). Jetzt richtet sich die Punktgröße nach der
+ * Tafel, sodass das Raster immer rund 96×48 Punkte hat.
+ *
+ * Die Lücke zwischen den Punkten wächst mit: Bei großen Punkten bliebe
+ * ein einzelnes Pixel unsichtbar, und die Fläche sähe aus wie Kacheln
+ * statt wie Lampen.
+ */
+export function retroGrid(width: number, height: number): {
+  cell: number;
+  dot: number;
+  cols: number;
+  rows: number;
+} {
+  const cell = Math.max(1, Math.min(Math.floor(width / BASE_COLS), Math.floor(height / BASE_ROWS)));
+  const gap = cell < 2 ? 0 : Math.max(1, Math.round(cell / 4));
+  return {
+    cell,
+    dot: cell - gap,
+    cols: Math.floor(width / cell),
+    rows: Math.floor(height / cell),
+  };
+}
 
 // --------------------------------------------------------------------
 // Schriften
@@ -63,7 +90,9 @@ const GROSS: Record<string, string> = {
   X: '10001 10001 01010 00100 01010 10001 10001',
   Y: '10001 10001 01010 00100 00100 00100 00100',
   Z: '11111 00001 00010 00100 01000 10000 11111',
-  '0': '01110 10001 10011 10101 11001 10001 01110',
+  // Ohne Schrägstrich wie auf den Vorbildern -- mit sah die Null im
+  // Spielstand aus wie ein "Ø".
+  '0': '01110 10001 10001 10001 10001 10001 01110',
   '1': '00100 01100 00100 00100 00100 00100 01110',
   '2': '01110 10001 00001 00010 00100 01000 11111',
   '3': '11110 00001 00001 01110 00001 00001 11110',
@@ -358,12 +387,21 @@ export type RetroScene =
   /** Nur das erloschene Raster, z. B. hinter einem Sponsoren-Fenster. */
   | { kind: 'blank' }
   | { kind: 'matchup'; home: string; away: string; line: string }
+  /** Sponsoren-Fenster: Titel als Punktschrift, die Logos liegen darüber. */
+  | { kind: 'sponsors'; title: string; page: number; pages: number }
   | {
       kind: 'match';
       home: string;
       away: string;
       homeScore: number;
       awayScore: number;
+      /**
+       * Tore und Platzverweise in zeitlicher Reihenfolge, älteste zuerst
+       * ("13' BRINKMANN"). Eine Zeile je Ereignis über die volle Breite,
+       * Heim links, Gast rechts -- in einer halben Zeile wurden Namen auf
+       * sieben Zeichen gekürzt.
+       */
+      scorers: { side: 'home' | 'away'; text: string }[];
       footer:
         | { kind: 'clock'; clock: string; half: string; stoppage: string }
         | { kind: 'phase'; text: string }
@@ -408,49 +446,73 @@ function autoLine(m: DotMatrix, text: string, y: number, slot: number, left: num
   m.centered(text, y + Math.floor((slot - height) / 2), font, scale, left, width);
 }
 
-/** Eine Tor-Ziffer groß, ohne Kürzung -- zweistellig passt sie noch. */
-const SCORE_SCALE = 3;
+/**
+ * Spielstand doppelt groß. Dreifach füllte er die Tafel gut, ließ aber
+ * keinen Platz für die Torschützen -- und die gehören auf die Tafel
+ * (Nutzerwunsch 16.10.2026).
+ */
+const SCORE_SCALE = 2;
 
+/** So viele Torschützenzeilen je Mannschaft passen über die Uhrzeile. */
+export const RETRO_SCORER_LINES = 3;
+
+/*
+ * Aufteilung der Spielansicht (Zeilen bei 48 Punkten Höhe):
+ *   0– 6  Kurznamen, Heim links, Gast rechts
+ *   8–21  Spielstand
+ *  23–39  die letzten drei Tore, Heim links, Gast rechts
+ *  41–47  Halbzeit · Uhr · Nachspielzeit, bzw. "HALBZEIT"/"ENDSTAND"
+ * Eine Einblendung (Karte, Ecken) nimmt sich die Zeilen ab 23.
+ */
 function composeMatch(m: DotMatrix, scene: Extract<RetroScene, { kind: 'match' }>, x0: number, y0: number, w: number): void {
   const half = Math.floor(w / 2);
-
-  // Namen in der obersten Zeile, Heim links, Gast rechts -- groß, wenn
-  // beide nebeneinander passen, sonst klein.
   const room = half - 2;
+
+  // Namen in der obersten Zeile -- groß, wenn beide nebeneinander passen,
+  // sonst klein.
   const big = textWidth(scene.home, 'gross') <= room && textWidth(scene.away, 'gross') <= room;
   const font: RetroFont = big ? 'gross' : 'klein';
-  m.text(fitText(scene.home, font, 1, room), x0 + 1, y0 + 1, font);
-  m.rightAligned(fitText(scene.away, font, 1, room), x0 + w - 2, y0 + 1, font);
+  const nameY = y0 + (big ? 0 : 1);
+  m.text(fitText(scene.home, font, 1, room), x0 + 1, nameY, font);
+  m.rightAligned(fitText(scene.away, font, 1, room), x0 + w - 2, nameY, font);
 
-  // Spielstand groß, der Trenner exakt in der Mitte
-  const home = String(scene.homeScore);
-  const away = String(scene.awayScore);
-  m.rightAligned(home, x0 + half - 5, y0 + 10, 'gross', SCORE_SCALE);
-  m.text(away, x0 + half + 4, y0 + 10, 'gross', SCORE_SCALE);
-  m.block(x0 + half - 1, y0 + 15, 2, 2);
-  m.block(x0 + half - 1, y0 + 23, 2, 2);
+  // Spielstand, der Trenner exakt in der Mitte
+  m.rightAligned(String(scene.homeScore), x0 + half - 4, y0 + 8, 'gross', SCORE_SCALE);
+  m.text(String(scene.awayScore), x0 + half + 3, y0 + 8, 'gross', SCORE_SCALE);
+  m.block(x0 + half - 1, y0 + 11, 2, 2);
+  m.block(x0 + half - 1, y0 + 17, 2, 2);
 
   const footer = scene.footer;
-  if (footer.kind === 'clock') {
-    m.centered(footer.clock, y0 + 34, 'gross', 2, x0, w);
-    // Die Halbzeit in großer Schrift, wo sie neben die Uhr passt ("1.HZ"
-    // ist 19 Punkte breit, die Uhr beginnt bei 23).
-    const half = footer.half.replace(/\s+/g, '');
-    const clockLeft = x0 + Math.floor((w - textWidth(footer.clock, 'gross', 2)) / 2);
-    if (textWidth(half, 'gross') <= clockLeft - x0 - 3) m.text(half, x0 + 1, y0 + 38, 'gross');
-    else m.text(half, x0 + 1, y0 + 39, 'klein');
-    if (footer.stoppage) m.rightAligned(footer.stoppage, x0 + w - 2, y0 + 38, 'gross');
-  } else if (footer.kind === 'phase') {
-    if (textWidth(footer.text, 'gross', 2) <= w) m.centered(footer.text, y0 + 34, 'gross', 2, x0, w);
-    else m.centered(footer.text, y0 + 38, 'gross', 1, x0, w);
-  } else {
-    // Einblendung (Karte, Ecken): ersetzt die Uhr wie in den anderen
-    // Designs die Leiste. Kartenfarben gibt es auf einer einfarbigen
-    // Tafel nicht -- die Karte steht deshalb als Wort da.
+
+  if (footer.kind === 'info') {
+    // Einblendung (Karte, Ecken): nimmt sich den unteren Teil wie in den
+    // anderen Designs die Leiste. Kartenfarben gibt es auf einer
+    // einfarbigen Tafel nicht -- die Karte steht deshalb als Wort da.
     const value = footer.value;
-    m.text(fitText(footer.title, 'gross', 1, w - textWidth(value, 'gross') - 4), x0 + 1, y0 + 33, 'gross');
-    m.rightAligned(value, x0 + w - 2, y0 + 33, 'gross');
-    if (footer.name) m.text(fitText(footer.name, 'klein', 1, w - 2), x0 + 1, y0 + 42, 'klein');
+    m.text(fitText(footer.title, 'gross', 1, w - textWidth(value, 'gross') - 4), x0 + 1, y0 + 28, 'gross');
+    m.rightAligned(value, x0 + w - 2, y0 + 28, 'gross');
+    if (footer.name) m.text(fitText(footer.name, 'klein', 1, w - 2), x0 + 1, y0 + 39, 'klein');
+    return;
+  }
+
+  // Die letzten Ereignisse in zeitlicher Reihenfolge -- wie auf den alten
+  // Tafeln. Jede Zeile hat die volle Breite; die Seite zeigt die
+  // Mannschaft. Ältere fallen heraus wie im klassischen Design.
+  scene.scorers.slice(-RETRO_SCORER_LINES).forEach((entry, i) => {
+    const line = fitText(entry.text, 'klein', 1, w - 2);
+    const y = y0 + 23 + i * 6;
+    if (entry.side === 'home') m.text(line, x0 + 1, y, 'klein');
+    else m.rightAligned(line, x0 + w - 2, y, 'klein');
+  });
+
+  if (footer.kind === 'clock') {
+    // Uhr in einfacher Größe -- doppelt groß drängte sie sich vor den
+    // Spielstand (Befund des Nutzers, 16.10.2026).
+    m.centered(footer.clock, y0 + 41, 'gross', 1, x0, w);
+    m.text(footer.half.replace(/\s+/g, ''), x0 + 1, y0 + 41, 'gross');
+    if (footer.stoppage) m.rightAligned(footer.stoppage, x0 + w - 2, y0 + 41, 'gross');
+  } else {
+    m.centered(footer.text, y0 + 41, 'gross', 1, x0, w);
   }
 }
 
@@ -464,8 +526,10 @@ function composeMatch(m: DotMatrix, scene: Extract<RetroScene, { kind: 'match' }
 export function composeRetro(raw: RetroScene, cols: number, rows: number): DotMatrix {
   // Erst aufbereiten, dann messen: "Köln" wird zu "KOELN" und damit
   // breiter. Gemessen am Rohtext liefen Kürzung und Zentrierung daneben.
+  // `kind` und `side` sind Steuerfelder, keine Anzeigetexte -- in
+  // Großbuchstaben passten sie zu keinem Vergleich mehr.
   const scene = JSON.parse(JSON.stringify(raw), (key, value) =>
-    typeof value === 'string' && key !== 'kind' ? normalizeRetroText(value) : value
+    typeof value === 'string' && key !== 'kind' && key !== 'side' ? normalizeRetroText(value) : value
   ) as RetroScene;
   const m = new DotMatrix(cols, rows);
   const w = Math.min(cols, BASE_COLS);
@@ -486,6 +550,22 @@ export function composeRetro(raw: RetroScene, cols: number, rows: number): DotMa
     case 'match':
       composeMatch(m, scene, x0, y0, w);
       break;
+
+    case 'sponsors': {
+      // Nur die Titelzeile -- die Logos liegen als Bilder in ihren
+      // Kacheln darüber. Ganz oben und nicht mittig verschoben: Sie
+      // gehört in den Streifen, den das Fenster dafür freilässt.
+      m.text(scene.title, x0 + 2, 0, 'gross');
+      if (scene.pages > 1) {
+        for (let i = 0; i < scene.pages; i++) {
+          const x = x0 + w - 2 - (scene.pages - i) * 4;
+          // Aktuelle Seite als gefülltes Quadrat, die übrigen als Punkt
+          if (i === scene.page) m.block(x, 2, 3, 3);
+          else m.set(x + 1, 3);
+        }
+      }
+      break;
+    }
 
     case 'goal': {
       const scale = textWidth(scene.word, 'gross', 4) <= w ? 4 : 3;

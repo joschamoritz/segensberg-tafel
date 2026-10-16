@@ -43,6 +43,7 @@ function spiel(overrides = {}) {
     away: 'Erkenschwick',
     homeScore: 2,
     awayScore: 1,
+    scorers: [],
     footer: { kind: 'clock', clock: '41:23', half: '1. HZ', stoppage: '' },
     ...overrides,
   };
@@ -198,6 +199,59 @@ test('jede Szene bleibt in der Fläche, auch mit überlangen Texten', () => {
   }
 });
 
+test('das Raster hat bei jeder Tafelauflösung rund 96 Punkte Breite', () => {
+  // Vorher war die Punktgröße fest. Bei einer Tafelauflösung in
+  // Bildschirmgröße entstand ein riesiges Raster mit winzigem Inhalt.
+  const { retroGrid } = load('shared/retroMatrix');
+  assert.deepEqual(retroGrid(384, 192), { cell: 4, dot: 3, cols: 96, rows: 48 });
+  for (const [w, h] of [
+    [1920, 1080],
+    [1874, 1036],
+    [768, 384],
+    [384, 224],
+  ]) {
+    const g = retroGrid(w, h);
+    assert.ok(g.cols >= 96 && g.cols < 110, `${w}x${h}: ${g.cols} Spalten`);
+    assert.ok(g.rows >= 48, `${w}x${h}: ${g.rows} Zeilen`);
+    assert.ok(g.dot < g.cell, `${w}x${h}: zwischen den Punkten muss eine Lücke bleiben`);
+  }
+});
+
+test('Spielansicht: die Torschützen stehen unter dem Spielstand', () => {
+  const ohne = composeRetro(spiel(), COLS, ROWS);
+  const mit = composeRetro(
+    spiel({
+      scorers: [
+        { side: 'home', text: "13' BRINKMANN" },
+        { side: 'away', text: "32' SCHULTE-WIEGAND" },
+      ],
+    }),
+    COLS,
+    ROWS
+  );
+  assert.equal(punkte(ohne, 0, 23, 95, 39), 0, 'ohne Tore bleibt der Bereich leer');
+  assert.ok(punkte(mit, 0, 23, 20, 27) > 0, 'Heimtor fehlt in der ersten Zeile, links');
+  assert.equal(punkte(mit, 75, 23, 95, 27), 0, 'Heimtor gehört nach links');
+  assert.ok(punkte(mit, 75, 29, 95, 33) > 0, 'Gasttor fehlt in der zweiten Zeile, rechts');
+  // Volle Breite: der lange Gastname reicht über die Mitte nach links.
+  assert.ok(punkte(mit, 10, 29, 45, 33) > 0, 'Gastname wurde auf eine halbe Zeile gekürzt');
+  assert.equal(punkte(mit, 0, 40, 95, 40), 0, 'die Liste läuft in die Uhrzeile');
+});
+
+test('Spielansicht: bei mehr als drei Toren stehen die jüngsten', () => {
+  const e = (text) => ({ side: 'home', text });
+  const vier = composeRetro(spiel({ scorers: [e('1 A'), e('2 B'), e('3 C'), e('4 D')] }), COLS, ROWS);
+  const letzteDrei = composeRetro(spiel({ scorers: [e('2 B'), e('3 C'), e('4 D')] }), COLS, ROWS);
+  assert.deepStrictEqual(Array.from(vier.dots), Array.from(letzteDrei.dots));
+});
+
+test('Sponsoren: der Titel steht als Punktschrift ganz oben', () => {
+  const m = composeRetro({ kind: 'sponsors', title: 'UNSERE PARTNER', page: 0, pages: 2 }, COLS, ROWS);
+  assert.ok(punkte(m, 0, 0, 80, 6) > 0, 'Titel fehlt');
+  assert.ok(punkte(m, 81, 0, 95, 6) > 0, 'Seitenmarken fehlen');
+  assert.equal(punkte(m, 0, 8, 95, 47), 0, 'unter dem Titel liegen die Logos -- dort keine Punkte');
+});
+
 test('Umlaute werden vor dem Messen aufbereitet', () => {
   // "Köln" ist auf der Matrix "KOELN" -- gemessen am Rohtext wäre die
   // Zentrierung um ein Zeichen daneben.
@@ -298,6 +352,58 @@ test('display: Bilder der Diashow liegen im Retro-Design über dem Raster', asyn
   await Promise.resolve();
   await Promise.resolve();
   assert.equal(r.document.body.dataset.retroOverlay, 'slide');
+  assert.deepEqual(r.drainErrors(), []);
+});
+
+/** Die Szene, die die Anzeige zuletzt gezeichnet hätte. */
+async function szene(r) {
+  await Promise.resolve();
+  await Promise.resolve();
+  return JSON.parse(r.document.getElementById('retro-matrix').dataset.scene);
+}
+
+test('display: Tore und Platzverweise stehen in zeitlicher Reihenfolge', async (t) => {
+  const store = retroStore();
+  store.setSquad('home', [
+    { id: 'h1', number: 9, firstName: 'Lukas', lastName: 'Brinkmann', position: '', role: 'start', isGoalkeeper: false, isCaptain: false },
+  ]);
+  store.kickoff();
+  store.stopClock();
+  store.setClock(12 * 60_000);
+  store.incrementScore('home', 1);
+  store.setGoalScorer(store.getState().events.at(-1).id, 'h1');
+  store.setClock(30 * 60_000);
+  store.incrementScore('away', 1);
+  store.addCard('away', 'yellow');
+  store.addCard('away', 'red');
+  store.stopClock();
+
+  const r = openRenderer('display', t);
+  r.emit('onStateUpdated', store.getState());
+  const s = await szene(r);
+
+  assert.equal(s.kind, 'match');
+  assert.deepEqual(s.scorers, [
+    { side: 'home', text: "13' Brinkmann" },
+    { side: 'away', text: "31' TOR" },
+    { side: 'away', text: "31' ROT" },
+  ], 'Gelb fehlt bewusst, ein Tor ohne Schützen heißt TOR');
+  assert.deepEqual(r.drainErrors(), []);
+});
+
+test('display: die Sponsoren-Folie zeigt den Titel als Punktschrift', async (t) => {
+  const store = retroStore();
+  store.setMedia({
+    werbung: { rootPath: 'W', files: ['1.png', '2.png', '3.png', '4.png', '5.png'] },
+    highlights: { rootPath: 'H', files: [] },
+    sounds: { rootPath: 'S', files: [] },
+  });
+  const r = openRenderer('display', t);
+  r.emit('onStateUpdated', store.getState());
+  store.startSlideshow();
+  r.emit('onStateUpdated', store.getState());
+
+  assert.deepEqual(await szene(r), { kind: 'sponsors', title: 'UNSERE PARTNER', page: 0, pages: 2 });
   assert.deepEqual(r.drainErrors(), []);
 });
 

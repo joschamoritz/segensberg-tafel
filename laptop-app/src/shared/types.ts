@@ -218,8 +218,11 @@ export interface GoalStagePlan {
  * Ablauf beim eigenen Tor. Der Vollbildteil bleibt kurz -- Spielstand und
  * Uhr sind währenddessen verdeckt.
  */
+// Vollbild 4 s statt 1,8 s (Befund des Nutzers, 16.10.2026): Ein Tor
+// soll stehen bleiben, bis es auch hinten auf der Tribüne angekommen ist.
+// Im Retro-Design geht dazu gut eine halbe Sekunde für den Aufbau ab.
 export const HOME_GOAL_STAGES: GoalStagePlan[] = [
-  { stage: 'word', ms: 1800 },
+  { stage: 'word', ms: 4000 },
   { stage: 'boost', ms: 1800 },
 ];
 
@@ -231,7 +234,7 @@ export const HOME_GOAL_STAGES: GoalStagePlan[] = [
  * Ziffer an ihren Platz.
  */
 export const AWAY_GOAL_STAGES: GoalStagePlan[] = [
-  { stage: 'plain', ms: 2200 },
+  { stage: 'plain', ms: 3000 },
   { stage: 'boost', ms: 1200 },
 ];
 

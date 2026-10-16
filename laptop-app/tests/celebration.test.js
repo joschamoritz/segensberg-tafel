@@ -352,9 +352,12 @@ test('display: ein zweites Tor räumt die Zeitschalter des ersten ab', (t) => {
   assert.equal(r.document.body.dataset.goalStage, 'plain', 'der neue Jubel gilt');
   assert.equal(uhr.offen(), AWAY_GOAL_STAGES.length, 'vom Heimjubel darf nichts übrig sein');
 
-  // Der Punkt der Sache: Zum Zeitpunkt des Stufenwechsels des Heimtors
-  // darf nichts mehr umspringen.
-  uhr.vorspulen(HOME_GOAL_STAGES[0].ms - 1);
+  // Der Punkt der Sache: Vor dem eigenen Stufenwechsel des Gegentors darf
+  // nichts umspringen -- auch nicht durch einen übrig gebliebenen
+  // Schalter des Heimtors. Seit der Heimjubel länger steht als der
+  // Gastjubel (4 s gegen 3 s), greift hier die Zählung oben; dieser
+  // Schritt sichert die Reihenfolge, falls die Dauern wieder wechseln.
+  uhr.vorspulen(Math.min(HOME_GOAL_STAGES[0].ms, AWAY_GOAL_STAGES[0].ms) - 1);
   assert.equal(r.document.body.dataset.goalStage, 'plain', 'die Stufe ist umgesprungen');
 
   assert.deepEqual(r.drainErrors(), []);
