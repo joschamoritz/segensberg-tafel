@@ -1591,6 +1591,34 @@ body[data-theme='flutlicht'] .stoppage {
    Tafel. Aufbau, Dauer und Ablauf bleiben wie im klassischen Design;
    hier ändert sich nur die Erscheinung. */
 
+/* Aufstellung: Kopfzeile als Indigo-Plakette in der Form der Uhr, Titel
+   geneigt. Die Namen bleiben aufrecht -- zwölf Einträge in kleiner
+   Schrift lesen sich geneigt schlechter, und hier geht Lesbarkeit vor. */
+body[data-theme='flutlicht'] .lineup-header {
+  position: relative;
+  isolation: isolate;
+  margin: 0 -3cqw 1.5cqh;
+  padding: 0 6cqw;
+}
+
+body[data-theme='flutlicht'] .lineup-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--svh-dk);
+  clip-path: polygon(0 0, 100% 0, 97% 100%, 3% 100%);
+}
+
+body[data-theme='flutlicht'] .lineup-title {
+  font-size: 10cqh;
+  transform: skewX(-12deg);
+}
+
+body[data-theme='flutlicht'][data-fx~='schatten'] .lineup-grid {
+  filter: drop-shadow(0 0.4cqh 1cqh var(--flut-shadow));
+}
+
 /* Vor dem Anpfiff: "VS" geneigt wie die Ziffern */
 body[data-theme='flutlicht'] .pre-vs {
   font-size: 14cqh;

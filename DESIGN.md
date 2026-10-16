@@ -150,7 +150,8 @@ damit sie beim Hochzählen nicht springen.
   **2×2 gleich große weiße Kacheln**, Logo eingepasst (`contain`). Ab
   zwei Seiten zeigen kleine gefüllte Quadrate rechts in der Titelleiste
   die Seite an (aktive weiß, übrige `--sponsor-page-off`). Fehlen auf
-  einer Seite Logos, bleiben Kacheln **leer** statt zu verschwinden –
+  einer Seite Logos, bleiben Kacheln **leer** (Nutzerentscheidung
+  16.10.2026, kein Vereinswappen als Füllung) statt zu verschwinden –
   sonst würden die übrigen größer, und gleich große Partner sind der
   Zweck. Weiße Kacheln, weil Sponsorenlogos fast immer für hellen Grund
   gezeichnet sind; die frühere Regel „Motive im Vereinsblau anlegen"
@@ -256,7 +257,9 @@ Gast" und wurde deshalb verworfen (Nutzer, 16.10.2026).
     geringer Kontrast wie im klassischen Design.
   - *Gegentor:* dunkler Kegel ohne Puls, „TOR" in Weiß.
   - *Vor dem Anpfiff:* „VS" geneigt wie die Ziffern.
-  - *Aufstellungsseiten:* unverändert, nur auf dem neuen Hintergrund.
+  - *Aufstellungsseiten:* Kopfzeile als Indigo-Plakette um Wappen und
+    geneigten Titel; die Namen bleiben aufrecht, weil zwölf Einträge in
+    kleiner Schrift geneigt schlechter lesbar wären.
 
 **Ausnahme von den Guardrails:** Verläufe, Transparenz und Leuchten sind
 im Flutlicht-Design erlaubt – aber **nur** dort, und jeder dieser Effekte

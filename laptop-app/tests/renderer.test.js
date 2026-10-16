@@ -21,6 +21,7 @@ const { openRenderer } = require('./dom');
 
 stubElectron();
 const { MatchStateStore } = load('main/state');
+const { DEFAULT_APPEARANCE, DISPLAY_THEMES } = load('shared/types');
 
 // --------------------------------------------------------------------
 // Zustände zum Durchschieben
@@ -135,9 +136,46 @@ function alleZustaende() {
   return faelle;
 }
 
+/**
+ * Dieselben Zustände in einem anderen Design. Das HTML ist für alle
+ * Designs dasselbe -- aber der Renderer liest den Zustand jedes Mal neu,
+ * und ein Fehler, der nur bei einem bestimmten Design auftritt, fiele im
+ * klassischen Durchlauf nicht auf.
+ */
+function imDesign(theme, alleEffekte) {
+  const effects = { verlauf: alleEffekte, strahlen: alleEffekte, leuchten: alleEffekte, schatten: alleEffekte };
+  return alleZustaende().map(([name, state]) => [name, { ...state, appearance: { theme, effects } }]);
+}
+
 // --------------------------------------------------------------------
 // Der eigentliche Durchlauf
 // --------------------------------------------------------------------
+
+for (const theme of DISPLAY_THEMES.filter((t) => t !== DEFAULT_APPEARANCE.theme)) {
+  for (const alleEffekte of [true, false]) {
+    const variante = `${theme}, Effekte ${alleEffekte ? 'an' : 'aus'}`;
+
+    test(`display: verträgt jeden Spielzustand im Design ${variante}`, (t) => {
+      const r = openRenderer('display', t);
+      r.drainErrors();
+      for (const [name, state] of imDesign(theme, alleEffekte)) {
+        r.emit('onStateUpdated', state);
+        assert.deepEqual(r.drainErrors(), [], `Zustand "${name}" hat einen Fehler ausgelöst`);
+        assert.equal(r.document.body.dataset.theme, theme, `Zustand "${name}"`);
+      }
+    });
+
+    test(`control: verträgt jeden Spielzustand im Design ${variante}`, (t) => {
+      const r = openRenderer('control', t);
+      r.drainErrors();
+      for (const [name, state] of imDesign(theme, alleEffekte)) {
+        r.emit('onStateUpdated', state);
+        assert.deepEqual(r.drainErrors(), [], `Zustand "${name}" hat einen Fehler ausgelöst`);
+      }
+      assert.equal(r.document.getElementById('theme-select').value, theme);
+    });
+  }
+}
 
 for (const fenster of ['control', 'display']) {
   test(`${fenster}: baut ohne Fehler auf`, (t) => {
