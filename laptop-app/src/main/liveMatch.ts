@@ -1,7 +1,14 @@
 import { app } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
-import { LiveMatchSnapshot, MatchPhase, MatchState } from '../shared/types';
+import {
+  LiveMatchSnapshot,
+  MatchPhase,
+  MatchState,
+  MAX_SHOOTOUT_KICKS,
+  Shootout,
+  ShootoutKick,
+} from '../shared/types';
 
 /**
  * Sicherung des laufenden Spiels.
@@ -58,6 +65,7 @@ export function toSnapshot(state: MatchState): LiveMatchSnapshot {
     stoppageMinutes: state.stoppageMinutes,
     corners: state.corners,
     attendance: state.attendance,
+    shootout: state.shootout,
   };
 }
 
@@ -93,6 +101,19 @@ const PHASES: MatchPhase[] = ['pre-match', 'live', 'half-time', 'full-time'];
 function sanitizeCount(value: unknown): number {
   if (typeof value !== 'number' || !Number.isFinite(value)) return 0;
   return Math.max(0, Math.round(value));
+}
+
+/** Elfmeterschießen aus einer Sicherung; alles Unbrauchbare wird zu null. */
+function sanitizeShootout(value: unknown): Shootout | null {
+  if (!value || typeof value !== 'object') return null;
+  const raw = value as Record<string, unknown>;
+  const kicks = (list: unknown): ShootoutKick[] =>
+    Array.isArray(list)
+      ? list
+          .filter((k): k is ShootoutKick => k === 'goal' || k === 'miss')
+          .slice(0, MAX_SHOOTOUT_KICKS)
+      : [];
+  return { home: kicks(raw.home), away: kicks(raw.away), finished: raw.finished === true };
 }
 
 /**
@@ -143,6 +164,8 @@ export function loadLiveMatch(): LiveMatchSnapshot | null {
         typeof parsed.attendance === 'number' && Number.isFinite(parsed.attendance)
           ? Math.max(0, Math.round(parsed.attendance))
           : null,
+      // Ein Elfmeterschießen gibt es nur nach dem Abpfiff.
+      shootout: parsed.phase === 'full-time' ? sanitizeShootout(parsed.shootout) : null,
     };
   } catch {
     // Auch "Datei gibt es nicht" landet hier -- der Normalfall.

@@ -458,8 +458,41 @@ export interface MatchState {
   sound: SoundSettings;
   /** siehe `InfoOverlay` */
   infoRequest: InfoRequest | null;
+  /** Elfmeterschießen nach dem Abpfiff, siehe `Shootout` */
+  shootout: Shootout | null;
   /** siehe `StateRevisions` */
   revisions: StateRevisions;
+}
+
+/**
+ * Elfmeterschießen (Review 2026-10, W11).
+ *
+ * Für Pokalspiele, die unentschieden enden. Die Schüsse sind KEINE
+ * Ereignisse der Chronik: Sie zählen nicht zum Spielstand und gehören
+ * nicht in die Torschützenliste -- im Spielbericht steht „2:2, 4:3 i. E.“.
+ * Gestartet wird es nur nach dem Abpfiff. Eine Verlängerung lässt sich
+ * über die weiterlaufende Uhr abbilden (Nutzerentscheidung 20.10.2026).
+ *
+ * Solange `finished` false ist, zeigt die Tafel eine eigene Vollbildansicht
+ * mit den Schüssen; danach steht das Ergebnis im Endstand.
+ */
+export type ShootoutKick = 'goal' | 'miss';
+
+export interface Shootout {
+  home: ShootoutKick[];
+  away: ShootoutKick[];
+  finished: boolean;
+}
+
+/** Schüsse je Mannschaft, die die Tafel mindestens als Felder zeigt. */
+export const SHOOTOUT_ROUNDS = 5;
+
+/** Höchstzahl Schüsse je Mannschaft -- weit über jedem echten Verlauf. */
+export const MAX_SHOOTOUT_KICKS = 30;
+
+export function shootoutScore(shootout: Shootout): { home: number; away: number } {
+  const goals = (kicks: ShootoutKick[]) => kicks.filter((k) => k === 'goal').length;
+  return { home: goals(shootout.home), away: goals(shootout.away) };
 }
 
 /**
@@ -492,6 +525,8 @@ export interface LiveMatchSnapshot {
   corners?: Corners;
   /** Ebenfalls nachträglich ergänzt, siehe `stoppageMinutes`. */
   attendance?: number | null;
+  /** Ebenfalls nachträglich ergänzt, siehe `stoppageMinutes`. */
+  shootout?: Shootout | null;
 }
 
 /**
@@ -1021,6 +1056,11 @@ export const IPC = {
   setAnnouncements: 'content:set-announcements',
   slideshowStart: 'slideshow:start',
   slideshowStop: 'slideshow:stop',
+  shootoutStart: 'shootout:start',
+  shootoutKick: 'shootout:kick',
+  shootoutUndo: 'shootout:undo',
+  shootoutFinish: 'shootout:finish',
+  shootoutCancel: 'shootout:cancel',
   mediaReload: 'media:reload',
   setSound: 'sound:set',
   soundRead: 'sound:read',

@@ -24,6 +24,8 @@ import {
   Player,
   playerLabel,
   RetroColor,
+  shootoutScore,
+  ShootoutKick,
   slideCount,
   slideshowAvailable,
   sortPlayersByNumber,
@@ -1035,7 +1037,9 @@ function renderSlideshowControls(state: MatchState): void {
   const start = document.getElementById('slideshow-start') as HTMLButtonElement;
   const stop = document.getElementById('slideshow-stop') as HTMLButtonElement;
 
-  start.disabled = !available || folien === 0;
+  // Ein laufendes Elfmeterschießen soll nicht hinter Folien verschwinden.
+  const shootoutRunning = state.shootout !== null && !state.shootout.finished;
+  start.disabled = !available || folien === 0 || shootoutRunning;
   stop.disabled = !running;
   start.classList.toggle('btn-next', available && !running && folien > 0);
 
@@ -1056,6 +1060,47 @@ function renderSlideshowControls(state: MatchState): void {
 
   const announcements = document.getElementById('announcements-input') as HTMLTextAreaElement;
   updateInputIfNotFocused(announcements, state.announcements.join('\n'));
+}
+
+/**
+ * Elfmeterschießen (Review 2026-10, W11). Starten nur nach dem Abpfiff;
+ * solange es läuft, steht der Klapper offen -- dort sitzen die Knöpfe,
+ * und es geht schnell.
+ */
+let shootoutWasRunning = false;
+
+function renderShootoutControls(state: MatchState): void {
+  const shootout = state.shootout;
+  const running = shootout !== null && !shootout.finished;
+
+  (document.getElementById('shootout-start') as HTMLButtonElement).disabled =
+    state.phase !== 'full-time' || shootout !== null;
+  for (const btn of document.querySelectorAll<HTMLButtonElement>(
+    '#shootout-controls [data-shootout-team], #shootout-controls [data-shootout-undo]'
+  )) {
+    btn.disabled = !running;
+  }
+  (document.getElementById('shootout-finish') as HTMLButtonElement).disabled = !running;
+  (document.getElementById('shootout-cancel') as HTMLButtonElement).disabled = shootout === null;
+
+  document.getElementById('shootout-home-name')!.textContent = state.home.shortName;
+  document.getElementById('shootout-away-name')!.textContent = state.away.shortName;
+
+  const hint = document.getElementById('shootout-hint')!;
+  if (shootout === null) {
+    hint.textContent = state.phase === 'full-time' ? '' : 'Erst nach dem Abpfiff.';
+  } else {
+    const score = shootoutScore(shootout);
+    hint.textContent =
+      `${score.home}:${score.away} (${shootout.home.length}:${shootout.away.length} Schüsse)` +
+      (shootout.finished ? ' – steht als „i. E.“ im Endstand.' : '');
+  }
+
+  if (running && !shootoutWasRunning) {
+    const klapper = document.getElementById('shootout-controls')!.closest('details');
+    if (klapper) klapper.open = true;
+  }
+  shootoutWasRunning = running;
 }
 
 /**
@@ -1151,6 +1196,7 @@ function renderState(state: MatchState): void {
   renderLineupControls(state);
   renderInfoControls(state);
   renderSlideshowControls(state);
+  renderShootoutControls(state);
   renderSoundControls(state);
   renderGoalLog(state);
   renderSquad('home', state);
@@ -1645,6 +1691,24 @@ function wireInfoControls(): void {
   // statt an den Fuß des Fensters zu wechseln. Regler, Stummschalter und
   // "Stopp" bleiben unten -- die stellt man einmal ein, nicht im Jubel.
   document.getElementById('sound-play-quick')!.addEventListener('click', playGoalSound);
+
+  document.getElementById('shootout-start')!.addEventListener('click', () => {
+    if (confirm('Elfmeterschießen starten? Die Tafel zeigt dann die Schüsse.')) window.api.shootoutStart();
+  });
+  document.querySelectorAll<HTMLButtonElement>('button[data-shootout-team]').forEach((btn) => {
+    btn.addEventListener('click', () =>
+      window.api.shootoutKick(btn.dataset.shootoutTeam as TeamId, btn.dataset.shootoutKick as ShootoutKick)
+    );
+  });
+  document.querySelectorAll<HTMLButtonElement>('button[data-shootout-undo]').forEach((btn) => {
+    btn.addEventListener('click', () => window.api.shootoutUndo(btn.dataset.shootoutUndo as TeamId));
+  });
+  document.getElementById('shootout-finish')!.addEventListener('click', () => {
+    if (confirm('Elfmeterschießen beenden? Das Ergebnis steht dann im Endstand.')) window.api.shootoutFinish();
+  });
+  document.getElementById('shootout-cancel')!.addEventListener('click', () => {
+    if (confirm('Elfmeterschießen verwerfen? Alle Schüsse gehen verloren.')) window.api.shootoutCancel();
+  });
 
   document
     .getElementById('slideshow-start')!

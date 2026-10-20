@@ -22,11 +22,13 @@ import {
   MAX_ATTENDANCE,
   MAX_ATTENDANCE_MESSAGE_LENGTH,
   MAX_CORNERS,
+  MAX_SHOOTOUT_KICKS,
   MAX_STOPPAGE_MIN,
   MediaLists,
   Player,
   SoundSettings,
   SCORER_DISPLAY_MS,
+  ShootoutKick,
   slideshowAvailable,
   StateRevisions,
   TeamId,
@@ -103,6 +105,7 @@ function initialState(): MatchState {
     },
     competition: null,
     slideshowRequest: null,
+    shootout: null,
     sound: { ...DEFAULT_SOUND_SETTINGS },
     revisions: { teams: 0, squads: 0, events: 0 },
   };
@@ -407,6 +410,8 @@ export class MatchStateStore {
    */
   startSlideshow(): void {
     if (!slideshowAvailable(this.state.phase)) return;
+    // Ein laufendes Elfmeterschießen gehört auf die Tafel, nicht dahinter.
+    if (this.state.shootout && !this.state.shootout.finished) return;
     this.state = {
       ...this.state,
       slideshowRequest: { id: this.nextSlideshowId++, phase: this.state.phase },
@@ -857,6 +862,49 @@ export class MatchStateStore {
     this.emit();
   }
 
+  // --- Elfmeterschießen ---------------------------------------------------
+  // Siehe `Shootout` in shared/types.ts. Nur nach dem Abpfiff; ein
+  // Zurücknehmen des Abpfiffs verwirft es (`revertPhase`).
+
+  startShootout(): void {
+    if (this.state.phase !== 'full-time' || this.state.shootout !== null) return;
+    // Die Schüsse gehören auf die Tafel -- eine laufende Diashow würde sie
+    // verdecken.
+    this.clearSlideshow();
+    this.state = { ...this.state, shootout: { home: [], away: [], finished: false } };
+    this.emit();
+  }
+
+  addShootoutKick(team: TeamId, kick: ShootoutKick): void {
+    const shootout = this.state.shootout;
+    if (!shootout || shootout.finished || shootout[team].length >= MAX_SHOOTOUT_KICKS) return;
+    this.state = { ...this.state, shootout: { ...shootout, [team]: [...shootout[team], kick] } };
+    this.emit();
+  }
+
+  /** Nimmt den letzten Schuss einer Mannschaft zurück (Fehleingabe). */
+  undoShootoutKick(team: TeamId): void {
+    const shootout = this.state.shootout;
+    if (!shootout || shootout.finished || shootout[team].length === 0) return;
+    this.state = { ...this.state, shootout: { ...shootout, [team]: shootout[team].slice(0, -1) } };
+    this.emit();
+  }
+
+  /** Ergebnis übernehmen: Die Tafel zeigt wieder den Endstand, mit „i. E.“. */
+  finishShootout(): void {
+    const shootout = this.state.shootout;
+    if (!shootout || shootout.finished) return;
+    this.state = { ...this.state, shootout: { ...shootout, finished: true } };
+    this.emit();
+  }
+
+  /** Verwirft das Elfmeterschießen ganz -- auch ein schon beendetes. */
+  cancelShootout(): void {
+    if (this.state.shootout === null) return;
+    this.state = { ...this.state, shootout: null };
+    this.emit();
+  }
+
   /** Abpfiff: Uhr anhalten, Endstand anzeigen. */
   goToFullTime(): void {
     if (this.state.phase !== 'live') return;
@@ -883,7 +931,8 @@ export class MatchStateStore {
     this.clearSlideshow();
     switch (this.state.phase) {
       case 'full-time':
-        this.state = { ...this.state, phase: 'live' };
+        // Ein Elfmeterschießen gibt es nur nach dem Abpfiff.
+        this.state = { ...this.state, phase: 'live', shootout: null };
         break;
       case 'half-time':
         this.secondHalfResumeMs = null;
@@ -935,6 +984,7 @@ export class MatchStateStore {
       stoppageMinutes: snapshot.stoppageMinutes ?? 0,
       corners: snapshot.corners ?? { home: 0, away: 0 },
       attendance: snapshot.attendance ?? null,
+      shootout: snapshot.shootout ?? null,
       // Einblendungen sind flüchtig und gehören nicht zum Spielstand.
       lineupRequest: null,
       scorerRequest: null,

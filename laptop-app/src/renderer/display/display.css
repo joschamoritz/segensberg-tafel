@@ -179,6 +179,7 @@ body {
 body.celebrating .deco,
 body.showing-scorer .deco,
 body.showing-thanks .deco,
+body.showing-shootout .deco,
 body.showing-slide .deco {
   display: none;
 }
@@ -233,6 +234,7 @@ body.celebrating .board-pre,
 body.celebrating .board-match,
 body.celebrating .board-scorer,
 body.celebrating .board-thanks,
+body.celebrating .board-shootout,
 body.celebrating .board-slides {
   display: none;
 }
@@ -906,6 +908,101 @@ body.showing-slide .board-match {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* --- Elfmeterschießen -------------------------------------------------- */
+/* Vollflächig, solange es läuft (body.showing-shootout, gesetzt von
+   display.ts). Danach steht das Ergebnis als „i. E.“ im Endstand.
+   Die Schüsse sind gefüllte Felder statt Haken und Kreuz: Feine Zeichen
+   verschwinden auf der Matrix, eine Fläche nicht -- dieselbe Überlegung
+   wie beim Doppelpunkt des Spielstands. */
+
+.board-shootout {
+  display: none;
+  position: absolute;
+  inset: 0;
+  flex-direction: column;
+  align-items: center;
+  padding: 3cqh 3cqw;
+  background: var(--svh-dk);
+}
+
+body.showing-shootout .board-shootout {
+  display: flex;
+}
+
+body.showing-shootout .board-match {
+  display: none;
+}
+
+/* Einblendungen, die das ganze Bild nehmen, gehen vor. */
+body.celebrating .board-shootout,
+body.showing-scorer .board-shootout,
+body.showing-thanks .board-shootout,
+body.showing-slide .board-shootout {
+  display: none;
+}
+
+.shootout-title {
+  flex: 0 0 auto;
+  font-weight: 700;
+  font-size: 10cqh;
+  line-height: 1.1;
+  letter-spacing: 0.06em;
+  color: var(--svh-gold);
+}
+
+.shootout-main {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  width: 100%;
+}
+
+.shootout-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4cqh;
+}
+
+.shootout-side .crest-img {
+  max-height: 34cqh;
+}
+
+.shootout-kicks {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.6cqh;
+  /* Fünf Felder je Zeile; ab dem sechsten Schuss eine zweite. */
+  max-width: calc(5 * 7cqh + 4 * 1.6cqh);
+}
+
+.shootout-kicks i {
+  display: block;
+  width: 7cqh;
+  height: 7cqh;
+  background: var(--sponsor-page-off);
+}
+
+.shootout-kicks i.is-goal {
+  background: var(--svh-gold);
+}
+
+.shootout-kicks i.is-miss {
+  background: var(--card-red);
+}
+
+.shootout-score {
+  display: flex;
+  align-items: center;
+  gap: 2cqw;
+  font-weight: 700;
+  font-size: 40cqh;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
 /* --- Danksagung an die Zuschauer --------------------------------------- */

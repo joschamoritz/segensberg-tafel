@@ -878,6 +878,25 @@ app.whenReady().then(() => {
     persistContent();
   });
 
+  onIpc(IPC.shootoutStart, () => {
+    store.startShootout();
+    flushLiveMatchSave();
+  });
+  onIpc(IPC.shootoutKick, (_event, team: unknown, kick: unknown) => {
+    if (!isTeamId(team) || (kick !== 'goal' && kick !== 'miss')) return;
+    store.addShootoutKick(team, kick);
+    flushLiveMatchSave();
+  });
+  onIpc(IPC.shootoutUndo, (_event, team: unknown) => {
+    if (!isTeamId(team)) return;
+    store.undoShootoutKick(team);
+  });
+  onIpc(IPC.shootoutFinish, () => {
+    store.finishShootout();
+    flushLiveMatchSave();
+  });
+  onIpc(IPC.shootoutCancel, () => store.cancelShootout());
+
   onIpc(IPC.slideshowStart, () => store.startSlideshow());
   onIpc(IPC.slideshowStop, () => store.stopSlideshow());
 

@@ -24,6 +24,8 @@ import {
   formatEventMinute,
   goalScorer,
   goalStagesFor,
+  SHOOTOUT_ROUNDS,
+  shootoutScore,
   GoalEvent,
   otherTeam,
   GoalStage,
@@ -188,7 +190,7 @@ function retroFooter(state: MatchState): Extract<RetroScene, { kind: 'match' }>[
   }
 
   if (state.phase === 'half-time' || state.phase === 'full-time') {
-    return { kind: 'phase', text: displayPhaseLabel(state.phase) };
+    return { kind: 'phase', text: phaseLabelText(state) };
   }
 
   const view = clockView(lastClock.elapsedMs, state.half, state.halfDurationMin, state.stoppageMinutes);
@@ -305,6 +307,20 @@ function currentRetroScene(state: MatchState): RetroScene {
       return { kind: 'sponsors', title: SPONSORS_TITLE, page: activeSlide.page, pages: activeSlide.pages };
     }
     if (activeSlide.kind !== 'base') return { kind: 'blank' };
+  }
+
+  // Elfmeterschießen: Felder gibt es in der Punktmatrix nicht, deshalb je
+  // Mannschaft eine Zeile mit Namen und Stand und eine mit den Schüssen
+  // ("T" Treffer, "-" verschossen).
+  if (body.classList.contains('showing-shootout') && state.shootout) {
+    const score = shootoutScore(state.shootout);
+    const kicks = (team: TeamId) => state.shootout![team].map((k) => (k === 'goal' ? 'T' : '-')).join(' ');
+    return {
+      kind: 'text',
+      // "ELFMETERSCHIESSEN" passt in der großen Punktschrift nicht in die Breite.
+      title: 'ELFMETER',
+      lines: [`${home} ${score.home}`, kicks('home'), `${away} ${score.away}`, kicks('away')],
+    };
   }
 
   if (state.phase === 'pre-match') {
@@ -1013,6 +1029,46 @@ function handleEvents(state: MatchState, isFirstRender: boolean): void {
 }
 
 /**
+ * Beschriftung am Fuß in Halbzeit und Endstand. Nach einem beendeten
+ * Elfmeterschießen steht dessen Ergebnis dabei, wie im Spielbericht:
+ * „Endstand · 4:3 i. E.“
+ */
+function phaseLabelText(state: MatchState): string {
+  const label = displayPhaseLabel(state.phase);
+  if (state.phase !== 'full-time' || !state.shootout?.finished) return label;
+  const score = shootoutScore(state.shootout);
+  return `${label} · ${score.home}:${score.away} i. E.`;
+}
+
+/**
+ * Elfmeterschießen: Vollbild, solange es läuft (siehe `Shootout`).
+ * Gezeichnet wird bei jedem Zustand neu -- es sind höchstens ein paar
+ * Dutzend Felder, und eine Signatur wäre hier mehr Code als Ersparnis.
+ */
+function renderShootout(state: MatchState): void {
+  const shootout = state.shootout;
+  const showing = state.phase === 'full-time' && shootout !== null && !shootout.finished;
+  document.body.classList.toggle('showing-shootout', showing);
+  if (!shootout) return;
+
+  const score = shootoutScore(shootout);
+  for (const team of ['home', 'away'] as TeamId[]) {
+    renderCrest(`shootout-${team}-logo`, `shootout-${team}-fallback`, state[team]);
+    renderDigits(document.getElementById(`shootout-${team}-score`)!, String(score[team]));
+
+    const kicks = document.getElementById(`shootout-${team}-kicks`)!;
+    kicks.textContent = '';
+    const fields = Math.max(SHOOTOUT_ROUNDS, shootout[team].length);
+    for (let i = 0; i < fields; i++) {
+      const field = document.createElement('i');
+      const kick = shootout[team][i];
+      if (kick) field.className = kick === 'goal' ? 'is-goal' : 'is-miss';
+      kicks.appendChild(field);
+    }
+  }
+}
+
+/**
  * Führt einen Renderschritt aus und fängt Fehler ab.
  *
  * Hintergrund: Ein einziger fehlgeschlagener Zugriff (etwa auf ein aus dem
@@ -1079,7 +1135,7 @@ function renderState(state: MatchState): void {
   step('Uhr', () => renderClock(state.clock));
 
   step('Phase', () => {
-    document.getElementById('phase-label')!.textContent = displayPhaseLabel(state.phase);
+    document.getElementById('phase-label')!.textContent = phaseLabelText(state);
     document.getElementById('clock-half')!.textContent = `${state.half}. HZ`;
   });
 
@@ -1102,6 +1158,7 @@ function renderState(state: MatchState): void {
     renderScorerList('away', state);
   });
 
+  step('Elfmeterschießen', () => renderShootout(state));
   step('Anstoß-Countdown', renderKickoffCountdown);
   step('Torjubel', () => handleEvents(state, isFirstRender));
   step('Aufstellungs-Einblendung', () => handleLineupRequest(state));

@@ -449,6 +449,29 @@
       <button id="media-reload" class="btn btn-small">Medien neu einlesen</button>
       <span class="lineup-controls-hint" id="slideshow-hint"></span>
     </div>
+    <!-- Elfmeterschießen (Pokal). Nur nach dem Abpfiff; die Schüsse sind
+         keine Ereignisse der Chronik. Die Knöpfe tragen data-shootout-*,
+         NICHT data-team -- sonst hingen sie sich über den dokumentweiten
+         Selektor einen Spielstand-Handler ein. -->
+    <div class="lineup-controls shootout-controls" id="shootout-controls">
+      <span class="lineup-controls-label">Elfmeterschießen:</span>
+      <button id="shootout-start" class="btn btn-small">Starten</button>
+      <span class="shootout-team">
+        <strong id="shootout-home-name">Heim</strong>
+        <button class="btn btn-small" data-shootout-team="home" data-shootout-kick="goal">Treffer</button>
+        <button class="btn btn-small" data-shootout-team="home" data-shootout-kick="miss">Verschossen</button>
+        <button class="btn btn-small" data-shootout-undo="home" title="Letzten Schuss zurücknehmen">↶</button>
+      </span>
+      <span class="shootout-team">
+        <strong id="shootout-away-name">Gast</strong>
+        <button class="btn btn-small" data-shootout-team="away" data-shootout-kick="goal">Treffer</button>
+        <button class="btn btn-small" data-shootout-team="away" data-shootout-kick="miss">Verschossen</button>
+        <button class="btn btn-small" data-shootout-undo="away" title="Letzten Schuss zurücknehmen">↶</button>
+      </span>
+      <button id="shootout-finish" class="btn btn-small">Beenden</button>
+      <button id="shootout-cancel" class="btn btn-small">Verwerfen</button>
+      <span class="lineup-controls-hint" id="shootout-hint"></span>
+    </div>
     <details class="thanks-box">
       <summary>Termine &amp; Ankündigungen (Pause und nach Abpfiff)</summary>
       <textarea id="announcements-input" rows="5"

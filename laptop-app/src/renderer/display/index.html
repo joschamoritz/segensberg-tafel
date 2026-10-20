@@ -184,6 +184,36 @@
          Die Zahl steht groß in der Mitte, der Text darum herum kleiner --
          sie wird pro Spiel nur einmal gezeigt und ist eher eine Geste ans
          Publikum als eine Zusatzinformation nebenher. -->
+    <!-- Elfmeterschießen (Pokal): eigene Vollbildansicht, solange es läuft.
+         Wappen links und rechts, darunter je ein Feld pro Schuss -- gefüllt
+         Gold für einen Treffer, Rot für einen Fehlschuss, gedämpft für
+         einen noch offenen der ersten fünf. Felder statt Symbolen: Ein
+         Haken oder Kreuz verschwände auf der Matrix, eine Fläche nicht. -->
+    <div class="board board-shootout">
+      <div class="shootout-title">ELFMETERSCHIESSEN</div>
+      <div class="shootout-main">
+        <div class="shootout-side">
+          <div class="crest">
+            <img class="crest-img" id="shootout-home-logo" alt="" hidden />
+            <span class="crest-text" id="shootout-home-fallback"></span>
+          </div>
+          <div class="shootout-kicks" id="shootout-home-kicks"></div>
+        </div>
+        <div class="shootout-score">
+          <span id="shootout-home-score"></span>
+          <span class="score-sep" aria-hidden="true"><i></i><i></i></span>
+          <span id="shootout-away-score"></span>
+        </div>
+        <div class="shootout-side">
+          <div class="crest">
+            <img class="crest-img" id="shootout-away-logo" alt="" hidden />
+            <span class="crest-text" id="shootout-away-fallback"></span>
+          </div>
+          <div class="shootout-kicks" id="shootout-away-kicks"></div>
+        </div>
+      </div>
+    </div>
+
     <div class="board board-thanks">
       <div class="thanks-before" id="thanks-before"></div>
       <div class="thanks-number" id="thanks-number"></div>

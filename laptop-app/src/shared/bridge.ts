@@ -10,6 +10,7 @@ import {
   LibraryTeam,
   MatchState,
   Player,
+  ShootoutKick,
   SoundCommand,
   TeamId,
 } from './types';
@@ -131,6 +132,11 @@ export function createApi(t: Transport) {
     setAnnouncements: (announcements: string[]) =>
       t.send(IPC.setAnnouncements, announcements),
     slideshowStart: () => t.send(IPC.slideshowStart),
+    shootoutStart: () => t.send(IPC.shootoutStart),
+    shootoutKick: (team: TeamId, kick: ShootoutKick) => t.send(IPC.shootoutKick, team, kick),
+    shootoutUndo: (team: TeamId) => t.send(IPC.shootoutUndo, team),
+    shootoutFinish: () => t.send(IPC.shootoutFinish),
+    shootoutCancel: () => t.send(IPC.shootoutCancel),
     slideshowStop: () => t.send(IPC.slideshowStop),
     mediaReload: () => t.send(IPC.mediaReload),
     setSound: (volume: number, muted: boolean) => t.send(IPC.setSound, volume, muted),
