@@ -10,7 +10,10 @@ dem Baudatum. Welche Stelle wann steigt, steht in
 
 ---
 
-## Noch nicht ausgeliefert
+## 1.8.0 – 20.10.2026 (Testfassung)
+
+Vorbereitung auf den TB50: Die App kann sich mit der Tafel im WLAN
+verbinden.
 
 **Neu**
 
