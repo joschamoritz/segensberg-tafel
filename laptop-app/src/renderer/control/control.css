@@ -390,6 +390,21 @@ body[data-setup='sponsoren'] #setup-sponsoren {
   border-bottom: none;
 }
 
+/* Haken der Diashow-Blöcke in einer Zeile neben den Knöpfen. */
+.slide-blocks {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 13px;
+}
+
+.slide-blocks label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
 /* ═══ Sponsoren-Plätze ═══ */
 /* Drei Spalten: Platz, Auswahl, wo das Logo erscheint. Die gemeinsame
    Beschriftungsspalte hält die Auswahlfelder in einer Flucht. */

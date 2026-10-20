@@ -438,6 +438,8 @@ export interface MatchState {
   competition: string | null;
   /** „Präsentiert von"-Plätze, siehe `SponsorSlots`. */
   sponsorSlots: SponsorSlots;
+  /** Abgehakte Blöcke der Diashow, siehe `SlideBlocks`. */
+  slideBlocks: SlideBlocks;
   /** Geplanter Anstoß als "HH:MM"; leer = keine Angabe. Nur informativ --
       der Anpfiff wird weiterhin manuell ausgelöst. */
   kickoffTime: string;
@@ -632,19 +634,78 @@ export const PRESENTED_BY = 'PRÄSENTIERT VON';
 export const HALFTIME_SPONSOR_TITLE = 'HALBZEIT PRÄSENTIERT VON';
 
 /**
- * Adresse des Logos an einem Platz -- oder `null`, wenn keiner gewählt
- * ist oder die Datei nicht mehr im Ordner liegt. Dann bleibt der Platz
- * leer statt ein zerbrochenes Bild zu zeigen; die Wahl bleibt erhalten,
- * falls die Datei nur kurz umbenannt war (wie beim Wettbewerbslogo).
+ * Ein Sponsorenlogo, wie es auf der Tafel steht. `white` heißt: weiße
+ * Fassung auf transparentem Grund -- sie steht direkt auf dem Vereinsblau,
+ * ohne weiße Kachel (Nutzerwunsch 20.10.2026, „für besseres Design").
  */
-export function sponsorSlotUrl(
+export interface SponsorLogo {
+  url: string;
+  white: boolean;
+}
+
+/** Kennung der weißen Fassung am Ende des Dateinamens: `Ott_weiß.png`. */
+const WHITE_LOGO_SUFFIX = /[_\s-]*(weiß|weiss|white)\s*$/i;
+
+/** Name ohne Endung und ohne Weiß-Kennung: `Ott_weiß.png` -> `Ott`. */
+export function sponsorBaseName(fileName: string): string {
+  return fileName.replace(/\.[^.]+$/, '').replace(WHITE_LOGO_SUFFIX, '');
+}
+
+export function isWhiteLogoFile(fileName: string): boolean {
+  return WHITE_LOGO_SUFFIX.test(fileName.replace(/\.[^.]+$/, ''));
+}
+
+/**
+ * Ein Eintrag je Sponsor: Liegen `Ott.png` und `Ott_weiß.png` im selben
+ * Ordner, gilt das als EIN Sponsor in zwei Fassungen, und die weiße wird
+ * genommen -- wie bei den Vereinslogos. Die farbige bleibt Rückfall, falls
+ * die weiße fehlt. Reihenfolge: wie im Ordner (nach Dateinamen).
+ */
+export function sponsorLogoFiles(files: string[]): string[] {
+  const chosen = new Map<string, string>();
+  for (const file of files) {
+    const base = sponsorBaseName(file).toLowerCase();
+    const current = chosen.get(base);
+    if (current === undefined || (!isWhiteLogoFile(current) && isWhiteLogoFile(file))) {
+      chosen.set(base, file);
+    }
+  }
+  return [...chosen.values()].sort(
+    (x, y) => files.indexOf(x) - files.indexOf(y)
+  );
+}
+
+/**
+ * Die Fassung, die für eine gewählte Datei gezeigt wird: die weiße, wenn
+ * es sie gibt, sonst die Datei selbst. Fehlt die Datei, aber eine andere
+ * Fassung desselben Sponsors liegt da, wird diese genommen -- wer die
+ * farbige gewählt und später durch die weiße ersetzt hat, verliert den
+ * Platz nicht. `null`, wenn vom Sponsor nichts mehr im Ordner liegt.
+ */
+export function preferredSponsorFile(files: string[], fileName: string): string | null {
+  const base = sponsorBaseName(fileName).toLowerCase();
+  return sponsorLogoFiles(files).find((f) => sponsorBaseName(f).toLowerCase() === base) ?? null;
+}
+
+export function sponsorLogo(folder: MediaFolderId, fileName: string): SponsorLogo {
+  return { url: mediaUrl(folder, fileName), white: isWhiteLogoFile(fileName) };
+}
+
+/**
+ * Logo an einem Platz -- oder `null`, wenn keiner gewählt ist oder vom
+ * Sponsor nichts mehr im Ordner liegt. Dann bleibt der Platz leer statt
+ * ein zerbrochenes Bild zu zeigen; die Wahl bleibt erhalten, falls die
+ * Datei nur kurz umbenannt war (wie beim Wettbewerbslogo).
+ */
+export function sponsorSlotLogo(
   slots: SponsorSlots,
   media: MediaLists,
   slot: SponsorSlotId
-): string | null {
+): SponsorLogo | null {
   const ref = slots[slot];
-  if (!ref || !media[ref.folder].files.includes(ref.file)) return null;
-  return mediaUrl(ref.folder, ref.file);
+  if (!ref) return null;
+  const file = preferredSponsorFile(media[ref.folder].files, ref.file);
+  return file === null ? null : sponsorLogo(ref.folder, file);
 }
 
 /** Beschriftung eines historischen Fotos, siehe `historyCaption()`. */
@@ -768,8 +829,31 @@ export const SPONSORS_PER_PAGE = 4;
 /** Titelzeile des Sponsoren-Fensters. */
 export const SPONSORS_TITLE = 'UNSERE PARTNER';
 
-/** Titelzeile der Hauptsponsor-Folie -- dasselbe Fenster mit EINER Kachel. */
-export const MAIN_SPONSOR_TITLE = 'UNSER HAUPTSPONSOR';
+/**
+ * Blöcke der Diashow, die sich im Steuerungsfenster abhaken lassen
+ * (Nutzerwunsch 20.10.2026). Eine Auswahl für alle Phasen: Was abgehakt
+ * ist, läuft vor dem Anpfiff, in der Pause und nach dem Abpfiff. Die
+ * frühere feste Regel „vor dem Anpfiff nur Sponsoren" ist damit
+ * entfallen -- die Person am Steuerungsfenster entscheidet.
+ *
+ * Gehört nach `content.json` und überdauert „Neues Spiel".
+ */
+export type SlideBlockId = 'partner' | 'highlights' | 'historie' | 'termine';
+
+export const SLIDE_BLOCK_IDS: SlideBlockId[] = ['partner', 'highlights', 'historie', 'termine'];
+
+export const SLIDE_BLOCK_LABELS: Record<SlideBlockId, string> = {
+  partner: 'Partner',
+  highlights: 'Highlights',
+  historie: 'Vereinsgeschichte',
+  termine: 'Termine',
+};
+
+export type SlideBlocks = Record<SlideBlockId, boolean>;
+
+export function allSlideBlocks(): SlideBlocks {
+  return { partner: true, highlights: true, historie: true, termine: true };
+}
 
 /** Kopfzeile eines historischen Fotos ohne Datum im Dateinamen. */
 export const HISTORY_FALLBACK_TITLE = 'AUS DER VEREINSGESCHICHTE';
@@ -777,14 +861,13 @@ export const HISTORY_FALLBACK_TITLE = 'AUS DER VEREINSGESCHICHTE';
 /**
  * Eine Folie der Diashow, ohne die normale Ansicht.
  *
- * Partner und Hauptsponsor teilen sich das Sponsoren-Fenster: Der
- * Hauptsponsor bekommt es allein mit einer großen Kachel
- * (Nutzerentscheidung 20.10.2026). So bleibt er als Sponsor erkennbar --
- * gleiche Titelleiste, gleiche weiße Fläche -- und wird trotzdem größer
- * gezeigt als die Partner.
+ * Hauptsponsoren erscheinen als Partner, nur großflächig: dasselbe
+ * Fenster unter „UNSERE PARTNER", aber mit EINER Kachel über die ganze
+ * Fläche (`main`). Ein eigener Titel „Hauptsponsor" war nicht gewünscht
+ * (Nutzer 20.10.2026) -- die Größe macht den Unterschied.
  */
 export type SlidePlanItem =
-  | { kind: 'sponsors'; main: boolean; title: string; urls: string[]; page: number; pages: number }
+  | { kind: 'sponsors'; main: boolean; title: string; logos: SponsorLogo[]; page: number; pages: number }
   | { kind: 'image'; url: string }
   | { kind: 'history'; url: string; caption: HistoryCaption }
   | { kind: 'text'; lines: string[] };
@@ -792,13 +875,15 @@ export type SlidePlanItem =
 /**
  * Die Folienfolge einer Diashow, in klar getrennten Blöcken
  * (Nutzerentscheidung 20.10.2026: eine Schau, nicht zwei Knöpfe):
- * Hauptsponsor, Partner, Vereinshighlights, Vereinsgeschichte, Termine.
- * Jeder Block hat seine eigene Form -- Sponsoren unter einer Titelleiste,
- * historische Fotos mit Beschriftung darunter, Termine als Textfolie --,
- * damit Werbung und Vereinsbeiträge auf der Tafel nicht verschwimmen.
+ * Partner (zuerst die großen, dann die Vierer-Fenster), Highlights,
+ * Vereinsgeschichte, Termine -- jeweils nur, wenn abgehakt.
  *
- * Partner kommen aus `Werbung/Partner/` UND direkt aus `Werbung/`: So
- * läuft der bisherige Ordner ohne Umräumen weiter.
+ * Der Halbzeit-Sponsor steht davor und hängt an keinem Haken: Er ist ein
+ * „präsentiert von"-Platz der Pause, kein Teil der Partner-Rotation.
+ *
+ * Partner kommen aus `Werbung/Hauptsponsor/`, `Werbung/Partner/` und
+ * direkt aus `Werbung/`. Die Seitenmarken zählen alle Partnerfolien als
+ * eine Reihe, große wie kleine.
  *
  * Gemeinsam für Anzeige und Steuerungsfenster: Die Anzeige spielt genau
  * diese Folge ab, das Steuerungsfenster nennt ihre Länge im Hinweis.
@@ -807,47 +892,52 @@ export function buildSlidePlan(
   phase: MatchPhase,
   media: MediaLists,
   announcements: string[],
-  sponsorSlots: SponsorSlots = emptySponsorSlots()
+  sponsorSlots: SponsorSlots = emptySponsorSlots(),
+  blocks: SlideBlocks = allSlideBlocks()
 ): SlidePlanItem[] {
-  const folders = slideFoldersForPhase(phase);
-  const urls = (folder: MediaFolderId): string[] =>
-    folders.includes(folder) ? media[folder].files.map((f) => mediaUrl(folder, f)) : [];
+  if (!slideshowAvailable(phase)) return [];
   const slides: SlidePlanItem[] = [];
+  const logos = (folder: MediaFolderId): SponsorLogo[] =>
+    sponsorLogoFiles(media[folder].files).map((file) => sponsorLogo(folder, file));
 
   // Halbzeit-Sponsor zuerst -- er „präsentiert" die Pause, also gehört
   // er an ihren Anfang. Nur in der Halbzeit, nicht nach dem Abpfiff.
-  const halfTime = phase === 'half-time' ? sponsorSlotUrl(sponsorSlots, media, 'halfTime') : null;
+  const halfTime = phase === 'half-time' ? sponsorSlotLogo(sponsorSlots, media, 'halfTime') : null;
   if (halfTime) {
-    slides.push({ kind: 'sponsors', main: true, title: HALFTIME_SPONSOR_TITLE, urls: [halfTime], page: 0, pages: 1 });
+    slides.push({ kind: 'sponsors', main: true, title: HALFTIME_SPONSOR_TITLE, logos: [halfTime], page: 0, pages: 1 });
   }
 
-  const main = urls('hauptsponsor');
-  main.forEach((url, page) =>
-    slides.push({ kind: 'sponsors', main: true, title: MAIN_SPONSOR_TITLE, urls: [url], page, pages: main.length })
-  );
-
-  const partners = [...urls('partner'), ...urls('werbung')];
-  const pages = Math.ceil(partners.length / SPONSORS_PER_PAGE);
-  for (let page = 0; page < pages; page++) {
-    slides.push({
-      kind: 'sponsors',
-      main: false,
-      title: SPONSORS_TITLE,
-      urls: partners.slice(page * SPONSORS_PER_PAGE, (page + 1) * SPONSORS_PER_PAGE),
-      page,
-      pages,
-    });
-  }
-
-  for (const url of urls('highlights')) slides.push({ kind: 'image', url });
-
-  if (folders.includes('historie')) {
-    for (const fileName of media.historie.files) {
-      slides.push({ kind: 'history', url: mediaUrl('historie', fileName), caption: historyCaption(fileName) });
+  if (blocks.partner) {
+    const main = logos('hauptsponsor');
+    const partners = [...logos('partner'), ...logos('werbung')];
+    const gridPages = Math.ceil(partners.length / SPONSORS_PER_PAGE);
+    const pages = main.length + gridPages;
+    main.forEach((logo, page) =>
+      slides.push({ kind: 'sponsors', main: true, title: SPONSORS_TITLE, logos: [logo], page, pages })
+    );
+    for (let i = 0; i < gridPages; i++) {
+      slides.push({
+        kind: 'sponsors',
+        main: false,
+        title: SPONSORS_TITLE,
+        logos: partners.slice(i * SPONSORS_PER_PAGE, (i + 1) * SPONSORS_PER_PAGE),
+        page: main.length + i,
+        pages,
+      });
     }
   }
 
-  if (announcementsVisible(phase)) {
+  if (blocks.highlights) {
+    for (const file of media.highlights.files) slides.push({ kind: 'image', url: mediaUrl('highlights', file) });
+  }
+
+  if (blocks.historie) {
+    for (const file of media.historie.files) {
+      slides.push({ kind: 'history', url: mediaUrl('historie', file), caption: historyCaption(file) });
+    }
+  }
+
+  if (blocks.termine) {
     for (let i = 0; i < announcements.length; i += ANNOUNCEMENTS_PER_SLIDE) {
       slides.push({ kind: 'text', lines: announcements.slice(i, i + ANNOUNCEMENTS_PER_SLIDE) });
     }
@@ -861,53 +951,20 @@ export function slideCount(
   phase: MatchPhase,
   media: MediaLists,
   announcements: string[],
-  sponsorSlots?: SponsorSlots
+  sponsorSlots?: SponsorSlots,
+  blocks?: SlideBlocks
 ): number {
-  return buildSlidePlan(phase, media, announcements, sponsorSlots).length;
+  return buildSlidePlan(phase, media, announcements, sponsorSlots, blocks).length;
 }
 
 /**
- * Welche Medienordner in welcher Phase laufen.
- *
- * Vor dem Anpfiff nur Sponsoren -- Highlights, Vereinsgeschichte und
- * Termine gehören in die Pause, wo die Zuschauer Zeit zum Lesen haben.
- *
- * Nach dem Abpfiff laufen dieselben Ordner wie in der Pause
- * (Nutzerwunsch 20.08.2026). Die frühere Begründung "dort steht der
- * Endstand mit der Torschützenliste" trägt nicht: Die Diashow startet
- * ausschließlich auf Knopfdruck, verdrängt den Endstand also nur, wenn
- * jemand das ausdrücklich will -- und während sich der Platz leert, ist
- * das die sinnvollste Zeit für Sponsorenmotive. Der Endstand ist über
- * "Diashow beenden" jederzeit zurück.
+ * Laufen in dieser Phase überhaupt Folien? In jeder außer dem laufenden
+ * Spiel -- dort gehört der Spielstand auf die Tafel. Nach dem Abpfiff
+ * läuft sie mit (Nutzerwunsch 20.08.2026): Sie startet ohnehin nur auf
+ * Knopfdruck und verdrängt den Endstand also nur, wenn jemand das will.
  */
-export function slideFoldersForPhase(phase: MatchPhase): MediaFolderId[] {
-  const sponsors: MediaFolderId[] = ['hauptsponsor', 'partner', 'werbung'];
-  if (phase === 'pre-match') return sponsors;
-  if (phase === 'half-time' || phase === 'full-time') return [...sponsors, 'highlights', 'historie'];
-  return [];
-}
-
-/**
- * Laufen in dieser Phase Ankündigungsfolien mit?
- *
- * Vor dem Anpfiff nicht -- da schauen die Zuschauer auf die Begegnung,
- * nicht auf den Vereinskalender. In der Pause und nach dem Abpfiff schon:
- * Genau dann ist "Nächstes Heimspiel: So 25.08." die Information, die
- * jemand mitnehmen soll.
- *
- * Gemeinsame Funktion, weil die Regel sonst an zwei Stellen stünde -- im
- * Folienaufbau der Anzeige und in der Folienzählung des
- * Steuerungsfensters. Zwei Kopien liefen beim nächsten Umbau
- * auseinander, und das Steuerungsfenster meldete dann eine Folienzahl,
- * die auf der Tafel nicht stimmt.
- */
-export function announcementsVisible(phase: MatchPhase): boolean {
-  return phase === 'half-time' || phase === 'full-time';
-}
-
-/** Laufen in dieser Phase überhaupt Folien? */
 export function slideshowAvailable(phase: MatchPhase): boolean {
-  return slideFoldersForPhase(phase).length > 0;
+  return phase !== 'live';
 }
 
 /**
@@ -1317,6 +1374,7 @@ export const IPC = {
   setAppearance: 'display:set-appearance',
   setCompetition: 'match:set-competition',
   setSponsorSlot: 'match:set-sponsor-slot',
+  setSlideBlocks: 'slideshow:set-blocks',
   goalSetScorer: 'goal:set-scorer',
   goalSetOwnGoal: 'goal:set-own-goal',
   goalSetPenalty: 'goal:set-penalty',

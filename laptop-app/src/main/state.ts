@@ -11,6 +11,8 @@ import {
   DEFAULT_HALF_DURATION_MIN,
   DEFAULT_SOUND_SETTINGS,
   emptySponsorSlots,
+  allSlideBlocks,
+  SlideBlocks,
   GoalEvent,
   infoOverlayDurationMs,
   InfoOverlay,
@@ -107,6 +109,7 @@ function initialState(): MatchState {
     ) as MediaLists,
     competition: null,
     sponsorSlots: emptySponsorSlots(),
+    slideBlocks: allSlideBlocks(),
     slideshowRequest: null,
     shootout: null,
     sound: { ...DEFAULT_SOUND_SETTINGS },
@@ -445,6 +448,16 @@ export class MatchStateStore {
   }
 
   /** Setzt die Ankündigungen für die Halbzeitpause. */
+  /**
+   * Abgehakte Blöcke der Diashow. Eine laufende Schau ändert sich dadurch
+   * nicht -- ihre Folge steht ab dem Start fest (siehe slideshow.ts); der
+   * Haken gilt für den nächsten Start.
+   */
+  setSlideBlocks(blocks: SlideBlocks): void {
+    this.state = { ...this.state, slideBlocks: { ...blocks } };
+    this.emit();
+  }
+
   setAnnouncements(announcements: string[]): void {
     this.state = { ...this.state, announcements };
     this.emit();
@@ -884,7 +897,7 @@ export class MatchStateStore {
 
   /**
    * Logo eines „präsentiert von"-Platzes setzen oder mit `null` leeren.
-   * Ob die Datei im Ordner liegt, prüft die Anzeige (`sponsorSlotUrl`),
+   * Ob die Datei im Ordner liegt, prüft die Anzeige (`sponsorSlotLogo`),
    * wie beim Wettbewerb. Kein `bump()`: An den Plätzen hängt keine
    * gepufferte Liste, die Fenster lesen den Wert direkt.
    */
@@ -1071,6 +1084,7 @@ export class MatchStateStore {
       appearance,
       competition,
       sponsorSlots,
+      slideBlocks,
       attendanceMessage,
       announcements,
       media,
@@ -1089,6 +1103,7 @@ export class MatchStateStore {
       competition,
       // Saisonverträge bleiben, der Spieltagssponsor wechselt je Spiel.
       sponsorSlots: { ...sponsorSlots, matchday: null },
+      slideBlocks,
       attendanceMessage,
       announcements,
       media,

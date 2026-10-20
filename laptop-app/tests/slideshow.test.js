@@ -19,9 +19,8 @@ const { MediaLibrary } = load('main/media');
 const v = load('main/validate');
 const {
   mediaUrl,
-  slideFoldersForPhase,
+  buildSlidePlan,
   slideshowAvailable,
-  announcementsVisible,
   MAX_ANNOUNCEMENTS,
   MAX_ANNOUNCEMENT_LENGTH,
 } = load('shared/types');
@@ -133,35 +132,39 @@ test('Folien laufen in jeder Phase außer dem laufenden Spiel', () => {
   assert.equal(slideshowAvailable('full-time'), true);
   assert.equal(slideshowAvailable('live'), false);
 
-  // Vor dem Anpfiff nur Sponsoren; Vereinsbeiträge brauchen die Pause.
-  const sponsoren = ['hauptsponsor', 'partner', 'werbung'];
-  assert.deepEqual(slideFoldersForPhase('pre-match'), sponsoren);
-  assert.deepEqual(slideFoldersForPhase('half-time'), [...sponsoren, 'highlights', 'historie']);
-  assert.deepEqual(slideFoldersForPhase('full-time'), [...sponsoren, 'highlights', 'historie']);
-  assert.deepEqual(slideFoldersForPhase('live'), []);
 });
 
-test('Ankündigungen laufen in der Pause und nach dem Abpfiff mit', () => {
-  // Vor dem Anpfiff nicht -- da schauen die Zuschauer auf die Begegnung.
-  // Die Regel steht gemeinsam in shared/types.ts, weil sie sonst im
-  // Folienaufbau der Anzeige und in der Folienzählung des
-  // Steuerungsfensters doppelt stünde und auseinanderliefe.
-  assert.equal(announcementsVisible('pre-match'), false);
-  assert.equal(announcementsVisible('live'), false);
-  assert.equal(announcementsVisible('half-time'), true);
-  assert.equal(announcementsVisible('full-time'), true);
-});
-
-test('slideshowAvailable und slideFoldersForPhase können nicht auseinanderlaufen', () => {
-  // slideshowAvailable leitet sich aus den Ordnern ab. Früher waren es
-  // zwei getrennte Phasenlisten -- eine neue Phase in nur einer davon
-  // hätte einen freigeschalteten Knopf ergeben, der eine leere Schau
-  // startet.
-  for (const phase of ['pre-match', 'live', 'half-time', 'full-time']) {
-    assert.equal(
-      slideshowAvailable(phase),
-      slideFoldersForPhase(phase).length > 0,
-      `Phase "${phase}" widerspricht sich`
+test('was abgehakt ist, läuft in jeder Phase -- auch die Vereinsgeschichte vor dem Anpfiff', () => {
+  // Nutzerwunsch 20.10.2026: Die feste Regel „vor dem Anpfiff nur
+  // Sponsoren" ist entfallen, die Haken entscheiden.
+  const media = Object.fromEntries(
+    ['werbung', 'hauptsponsor', 'partner', 'highlights', 'historie', 'sounds', 'wettbewerbe'].map((id) => [
+      id,
+      { rootPath: id, files: [] },
+    ])
+  );
+  media.werbung.files = ['a.png'];
+  media.highlights.files = ['h.jpg'];
+  media.historie.files = ['1998_Foto.jpg'];
+  for (const phase of ['pre-match', 'half-time', 'full-time']) {
+    assert.deepEqual(
+      buildSlidePlan(phase, media, ['Termin']).map((f) => f.kind),
+      ['sponsors', 'image', 'history', 'text'],
+      phase
+    );
+  }
+  assert.deepEqual(buildSlidePlan('live', media, ['Termin']), [], 'im Spiel nie');
+  const nurGeschichte = { partner: false, highlights: false, historie: true, termine: false };
+  assert.deepEqual(
+    buildSlidePlan('pre-match', media, ['Termin'], undefined, nurGeschichte).map((f) => f.kind),
+    ['history']
+  );
+  // Jeder Haken muss auch wirklich abschalten.
+  for (const [block, kind] of [['partner', 'sponsors'], ['highlights', 'image'], ['historie', 'history'], ['termine', 'text']]) {
+    const ohne = { partner: true, highlights: true, historie: true, termine: true, [block]: false };
+    assert.ok(
+      !buildSlidePlan('half-time', media, ['Termin'], undefined, ohne).some((f) => f.kind === kind),
+      `${block} abgehakt, läuft aber`
     );
   }
 });

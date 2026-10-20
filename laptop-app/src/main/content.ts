@@ -4,6 +4,7 @@ import * as path from 'path';
 import {
   DEFAULT_ATTENDANCE_MESSAGE,
   DEFAULT_SOUND_SETTINGS,
+  SlideBlocks,
   SoundSettings,
 } from '../shared/types';
 import { readJsonFile } from './configFile';
@@ -24,6 +25,8 @@ export interface ContentConfig {
   announcements: string[];
   /** Lautstärke und Stummschaltung der Tonausgabe */
   sound: SoundSettings;
+  /** Abgehakte Blöcke der Diashow -- geprüft wird in `sanitizeSlideBlocks` */
+  slideBlocks?: SlideBlocks;
 }
 
 function defaults(): ContentConfig {
@@ -65,6 +68,7 @@ export function loadContentConfig(): ContentConfig {
           : fallback.sound.volume,
       muted: parsed.sound?.muted === true,
     },
+    slideBlocks: parsed.slideBlocks,
   };
 }
 

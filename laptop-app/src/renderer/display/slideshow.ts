@@ -24,7 +24,7 @@ let slideTimer: ReturnType<typeof setTimeout> | null = null;
 function buildSlideDeck(state: MatchState): Slide[] {
   return [
     { kind: 'base' },
-    ...buildSlidePlan(state.phase, state.media, state.announcements, state.sponsorSlots),
+    ...buildSlidePlan(state.phase, state.media, state.announcements, state.sponsorSlots, state.slideBlocks),
   ];
 }
 
@@ -46,12 +46,15 @@ function renderSponsorWindow(slide: Extract<Slide, { kind: 'sponsors' }>): void 
 
   for (let i = 0; i < SPONSORS_PER_PAGE; i++) {
     const logo = document.getElementById(`sponsor-logo-${i}`) as HTMLImageElement;
-    const url = slide.urls[i];
-    logo.hidden = url === undefined;
-    if (url === undefined) {
+    const entry = slide.logos[i];
+    // Weiße Fassung ohne Kachel auf dem Grund. Leere Kacheln bleiben
+    // weiß, damit das Raster aus vier gleichen Flächen erhalten bleibt.
+    logo.parentElement!.classList.toggle('is-white', entry?.white === true);
+    logo.hidden = entry === undefined;
+    if (entry === undefined) {
       logo.removeAttribute('src');
-    } else if (logo.getAttribute('src') !== url) {
-      logo.src = url;
+    } else if (logo.getAttribute('src') !== entry.url) {
+      logo.src = entry.url;
     }
   }
 

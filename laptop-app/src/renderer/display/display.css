@@ -1491,6 +1491,14 @@ body.goal-lead-change .goal-frame {
   padding: 4cqh 6cqw;
 }
 
+/* Weiße Logofassung (`…_weiß.png`): ohne Kachel direkt auf dem
+   Vereinsblau (Nutzerwunsch 20.10.2026). Die farbige Fassung bleibt in
+   der weißen Kachel -- für hellen Grund gezeichnet. */
+.sponsor-tile.is-white,
+.sponsor-chip.is-white {
+  background: transparent;
+}
+
 /* ═══════════════════════════════════════════
    „Präsentiert von"-Plätze (alle Designs)
    ═══════════════════════════════════════════ */

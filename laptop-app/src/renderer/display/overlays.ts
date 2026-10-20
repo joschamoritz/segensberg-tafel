@@ -8,7 +8,7 @@ import {
   playerLabel,
   SCORER_DISPLAY_MS,
   splitAttendanceMessage,
-  sponsorSlotUrl,
+  sponsorSlotLogo,
 } from '../../shared/types';
 import { fillSponsorChip, goalTitle, ui } from './common';
 
@@ -92,7 +92,7 @@ function renderInfoOverlay(state: MatchState, overlay: InfoOverlay): string | nu
 
   label.textContent = 'ECKEN';
   value.textContent = `${state.corners.home} : ${state.corners.away}`;
-  fillSponsorChip(document.getElementById('info-sponsor')!, sponsorSlotUrl(state.sponsorSlots, state.media, 'corners'));
+  fillSponsorChip(document.getElementById('info-sponsor')!, sponsorSlotLogo(state.sponsorSlots, state.media, 'corners'));
   return 'showing-info';
 }
 

@@ -1,4 +1,12 @@
-import { MatchState, slideCount, slideshowAvailable, TeamId } from '../../shared/types';
+import {
+  MatchState,
+  SLIDE_BLOCK_IDS,
+  SlideBlockId,
+  SlideBlocks,
+  slideCount,
+  slideshowAvailable,
+  TeamId,
+} from '../../shared/types';
 import { updateInputIfNotFocused } from './common';
 import { wireShootout } from './shootout';
 import { wireSound } from './sound';
@@ -79,7 +87,7 @@ export function renderSlideshowControls(state: MatchState): void {
 
   // Dieselbe Zählung wie in der Anzeige: Sponsoren stehen dort zu viert
   // auf einer Folie, eine eigene Rechnung hier kündigte sonst mehr an.
-  const folien = slideCount(state.phase, state.media, state.announcements, state.sponsorSlots);
+  const folien = slideCount(state.phase, state.media, state.announcements, state.sponsorSlots, state.slideBlocks);
 
   const start = document.getElementById('slideshow-start') as HTMLButtonElement;
   const stop = document.getElementById('slideshow-stop') as HTMLButtonElement;
@@ -92,6 +100,7 @@ export function renderSlideshowControls(state: MatchState): void {
 
   const hint = document.getElementById('slideshow-hint')!;
   const leer = available && folien === 0;
+  const anzahl = folien === 1 ? '1 Folie' : folien + ' Folien';
 
   if (!available) {
     hint.textContent = 'Im laufenden Spiel gehört der Spielstand auf die Tafel.';
@@ -99,11 +108,18 @@ export function renderSlideshowControls(state: MatchState): void {
     hint.textContent =
       'Keine Motive gefunden unter "' + vereinsdatenOrdner(state.media.werbung.rootPath) + '".';
   } else if (running) {
-    hint.textContent = folien + ' Folien laufen im Wechsel mit dem Spielstand.';
+    // Die Folge steht ab dem Start fest -- ein geänderter Haken gilt erst
+    // beim nächsten Start. Das muss hier stehen, sonst wirkt er kaputt.
+    hint.textContent = anzahl + (folien === 1 ? ' läuft' : ' laufen') + ' im Wechsel mit dem Spielstand. Geänderte Haken gelten beim nächsten Start.';
   } else {
-    hint.textContent = folien + ' Folien bereit.';
+    hint.textContent = anzahl + ' bereit.';
   }
   hint.classList.toggle('is-empty', leer);
+
+  for (const id of SLIDE_BLOCK_IDS) {
+    const box = document.getElementById(`slide-block-${id}`) as HTMLInputElement;
+    box.checked = state.slideBlocks[id];
+  }
 
   const announcements = document.getElementById('announcements-input') as HTMLTextAreaElement;
   updateInputIfNotFocused(announcements, state.announcements.join('\n'));
@@ -153,6 +169,16 @@ export function wireInfoControls(): void {
   wireSound();
 
   wireShootout();
+
+  // Alle Haken gehen zusammen raus -- der Zustand kennt nur die ganze Auswahl.
+  const blockBoxes = document.querySelectorAll<HTMLInputElement>('input[data-slide-block]');
+  blockBoxes.forEach((box) => {
+    box.addEventListener('change', () => {
+      const blocks = {} as SlideBlocks;
+      blockBoxes.forEach((b) => (blocks[b.dataset.slideBlock as SlideBlockId] = b.checked));
+      window.api.setSlideBlocks(blocks);
+    });
+  });
 
   document
     .getElementById('slideshow-start')!

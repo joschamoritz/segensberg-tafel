@@ -89,8 +89,8 @@ test('Sponsoren zählen je angefangene vier als eine Folie', () => {
 test('Highlights und Termine zählen weiter einzeln bzw. je fünf', () => {
   // 5 Partner = 2 Fenster, 2 Highlights = 2 Folien, 6 Termine = 2 Folien
   assert.equal(slideCount('half-time', medien(logos(5), ['a.jpg', 'b.jpg']), termine(6)), 6);
-  // vor dem Anpfiff laufen nur die Partner
-  assert.equal(slideCount('pre-match', medien(logos(5), ['a.jpg', 'b.jpg']), termine(6)), 2);
+  // vor dem Anpfiff genauso -- es entscheiden die Haken, nicht die Phase
+  assert.equal(slideCount('pre-match', medien(logos(5), ['a.jpg', 'b.jpg']), termine(6)), 6);
   assert.equal(slideCount('live', medien(logos(5)), termine(6)), 0);
 });
 

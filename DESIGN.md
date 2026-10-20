@@ -177,11 +177,16 @@ damit sie beim Hochzählen nicht springen.
   Zweck. Weiße Kacheln, weil Sponsorenlogos fast immer für hellen Grund
   gezeichnet sind; die frühere Regel „Motive im Vereinsblau anlegen"
   gilt damit nur noch für Highlights.
-  **Hauptsponsor** (`.sponsor-window.is-main`, Nutzerentscheidung
-  20.10.2026): dasselbe Fenster mit Titel „UNSER HAUPTSPONSOR" und nur
-  EINER Kachel über die ganze Fläche. Bewusst kein eigenes Vollbild auf
-  Blau – gleiche Leiste und weiße Fläche machen ihn als Sponsor
-  erkennbar, die Größe macht den Unterschied zu den Partnern.
+  **Großer Partner** (`.sponsor-window.is-main`, Logos aus
+  `Werbung/Hauptsponsor/`): dasselbe Fenster unter „UNSERE PARTNER", nur
+  mit EINER Kachel über die ganze Fläche. Kein eigener Titel
+  „Hauptsponsor" (Nutzer 20.10.2026) – die Größe macht den Unterschied.
+  Die Seitenmarken zählen große und kleine Partnerfolien als eine Reihe.
+  **Weiße Logofassung** (`…_weiß.png`, `.is-white`): steht ohne Kachel
+  direkt auf dem Grund, in Fenster und „präsentiert von"-Platz gleich.
+  Die farbige Fassung bleibt in der weißen Kachel; eine leere Kachel
+  bleibt weiß, damit das Raster aus vier gleichen Flächen erhalten
+  bleibt.
 - **„Präsentiert von"-Kachel** (`.sponsor-chip`, Display): Logo in
   einer kleinen weißen Kachel, eingepasst; Höhe und Höchstbreite je
   Platz über `--chip-h`/`--chip-w` (Begegnung und Aufstellung 13cqh,
@@ -189,7 +194,7 @@ damit sie beim Hochzählen nicht springen.
   `--svh-gold`, 5,5cqh – außer in der Aufstellung, deren Kopfzeile schon
   Wappen und Titel trägt. Ohne Logo verschwindet der ganze Platz samt
   Schriftzug. Der Tor-Sponsor steht nur beim eigenen Tor. Die
-  Halbzeit-Folie ist das Hauptsponsor-Fenster mit Titel „HALBZEIT
+  Halbzeit-Folie ist das große Partner-Fenster mit Titel „HALBZEIT
   PRÄSENTIERT VON".
 - **Vereinsgeschichte** (`.history-slide`, Display, alle Designs):
   Foto eingepasst (`contain`, kein Zuschnitt – sonst fehlen auf alten

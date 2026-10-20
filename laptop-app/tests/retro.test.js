@@ -454,7 +454,7 @@ test('control: das Kurzname-Feld zeigt den Vorschlag und schickt die Eingabe', (
   assert.deepEqual(r.drainErrors(), []);
 });
 
-test('display: der Hauptsponsor trägt im Retro-Design seinen eigenen Titel', async (t) => {
+test('display: ein großer Partner trägt im Retro-Design den Partner-Titel', async (t) => {
   const store = retroStore();
   store.setMedia({
     werbung: { rootPath: 'W', files: [] },
@@ -470,6 +470,6 @@ test('display: der Hauptsponsor trägt im Retro-Design seinen eigenen Titel', as
   store.startSlideshow();
   r.emit('onStateUpdated', store.getState());
 
-  assert.deepEqual(await szene(r), { kind: 'sponsors', title: 'UNSER HAUPTSPONSOR', page: 0, pages: 1 });
+  assert.deepEqual(await szene(r), { kind: 'sponsors', title: 'UNSERE PARTNER', page: 0, pages: 1 });
   assert.deepEqual(r.drainErrors(), []);
 });

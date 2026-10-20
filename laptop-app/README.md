@@ -249,16 +249,20 @@ Electron-Main-Prozess (normaler Node-Kontext) und brauchen das nicht.
 - **Diashow** für Sponsoren, Vereinshighlights, Vereinsgeschichte und
   Termine. Läuft **nur auf Knopfdruck** („Diashow → Starten"), nie von
   selbst – vor dem Anpfiff, in der Halbzeitpause und nach dem Abpfiff.
-  Eine Schau in festen Blöcken: **Hauptsponsor** (je Logo eine Folie mit
-  einer großen Kachel unter „Unser Hauptsponsor"), **Partner** (zu viert
-  in gleich großen weißen Kacheln unter „Unsere Partner", bei mehr als
-  vier Logos weitere Seiten mit kleinen Quadraten als Seitenanzeige),
+  Eine Schau in festen Blöcken: **Partner** (Logos aus
+  `Werbung/Hauptsponsor/` je allein über die ganze Fläche, die übrigen zu
+  viert in gleich großen Kacheln, alle unter „Unsere Partner"; kleine
+  Quadrate zeigen die Seite an),
   **Highlights** (Vollbild), **Vereinsgeschichte** (historisches Foto mit
   Datum und Begegnung darunter) und **Termine**. Die normale Ansicht (Begegnung bzw.
   Zwischenstand) ist selbst eine Station der Rotation, der Spielstand
-  ist also nie länger als eine Folie weg. Standzeit 8 Sekunden. Vor dem
-  Anpfiff laufen nur die Sponsoren, in der Pause und nach dem Abpfiff
-  zusätzlich Highlights, Vereinsgeschichte und Termine. „Medien neu
+  ist also nie länger als eine Folie weg. Standzeit 8 Sekunden. **Welche Blöcke
+  laufen, wird neben „Starten" abgehakt** (Partner, Highlights,
+  Vereinsgeschichte, Termine); die Auswahl gilt in jeder Phase und liegt
+  in `content.json`. Ein geänderter Haken gilt ab dem nächsten Start.
+  **Weiße Logos:** Liegt neben `Ott.png` ein `Ott_weiß.png` (auch
+  `_weiss`, `_white`), zählt das als ein Sponsor; gezeigt wird die weiße
+  Fassung, ohne Kachel direkt auf dem Vereinsblau. „Medien neu
   einlesen" liest die Ordner erneut ein, ohne die App neu zu starten.
 - **„Präsentiert von"-Plätze** (Einrichtung → „Sponsoren"): je ein Logo
   für die Aufstellung (rechts in der Kopfzeile), die Halbzeit (erste
@@ -306,7 +310,7 @@ Die **Diashow-Bilder** liegen unter `Vereinsdaten/`:
 
 | Ordner | Block |
 |---|---|
-| `Werbung/Hauptsponsor/` | Hauptsponsor, je Logo eine Folie |
+| `Werbung/Hauptsponsor/` | Partner, je Logo allein über die ganze Fläche |
 | `Werbung/Partner/` und direkt `Werbung/` | Partner, zu viert |
 | `Highlights/` | Vereinshighlights im Vollbild |
 | `Historie/` | historische Mannschaftsfotos mit Beschriftung |

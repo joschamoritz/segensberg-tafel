@@ -23,6 +23,7 @@ import {
   sanitizeAttendance,
   sanitizeAppearance,
   sanitizeCompetition,
+  sanitizeSlideBlocks,
   sanitizeSponsorRef,
   sanitizeSponsorSlotId,
   sanitizeBoardSize,
@@ -157,6 +158,11 @@ export function registerIpcHandlers(): void {
 
   onIpc(IPC.setAnnouncements, (_event, value: unknown) => {
     store.setAnnouncements(sanitizeAnnouncements(value));
+    persistContent();
+  });
+
+  onIpc(IPC.setSlideBlocks, (_event, value: unknown) => {
+    store.setSlideBlocks(sanitizeSlideBlocks(value));
     persistContent();
   });
 

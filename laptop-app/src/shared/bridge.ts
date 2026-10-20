@@ -11,6 +11,7 @@ import {
   MatchState,
   Player,
   ShootoutKick,
+  SlideBlocks,
   SoundCommand,
   SponsorRef,
   SponsorSlotId,
@@ -136,6 +137,7 @@ export function createApi(t: Transport) {
       t.send(IPC.setAttendanceMessage, message),
     setAnnouncements: (announcements: string[]) =>
       t.send(IPC.setAnnouncements, announcements),
+    setSlideBlocks: (blocks: SlideBlocks) => t.send(IPC.setSlideBlocks, blocks),
     slideshowStart: () => t.send(IPC.slideshowStart),
     shootoutStart: () => t.send(IPC.shootoutStart),
     shootoutKick: (team: TeamId, kick: ShootoutKick) => t.send(IPC.shootoutKick, team, kick),

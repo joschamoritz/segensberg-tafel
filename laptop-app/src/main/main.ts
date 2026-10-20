@@ -17,6 +17,7 @@ import {
   sanitizeAppearance,
   sanitizeBoardSize,
   sanitizeCompetition,
+  sanitizeSlideBlocks,
   sanitizeSponsorSlots,
 } from './validate';
 import { SquadStore } from './squads';
@@ -107,6 +108,7 @@ app.whenReady().then(() => {
   store.setAttendanceMessage(content.attendanceMessage);
   store.setAnnouncements(sanitizeAnnouncements(content.announcements));
   store.setSound(content.sound);
+  store.setSlideBlocks(sanitizeSlideBlocks(content.slideBlocks));
 
   ctx.media = new MediaLibrary();
   store.setMedia(ctx.media.getLists());

@@ -15,6 +15,7 @@ export function persistContent(): void {
     attendanceMessage: state.attendanceMessage,
     announcements: state.announcements,
     sound: state.sound,
+    slideBlocks: state.slideBlocks,
   });
 }
 

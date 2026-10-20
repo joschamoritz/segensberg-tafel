@@ -10,6 +10,7 @@ import {
   MatchState,
   shootoutScore,
   SlidePlanItem,
+  SponsorLogo,
 } from '../../shared/types';
 
 // Was mehrere Teile der Anzeige gemeinsam brauchen. Die Module der Anzeige
@@ -156,10 +157,16 @@ export function goalTitle(goal: GoalEvent): string {
  * ausgeblendet -- samt Schriftzug, ein „präsentiert von" ins Leere wäre
  * schlimmer als nichts. Das `src` wird nur bei einem Wechsel gesetzt,
  * sonst lüde das Bild bei jedem Zustands-Update neu.
+ *
+ * Eine weiße Fassung steht ohne Kachel direkt auf dem Grund (`is-white`).
  */
-export function fillSponsorChip(container: HTMLElement, url: string | null): void {
-  container.hidden = url === null;
+export function fillSponsorChip(container: HTMLElement, logo: SponsorLogo | null): void {
+  container.hidden = logo === null;
+  const chip = container.classList.contains('sponsor-chip')
+    ? container
+    : container.querySelector<HTMLElement>('.sponsor-chip')!;
+  chip.classList.toggle('is-white', logo?.white === true);
   const img = container.querySelector('img')!;
-  if (url === null) img.removeAttribute('src');
-  else if (img.getAttribute('src') !== url) img.src = url;
+  if (logo === null) img.removeAttribute('src');
+  else if (img.getAttribute('src') !== logo.url) img.src = logo.url;
 }

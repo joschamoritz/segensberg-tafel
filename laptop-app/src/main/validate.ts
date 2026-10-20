@@ -19,6 +19,9 @@ import {
   RETRO_COLORS,
   RetroColor,
   emptySponsorSlots,
+  allSlideBlocks,
+  SLIDE_BLOCK_IDS,
+  SlideBlocks,
   SPONSOR_FOLDER_IDS,
   SPONSOR_SLOT_IDS,
   SponsorFolderId,
@@ -208,6 +211,20 @@ export function sanitizeCompetition(value: unknown): string | null {
   if (name === '' || name.length > 200) return null;
   if (/[\\/]/.test(name) || name === '.' || name === '..') return null;
   return name;
+}
+
+/**
+ * Abgehakte Blöcke der Diashow. Nur ein ausdrückliches `false` hakt ab:
+ * Ein fehlender oder kaputter Eintrag -- etwa in einer älteren
+ * `content.json` ohne dieses Feld -- lässt den Block laufen, wie vorher.
+ */
+export function sanitizeSlideBlocks(value: unknown): SlideBlocks {
+  const blocks = allSlideBlocks();
+  if (!value || typeof value !== 'object') return blocks;
+  for (const id of SLIDE_BLOCK_IDS) {
+    if ((value as Record<string, unknown>)[id] === false) blocks[id] = false;
+  }
+  return blocks;
 }
 
 /** Kennung eines „präsentiert von"-Platzes, sonst `null`. */

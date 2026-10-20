@@ -1,4 +1,4 @@
-import { MatchState, sponsorSlotUrl } from '../../shared/types';
+import { MatchState, sponsorSlotLogo } from '../../shared/types';
 import { fillSponsorChip } from './common';
 
 // „Präsentiert von"-Plätze auf Begegnung, Aufstellung und Torjubel. Die
@@ -12,12 +12,12 @@ import { fillSponsorChip } from './common';
 // statt in der ersten Sekunde nachzuladen.
 
 export function renderSponsorSlots(state: MatchState): void {
-  const url = (slot: Parameters<typeof sponsorSlotUrl>[2]) =>
-    sponsorSlotUrl(state.sponsorSlots, state.media, slot);
+  const logo = (slot: Parameters<typeof sponsorSlotLogo>[2]) =>
+    sponsorSlotLogo(state.sponsorSlots, state.media, slot);
 
-  fillSponsorChip(document.getElementById('pre-sponsor')!, url('matchday'));
-  fillSponsorChip(document.getElementById('goal-sponsor')!, url('goal'));
+  fillSponsorChip(document.getElementById('pre-sponsor')!, logo('matchday'));
+  fillSponsorChip(document.getElementById('goal-sponsor')!, logo('goal'));
 
-  const lineup = url('lineup');
+  const lineup = logo('lineup');
   document.querySelectorAll<HTMLElement>('.lineup-sponsor').forEach((chip) => fillSponsorChip(chip, lineup));
 }

@@ -23,7 +23,6 @@ const {
   buildSlidePlan,
   historyCaption,
   HISTORY_FALLBACK_TITLE,
-  MAIN_SPONSOR_TITLE,
   SLIDE_DURATION_MS,
   SPONSORS_TITLE,
 } = load('shared/types');
@@ -70,7 +69,7 @@ test('historyCaption: ohne Datum bleibt der Name, ohne Namen bleibt das Datum', 
 // Folienfolge
 // --------------------------------------------------------------------
 
-test('die Blöcke kommen in fester Folge: Hauptsponsor, Partner, Highlights, Geschichte, Termine', () => {
+test('die Blöcke kommen in fester Folge: große Partner, Partner, Highlights, Geschichte, Termine', () => {
   const plan = buildSlidePlan(
     'half-time',
     medien({
@@ -87,24 +86,18 @@ test('die Blöcke kommen in fester Folge: Hauptsponsor, Partner, Highlights, Ges
     ['haupt', 'partner', 'image', 'history', 'text']
   );
   // Partner aus Partner/ UND direkt aus Werbung/ teilen sich ein Fenster.
-  assert.deepEqual(plan[1].urls, ['svh-media://partner/p1.png', 'svh-media://werbung/alt.png']);
-  assert.equal(plan[0].title, MAIN_SPONSOR_TITLE);
+  assert.deepEqual(plan[1].logos.map((l) => l.url), ['svh-media://partner/p1.png', 'svh-media://werbung/alt.png']);
+  // Kein eigener Titel „Hauptsponsor" (Nutzer 20.10.2026): groß, aber Partner.
+  assert.equal(plan[0].title, SPONSORS_TITLE);
   assert.equal(plan[1].title, SPONSORS_TITLE);
-});
-
-test('vor dem Anpfiff nur Sponsoren, keine Vereinsgeschichte', () => {
-  const plan = buildSlidePlan(
-    'pre-match',
-    medien({ hauptsponsor: ['haupt.png'], werbung: ['alt.png'], historie: ['1998_Foto.jpg'] }),
-    []
-  );
-  assert.deepEqual(plan.map((s) => s.kind), ['sponsors', 'sponsors']);
+  // Eine Reihe von Seitenmarken über große und kleine Partnerfolien.
+  assert.deepEqual([plan[0].page, plan[0].pages, plan[1].page, plan[1].pages], [0, 2, 1, 2]);
 });
 
 test('jeder Hauptsponsor bekommt eine eigene Folie', () => {
   const plan = buildSlidePlan('pre-match', medien({ hauptsponsor: ['a.png', 'b.png'] }), []);
   assert.equal(plan.length, 2);
-  assert.deepEqual(plan.map((s) => [s.urls.length, s.page, s.pages]), [[1, 0, 2], [1, 1, 2]]);
+  assert.deepEqual(plan.map((s) => [s.logos.length, s.page, s.pages]), [[1, 0, 2], [1, 1, 2]]);
 });
 
 // --------------------------------------------------------------------
@@ -174,7 +167,7 @@ function schauInDerPause(t, dateien) {
   return { r, weiter };
 }
 
-test('display: der Hauptsponsor steht allein, danach das Partnerfenster wieder zu viert', (t) => {
+test('display: ein Hauptsponsor steht groß als Partner, danach das Fenster wieder zu viert', (t) => {
   const { r, weiter } = schauInDerPause(t, {
     hauptsponsor: ['haupt.png'],
     werbung: ['a.png', 'b.png'],
@@ -182,7 +175,7 @@ test('display: der Hauptsponsor steht allein, danach das Partnerfenster wieder z
   const fenster = r.document.getElementById('sponsor-window');
 
   assert.ok(fenster.classList.contains('is-main'));
-  assert.equal(r.text('sponsor-title'), MAIN_SPONSOR_TITLE);
+  assert.equal(r.text('sponsor-title'), SPONSORS_TITLE);
   assert.equal(r.document.getElementById('sponsor-logo-0').getAttribute('src'), 'svh-media://hauptsponsor/haupt.png');
   assert.equal(r.document.getElementById('sponsor-logo-1').hidden, true);
 

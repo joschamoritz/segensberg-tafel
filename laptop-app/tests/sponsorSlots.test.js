@@ -91,7 +91,7 @@ test('der Halbzeit-Sponsor ist die erste Folie der Pause, nicht nach dem Abpfiff
   const slots = { ...emptySponsorSlots(), halfTime: bank };
   const pause = buildSlidePlan('half-time', LOGOS, [], slots);
   assert.equal(pause[0].title, HALFTIME_SPONSOR_TITLE);
-  assert.deepEqual(pause[0].urls, ['svh-media://partner/bank.png']);
+  assert.deepEqual(pause[0].logos, [{ url: 'svh-media://partner/bank.png', white: false }]);
   assert.equal(pause[0].main, true, 'groß wie ein Hauptsponsor');
 
   const ende = buildSlidePlan('full-time', LOGOS, [], slots);

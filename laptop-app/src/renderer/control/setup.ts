@@ -4,6 +4,9 @@ import {
   competitionLabel,
   FlutlichtEffects,
   MatchState,
+  preferredSponsorFile,
+  sponsorBaseName,
+  sponsorLogoFiles,
   SPONSOR_FOLDER_IDS,
   SPONSOR_SLOT_IDS,
   SponsorFolderId,
@@ -198,7 +201,8 @@ export function renderSponsorSlotSelects(state: MatchState): void {
     const groups = new Map<string, HTMLOptGroupElement>();
     for (const folder of SPONSOR_FOLDER_IDS) {
       const label = SPONSOR_GROUP_LABELS[folder];
-      for (const file of state.media[folder].files) {
+      // Ein Eintrag je Sponsor -- `Ott.png` und `Ott_weiß.png` sind einer.
+      for (const file of sponsorLogoFiles(state.media[folder].files)) {
         let group = groups.get(label);
         if (!group) {
           group = document.createElement('optgroup');
@@ -206,16 +210,22 @@ export function renderSponsorSlotSelects(state: MatchState): void {
           groups.set(label, group);
           children.push(group);
         }
-        group.appendChild(new Option(competitionLabel(file), `${folder}/${file}`));
+        group.appendChild(new Option(competitionLabel(sponsorBaseName(file)), `${folder}/${file}`));
       }
     }
 
+    // Gewählt ist der Sponsor, nicht die Fassung: Steht `Ott.png` im
+    // Zustand und liegt inzwischen `Ott_weiß.png` daneben, gilt dessen
+    // Eintrag als gewählt.
     const ref = state.sponsorSlots[slot];
-    if (ref && !state.media[ref.folder].files.includes(ref.file)) {
-      children.push(new Option(`${competitionLabel(ref.file)} (Datei fehlt)`, `${ref.folder}/${ref.file}`));
+    const shown = ref ? preferredSponsorFile(state.media[ref.folder].files, ref.file) : null;
+    if (ref && shown === null) {
+      children.push(
+        new Option(`${competitionLabel(sponsorBaseName(ref.file))} (Datei fehlt)`, `${ref.folder}/${ref.file}`)
+      );
     }
     select.replaceChildren(...children);
-    select.value = ref ? `${ref.folder}/${ref.file}` : '';
+    select.value = ref ? `${ref.folder}/${shown ?? ref.file}` : '';
   }
 
   const hint = document.getElementById('sponsor-slots-hint')!;

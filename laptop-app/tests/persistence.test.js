@@ -87,11 +87,18 @@ test('Mannschaften: Hin- und Rückweg, beschädigte Datei fällt auf die Vorgabe
 
 test('Texte: Hin- und Rückweg, fremde Werte werden nicht übernommen', () => {
   aufräumen();
-  saveContentConfig({ attendanceMessage: 'Danke {n}!', announcements: ['So 25.08.'], sound: { volume: 40, muted: true } });
+  const haken = { partner: true, highlights: false, historie: true, termine: false };
+  saveContentConfig({
+    attendanceMessage: 'Danke {n}!',
+    announcements: ['So 25.08.'],
+    sound: { volume: 40, muted: true },
+    slideBlocks: haken,
+  });
   assert.deepEqual(loadContentConfig(), {
     attendanceMessage: 'Danke {n}!',
     announcements: ['So 25.08.'],
     sound: { volume: 40, muted: true },
+    slideBlocks: haken,
   });
 
   fs.writeFileSync(datei('content.json'), JSON.stringify({ announcements: ['ok', 7, { a: 1 }], sound: { volume: 900 } }));
