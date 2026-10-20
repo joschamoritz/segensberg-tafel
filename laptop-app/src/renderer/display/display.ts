@@ -6,7 +6,7 @@ import {
   RetroScene,
   retroTeamName,
 } from '../../shared/retroMatrix';
-import { buildScorerRows, visibleScorerRows } from '../../shared/scorerRows';
+import { buildScorerRows, goalNote, halfTimeScore, visibleScorerRows } from '../../shared/scorerRows';
 import { lineupNow, substitutionText } from '../../shared/substitutions';
 import {
   ANNOUNCEMENTS_PER_SLIDE,
@@ -227,9 +227,11 @@ function retroScorerLines(state: MatchState): { side: TeamId; text: string }[] {
         ? state.squads[event.team].find((p) => p.id === event.playerId)
         : undefined;
     const plain = player ? player.lastName || player.firstName : '';
-    // Eigentor wie im Spielbericht mit "(ET)" -- sonst stünde der Name
-    // eines Gegenspielers kommentarlos auf der eigenen Seite.
-    const name = isGoal && event.ownGoal ? (plain ? `${plain} (ET)` : 'EIGENTOR') : plain;
+    // Eigentor und Strafstoß wie im Spielbericht mit "(ET)" bzw. "(FE)" --
+    // sonst stünde etwa der Name eines Gegenspielers kommentarlos auf der
+    // eigenen Seite.
+    const name =
+      isGoal && event.ownGoal && !plain ? 'EIGENTOR' : [plain, isGoal ? goalNote(event) : ''].filter(Boolean).join(' ');
 
     const what = isGoal ? (name ? '' : 'TOR') : event.card === 'red' ? 'ROT' : 'GELB-ROT';
     const text = [formatEventMinute(event), what, name].filter(Boolean).join(' ');
@@ -282,7 +284,7 @@ function currentRetroScene(state: MatchState): RetroScene {
       const player = goalScorer(goal, state.squads);
       return {
         kind: 'scorer',
-        title: `${goal.ownGoal ? 'EIGENTOR' : 'TOR'} ${formatEventMinute(goal)}`,
+        title: `${goalTitle(goal)} ${formatEventMinute(goal)}`,
         name: player ? `${player.firstName} ${player.lastName}`.trim() : retroTeamName(state[goal.team]),
         detail: `${retroTeamName(state[goal.team])} ${goal.scoreHome}:${goal.scoreAway}`,
       };
@@ -1034,10 +1036,26 @@ function handleEvents(state: MatchState, isFirstRender: boolean): void {
  * „Endstand · 4:3 i. E.“
  */
 function phaseLabelText(state: MatchState): string {
-  const label = displayPhaseLabel(state.phase);
-  if (state.phase !== 'full-time' || !state.shootout?.finished) return label;
-  const score = shootoutScore(state.shootout);
-  return `${label} · ${score.home}:${score.away} i. E.`;
+  let label = displayPhaseLabel(state.phase, state.half);
+  if (state.phase !== 'full-time') return label;
+  // Halbzeitstand wie im Spielbericht: "Endstand (1:1)" (Review N12).
+  // Nicht beim Abbruch in der 1. Halbzeit -- da gab es keine Pause.
+  if (state.half === 2) {
+    const hz = halfTimeScore(state.events, state.halfDurationMin);
+    label += ` (${hz.home}:${hz.away})`;
+  }
+  if (state.shootout?.finished) {
+    const score = shootoutScore(state.shootout);
+    label += ` · ${score.home}:${score.away} i. E.`;
+  }
+  return label;
+}
+
+/** Überschrift der Torschützen-Einblendung: Tor, Eigentor oder Strafstoß. */
+function goalTitle(goal: GoalEvent): string {
+  if (goal.ownGoal) return 'EIGENTOR';
+  if (goal.penalty) return 'TOR (FE)';
+  return 'TOR';
 }
 
 /**
@@ -1477,8 +1495,7 @@ function handleScorerRequest(state: MatchState): void {
     photo.hidden = true;
   }
 
-  document.getElementById('spotlight-label')!.textContent =
-    `${goal.ownGoal ? 'EIGENTOR' : 'TOR'} · ${formatEventMinute(goal)}`;
+  document.getElementById('spotlight-label')!.textContent = `${goalTitle(goal)} · ${formatEventMinute(goal)}`;
   document.getElementById('spotlight-name')!.textContent = player
     ? playerLabel(player)
     : state[goal.team].name;

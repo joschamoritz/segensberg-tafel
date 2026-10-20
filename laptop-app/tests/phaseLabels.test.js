@@ -35,6 +35,7 @@ test('das Steuerungsfenster benennt jede Phase', () => {
   assert.equal(controlPhaseLabel('live', 2), '2. Halbzeit läuft');
   assert.equal(controlPhaseLabel('half-time', 1), 'Halbzeitpause');
   assert.equal(controlPhaseLabel('full-time', 2), 'Spiel beendet');
+  assert.match(controlPhaseLabel('full-time', 1), /abgebrochen/);
 });
 
 test('die Bedienung bekommt in jeder Phase einen Text, nie eine Leerstelle', () => {
@@ -54,6 +55,9 @@ test('die Anzeigetafel zeigt nur in Pause und nach Abpfiff eine Überschrift', (
   assert.equal(displayPhaseLabel('live'), '');
   assert.equal(displayPhaseLabel('half-time'), 'HALBZEIT');
   assert.equal(displayPhaseLabel('full-time'), 'ENDSTAND');
+  assert.equal(displayPhaseLabel('full-time', 2), 'ENDSTAND');
+  // Abpfiff in der 1. Halbzeit ist ein Abbruch (Review N14)
+  assert.equal(displayPhaseLabel('full-time', 1), 'SPIELABBRUCH');
 });
 
 test('beide Sätze bleiben verschieden -- sie sprechen verschiedene Leser an', () => {

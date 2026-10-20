@@ -1046,6 +1046,10 @@ app.whenReady().then(() => {
     if (!isEventId(eventId)) return;
     store.setGoalScorer(eventId, sanitizeOptionalId(scorerId));
   });
+  onIpc(IPC.goalSetPenalty, (_event, eventId: unknown, penalty: unknown) => {
+    if (!isEventId(eventId) || typeof penalty !== 'boolean') return;
+    store.setGoalPenalty(eventId, penalty);
+  });
   onIpc(IPC.goalSetOwnGoal, (_event, eventId: unknown, ownGoal: unknown) => {
     if (!isEventId(eventId) || typeof ownGoal !== 'boolean') return;
     store.setGoalOwnGoal(eventId, ownGoal);

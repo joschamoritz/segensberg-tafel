@@ -97,3 +97,85 @@ test('Tafel: Liste und Torschützen-Einblendung nennen das Eigentor', (t) => {
   assert.match(r.document.getElementById('spotlight-name').textContent, /Kowalski/);
   assert.deepEqual(r.drainErrors(), []);
 });
+
+// --------------------------------------------------------------------
+// Strafstoß, Halbzeitstand, Abbruch, Spieler entfernen (Review N11-N14)
+// --------------------------------------------------------------------
+
+const { halfTimeScore } = load('shared/scorerRows');
+
+test('Strafstoß: "(FE)" hinter dem Schützen, schließt Eigentor aus', () => {
+  const store = new MatchStateStore();
+  store.setSquad('home', [LANGE]);
+  store.setSquad('away', [KOWALSKI]);
+  store.incrementScore('home', 1);
+  const tor = store.getState().events.at(-1).id;
+
+  store.setGoalOwnGoal(tor, true);
+  store.setGoalScorer(tor, 'g4');
+  store.setGoalPenalty(tor, true);
+  let goal = store.getState().events.at(-1);
+  assert.equal(goal.penalty, true);
+  assert.equal(goal.ownGoal, false);
+  assert.equal(goal.scorerId, undefined, 'Kowalski gehört zum anderen Kader');
+
+  store.setGoalScorer(tor, 'h9');
+  const s = store.getState();
+  assert.deepEqual(buildScorerRows('home', s.events, s.squads.home, s.squads.away).map((r) => r.name), ['Lange (FE)']);
+
+  store.setGoalOwnGoal(tor, true);
+  goal = store.getState().events.at(-1);
+  assert.equal(goal.penalty, false, 'ein Eigentor ist nie ein Strafstoß');
+});
+
+test('Halbzeitstand zählt Nachspielzeit-Tore der 1. Halbzeit mit', () => {
+  const tore = [
+    { type: 'goal', team: 'home', minute: 12 },
+    { type: 'goal', team: 'away', minute: 45, stoppage: 2 },
+    { type: 'card', team: 'away', minute: 40 },
+    { type: 'goal', team: 'home', minute: 46 },
+  ];
+  assert.deepEqual(halfTimeScore(tore, 45), { home: 1, away: 1 });
+  assert.deepEqual(halfTimeScore(tore, 35), { home: 1, away: 0 }, 'Jugend: kürzere Halbzeit');
+});
+
+test('Tafel: Endstand mit Halbzeitstand, Abbruch in der 1. Halbzeit als Spielabbruch', (t) => {
+  const store = new MatchStateStore();
+  store.kickoff();
+  store.stopClock();
+  store.incrementScore('home', 1);
+  store.goToHalfTime();
+  store.startSecondHalf();
+  store.stopClock();
+  store.incrementScore('away', 1);
+  store.incrementScore('away', 1);
+  store.goToFullTime();
+
+  const r = openRenderer('display', t);
+  r.emit('onStateUpdated', store.getState());
+  assert.equal(r.document.getElementById('phase-label').textContent, 'ENDSTAND (1:0)');
+
+  const abbruch = new MatchStateStore();
+  abbruch.kickoff();
+  abbruch.stopClock();
+  abbruch.goToFullTime();
+  r.emit('onStateUpdated', abbruch.getState());
+  assert.equal(r.document.getElementById('phase-label').textContent, 'SPIELABBRUCH');
+  assert.deepEqual(r.drainErrors(), []);
+});
+
+test('Spieler entfernen fragt nach, ein Nein hält es auf', (t) => {
+  const store = new MatchStateStore();
+  store.setSquad('home', [LANGE]);
+  const r = openRenderer('control', t);
+  const fragen = [];
+  r.window.confirm = (frage) => {
+    fragen.push(frage);
+    return false;
+  };
+  r.emit('onStateUpdated', store.getState());
+  r.calls.length = 0;
+  r.document.querySelector('#home-squad-list .squad-remove').click();
+  assert.deepEqual(r.calls.map((c) => c.name), []);
+  assert.match(fragen[0], /Lange/);
+});

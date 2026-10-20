@@ -606,7 +606,24 @@ export class MatchStateStore {
     this.state = {
       ...this.state,
       events: this.state.events.map((event) =>
-        event.id === eventId ? { ...goal, ownGoal, scorerId: undefined } : event
+        // Ein Eigentor ist nie ein Strafstoß.
+        event.id === eventId ? { ...goal, ownGoal, penalty: ownGoal ? false : goal.penalty, scorerId: undefined } : event
+      ),
+    };
+    this.bump('events');
+    this.emit();
+  }
+
+  /** Markiert ein Tor als Strafstoß („(FE)“). Hebt ein Eigentor auf. */
+  setGoalPenalty(eventId: number, penalty: boolean): void {
+    const goal = this.state.events.find((e) => e.id === eventId);
+    if (!goal || goal.type !== 'goal' || (goal.penalty ?? false) === penalty) return;
+    // Wechselt der Kader (Eigentor -> eigenes Tor), passt der Schütze nicht mehr.
+    const scorerId = penalty && goal.ownGoal ? undefined : goal.scorerId;
+    this.state = {
+      ...this.state,
+      events: this.state.events.map((event) =>
+        event.id === eventId ? { ...goal, penalty, ownGoal: penalty ? false : goal.ownGoal, scorerId } : event
       ),
     };
     this.bump('events');

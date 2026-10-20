@@ -1,4 +1,29 @@
-import { formatEventMinute, MatchEvent, Player, TeamId } from './types';
+import { formatEventMinute, GoalEvent, MatchEvent, Player, TeamId } from './types';
+
+/**
+ * Zusatz hinter dem Torschützen wie im Spielbericht: „(ET)“ für ein
+ * Eigentor, „(FE)“ für einen Strafstoß. An einer Stelle für die
+ * Torschützenliste und die Retro-Matrix.
+ */
+export function goalNote(goal: GoalEvent): string {
+  if (goal.ownGoal) return '(ET)';
+  if (goal.penalty) return '(FE)';
+  return '';
+}
+
+/**
+ * Halbzeitstand aus der Chronik, für den Endstand („2:1 (1:1)“,
+ * Review 2026-10, N12). Ein Tor gehört zur 1. Halbzeit, wenn seine
+ * Basisminute die Halbzeitdauer nicht übersteigt -- Nachspielzeit steht
+ * als „45+2“ und damit bei 45.
+ */
+export function halfTimeScore(events: MatchEvent[], halfDurationMin: number): { home: number; away: number } {
+  const score = { home: 0, away: 0 };
+  for (const event of events) {
+    if (event.type === 'goal' && event.minute <= halfDurationMin) score[event.team]++;
+  }
+  return score;
+}
 
 /**
  * Eine Zeile der Torschützenliste unter dem Wappen.
@@ -44,14 +69,17 @@ export function buildScorerRows(
     const playerId = event.type === 'goal' ? event.scorerId : event.playerId;
     const player = playerId ? (ownGoal ? opponentSquad : squad).find((p) => p.id === playerId) : undefined;
     const plainName = player ? player.lastName || player.firstName : '';
-    // Wie im Spielbericht: "Kowalski (ET)". Ohne Namen bleibt das Wort
-    // stehen -- sonst sähe ein Eigentor aus wie ein eigenes Tor ohne Schützen.
-    const name = ownGoal ? (plainName ? `${plainName} (ET)` : 'Eigentor') : plainName;
+    // Wie im Spielbericht: "Kowalski (ET)", "Lange (FE)". Ohne Namen bleibt
+    // beim Eigentor das Wort stehen -- sonst sähe es aus wie ein eigenes
+    // Tor ohne Schützen.
+    const note = event.type === 'goal' ? goalNote(event) : '';
+    const name = ownGoal && !plainName ? 'Eigentor' : [plainName, note].filter(Boolean).join(' ');
 
     if (event.type === 'goal' && playerId) {
       // Eigentore eines Spielers nicht mit Toren zusammenfassen -- die Ids
       // stammen aus zwei Kadern.
-      const key = ownGoal ? `et:${playerId}` : playerId;
+      // Strafstoßtore ebenso nicht: "(FE)" gilt nur für dieses eine Tor.
+      const key = ownGoal ? `et:${playerId}` : event.penalty ? `fe:${event.id}` : playerId;
       const existing = byScorer.get(key);
       if (existing) {
         existing.minutes.push(formatEventMinute(event));

@@ -96,6 +96,8 @@ export function createApi(t: Transport) {
       t.send(IPC.goalSetScorer, eventId, scorerId),
     goalSetOwnGoal: (eventId: number, ownGoal: boolean) =>
       t.send(IPC.goalSetOwnGoal, eventId, ownGoal),
+    goalSetPenalty: (eventId: number, penalty: boolean) =>
+      t.send(IPC.goalSetPenalty, eventId, penalty),
     cardAdd: (team: TeamId, card: CardColor) => t.send(IPC.cardAdd, team, card),
     cardSetPlayer: (eventId: number, playerId: string | undefined) =>
       t.send(IPC.cardSetPlayer, eventId, playerId),

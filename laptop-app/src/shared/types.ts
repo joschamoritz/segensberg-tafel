@@ -120,6 +120,11 @@ export interface GoalEvent {
    * Sicherungen ohne das Feld sind gewöhnliche Tore.
    */
   ownGoal?: boolean;
+  /**
+   * Tor per Strafstoß -- im Spielbericht „(FE)“ (Review 2026-10, N13).
+   * Schließt `ownGoal` aus; der Store hält beide nie gleichzeitig.
+   */
+  penalty?: boolean;
 }
 
 /** Die jeweils andere Mannschaft. */
@@ -1090,6 +1095,7 @@ export const IPC = {
   setCompetition: 'match:set-competition',
   goalSetScorer: 'goal:set-scorer',
   goalSetOwnGoal: 'goal:set-own-goal',
+  goalSetPenalty: 'goal:set-penalty',
   /** einmalig abgefragt, liefert `AppInfo` -- siehe dort */
   appInfo: 'app:info',
   /** Tormusik von der Fernsteuerung am Laptop abspielen, siehe `SoundCommand` */

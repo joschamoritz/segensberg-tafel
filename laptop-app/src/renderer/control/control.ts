@@ -451,7 +451,13 @@ function buildPlayerRow(team: TeamId, player: Player): SquadRow {
   remove.className = 'squad-remove';
   remove.textContent = '×';
   remove.title = 'Spieler entfernen';
-  remove.addEventListener('click', () => window.api.squadRemovePlayer(team, current.id));
+  // Mit Rückfrage: Das ist endgültig -- squads.json wird sofort
+  // geschrieben, und Tore oder Karten in der Chronik verlören den Namen
+  // (Review 2026-10, N11).
+  remove.addEventListener('click', () => {
+    const name = playerLabel(current) || 'diesen Spieler';
+    if (confirm(`${name} aus dem Kader entfernen?`)) window.api.squadRemovePlayer(team, current.id);
+  });
 
   row.append(
     numberInput,
@@ -677,6 +683,17 @@ function renderGoalLog(state: MatchState): void {
       og.classList.toggle('is-active', ownGoal);
       og.addEventListener('click', () => window.api.goalSetOwnGoal(eventId, !ownGoal));
       item.appendChild(og);
+
+      // Strafstoß -- erscheint als "(FE)" hinter dem Schützen (Review N13).
+      const penalty = event.penalty === true;
+      const fe = document.createElement('button');
+      fe.className = 'btn btn-small penalty-toggle';
+      fe.textContent = 'FE';
+      fe.title = penalty ? 'Strafstoß -- zurück zum normalen Tor' : 'Als Strafstoß markieren';
+      fe.setAttribute('aria-pressed', String(penalty));
+      fe.classList.toggle('is-active', penalty);
+      fe.addEventListener('click', () => window.api.goalSetPenalty(eventId, !penalty));
+      item.appendChild(fe);
     }
 
     item.appendChild(playerSelect);

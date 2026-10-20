@@ -32,7 +32,7 @@ export function controlPhaseLabel(phase: MatchPhase, half: 1 | 2): string {
     case 'half-time':
       return 'Halbzeitpause';
     case 'full-time':
-      return 'Spiel beendet';
+      return half === 1 ? 'Spiel abgebrochen (1. Halbzeit)' : 'Spiel beendet';
   }
 }
 
@@ -40,8 +40,12 @@ export function controlPhaseLabel(phase: MatchPhase, half: 1 | 2): string {
  * Großer Text, der auf der Anzeigetafel in der Pause bzw. nach Abpfiff
  * das Uhr-Panel ersetzt. Vor Anpfiff und im laufenden Spiel bleibt er
  * leer -- dort gehört die Fläche dem Spielstand.
+ *
+ * Ein Abpfiff schon in der 1. Halbzeit ist ein Spielabbruch (Wetter,
+ * Verletzung) -- dort stand bis Fassung 1.6.0 trotzdem "ENDSTAND"
+ * (Review 2026-10, N14).
  */
-export function displayPhaseLabel(phase: MatchPhase): string {
+export function displayPhaseLabel(phase: MatchPhase, half: 1 | 2 = 2): string {
   switch (phase) {
     case 'pre-match':
     case 'live':
@@ -49,7 +53,7 @@ export function displayPhaseLabel(phase: MatchPhase): string {
     case 'half-time':
       return 'HALBZEIT';
     case 'full-time':
-      return 'ENDSTAND';
+      return half === 1 ? 'SPIELABBRUCH' : 'ENDSTAND';
   }
 }
 
