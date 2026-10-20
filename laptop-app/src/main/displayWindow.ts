@@ -3,6 +3,7 @@ import type { Display } from 'electron';
 import { AppStatus, IPC } from '../shared/types';
 import { configWarnings } from './configFile';
 import { ctx, toControl } from './context';
+import { boardLinkStatus } from './boardLinkControl';
 import { remoteStatus } from './remoteControl';
 import {
   createDisplayWindow,
@@ -43,6 +44,7 @@ export function currentStatus(): AppStatus {
     previewMode: target === null,
     displayOpen: ctx.displayWindow !== null && !ctx.displayWindow.isDestroyed(),
     remote: remoteStatus(),
+    boardLink: boardLinkStatus(),
     warnings: [...configWarnings(), ...runtimeWarnings],
   };
 }

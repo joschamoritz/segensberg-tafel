@@ -24,7 +24,8 @@
     "files": [
       "dist/**/*",
       "assets/**/*",
-      "package.json"
+      "package.json",
+      "THIRD-PARTY-NOTICES.md"
     ],
     "win": {
       "target": [

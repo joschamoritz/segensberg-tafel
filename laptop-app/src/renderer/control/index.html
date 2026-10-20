@@ -28,6 +28,14 @@
          wenn build-info.json fehlt. Erscheint auch am iPad. -->
     <span id="app-credit" class="app-version">Programmiert von Joscha Fresmann</span>
     <div id="display-status" class="status-banner"></div>
+    <!-- Verbindung zum TB50 auf einen Blick. Ein Knopf: Er öffnet die
+         Einrichtung „Anzeige", wo Helligkeit und Zugang stehen. Trägt
+         `data-setup-open`, nicht `data-setup` -- sonst zählte er als
+         Leisteneintrag und schaltete die Fläche beim zweiten Druck zu. -->
+    <button type="button" id="board-link-pill" class="board-link-pill" data-setup-open="anzeige" hidden>
+      <span class="board-link-dot" aria-hidden="true"></span>
+      <span id="board-link-pill-text"></span>
+    </button>
 
     <!-- Leiste für das Einmalige. Vorbild ist die Menüleiste der
          Herstellersoftware: Was einmal eingerichtet und dann nie
@@ -77,6 +85,56 @@
       LED-Wand – gleiche Zeilenzahl, gleiche Kürzungen. Standard laut
       goracon-Anleitung: 384 × 192.
     </p>
+  </section>
+
+  <!-- Verbindung zum TB50 im WLAN der Tafel (main/boardLink.ts). Das Bild
+       geht weiter per HDMI; über diese Verbindung laufen nur Anzeige,
+       Helligkeit und das Umschalten der Bildquelle. -->
+  <section class="board-link-settings">
+    <label class="remote-toggle board-link-toggle">
+      <input type="checkbox" id="board-link-enabled" />
+      Verbindung zur Tafel im WLAN (TB50)
+    </label>
+    <div class="board-link-details" id="board-link-details" hidden>
+      <p class="board-link-state" id="board-link-state"></p>
+      <dl class="board-link-facts">
+        <dt>Bildquelle</dt><dd id="board-link-source">–</dd>
+        <dt>HDMI-Signal</dt><dd id="board-link-hdmi">–</dd>
+        <dt>Lichtsensor</dt><dd id="board-link-ambient">–</dd>
+        <dt>LED-Wand</dt><dd id="board-link-led">–</dd>
+      </dl>
+      <div class="board-link-row">
+        <label for="board-brightness">Helligkeit:</label>
+        <input type="range" id="board-brightness" min="0" max="100" step="1" value="0" disabled />
+        <output id="board-brightness-value" for="board-brightness">–</output>
+      </div>
+      <div class="board-link-row">
+        <button id="board-select-hdmi" class="btn btn-small" disabled>Tafel auf Laptop-Bild (HDMI) schalten</button>
+        <button id="board-size-apply" class="btn btn-small" hidden>Größe als Tafelauflösung übernehmen</button>
+      </div>
+      <details class="board-link-access">
+        <summary>Zugang zur Tafel</summary>
+        <div class="board-link-row">
+          <label for="board-username">Benutzer:</label>
+          <input type="text" id="board-username" autocomplete="off" spellcheck="false" />
+          <label for="board-password">Passwort:</label>
+          <input type="password" id="board-password" autocomplete="off" placeholder="unverändert" />
+          <label for="board-host">Adresse:</label>
+          <input type="text" id="board-host" autocomplete="off" spellcheck="false" placeholder="automatisch suchen" />
+          <button id="board-link-save" class="btn btn-small">Übernehmen</button>
+        </div>
+        <p class="remote-hint">
+          Vorgabe laut goracon-Anleitung: Admin / 1234. Die Adresse nur
+          eintragen, wenn die Suche die Tafel nicht findet.
+        </p>
+      </details>
+      <p class="remote-hint">
+        Laptop und iPad ins WLAN „Taurus-…“ der Tafel (Kennwort laut
+        Anleitung). Die Helligkeit gilt bis zum nächsten Neustart der Tafel,
+        danach wieder der dort gespeicherte Wert. Ein Lichtsensor kann sie
+        selbst nachregeln.
+      </p>
+    </div>
   </section>
 
   <!-- Gestaltung der Tafel. Hier in der Einrichtung und nicht im Spielteil:

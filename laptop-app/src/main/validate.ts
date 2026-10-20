@@ -12,7 +12,9 @@ import {
   MAX_ANNOUNCEMENT_LENGTH,
   MAX_ANNOUNCEMENTS,
   MAX_ATTENDANCE,
+  MAX_BOARD_BRIGHTNESS,
   MAX_BOARD_EDGE,
+  MIN_BOARD_BRIGHTNESS,
   MIN_BOARD_EDGE,
   Player,
   PlayerRole,
@@ -297,4 +299,31 @@ export function sanitizeKickoffTime(value: unknown): string {
   const minutes = Number(match[2]);
   if (hours > 23 || minutes > 59) return '';
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+}
+
+/**
+ * Feste Adresse der Tafel: eine IPv4-Adresse oder leer (dann Rundruf).
+ * Kein Rechnername -- im WLAN der Tafel gibt es keine Namensauflösung, und
+ * ein Tippfehler soll gleich auffallen statt erst beim Suchen.
+ */
+export function sanitizeBoardHost(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const text = value.trim();
+  if (text === '') return '';
+  const parts = text.split('.');
+  if (parts.length !== 4) return null;
+  if (!parts.every((p) => /^\d{1,3}$/.test(p) && Number(p) <= 255)) return null;
+  return parts.map(Number).join('.');
+}
+
+/** Anmeldename oder Passwort an der Tafel. Leerzeichen bleiben erhalten. */
+export function sanitizeBoardCredential(value: unknown): string {
+  if (typeof value !== 'string') return '';
+  return value.replace(/[\r\n\t]/g, '').slice(0, 64);
+}
+
+/** Helligkeit in Prozent, ganzzahlig; alles Unbrauchbare wird `null`. */
+export function sanitizeBoardBrightness(value: unknown): number | null {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return null;
+  return Math.round(Math.min(MAX_BOARD_BRIGHTNESS, Math.max(MIN_BOARD_BRIGHTNESS, value)));
 }

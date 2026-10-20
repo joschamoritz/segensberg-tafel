@@ -13,6 +13,7 @@ import { currentStatus, openDisplayWindow } from './displayWindow';
 import { handleIpc, onIpc } from './ipc';
 import { discardLiveMatch, flushLiveMatchSave } from './liveSave';
 import { broadcastLibrary, persistContent, persistSquad, persistTeams, updateSquad } from './persist';
+import { selectBoardHdmi, setBoardBrightness, setBoardLinkConfig, setBoardLinkEnabled } from './boardLinkControl';
 import { renewRemotePin, setRemoteEnabled } from './remoteControl';
 import {
   isCardColor,
@@ -26,6 +27,9 @@ import {
   sanitizeSlideBlocks,
   sanitizeSponsorRef,
   sanitizeSponsorSlotId,
+  sanitizeBoardBrightness,
+  sanitizeBoardCredential,
+  sanitizeBoardHost,
   sanitizeBoardSize,
   sanitizeImportedPlayers,
   sanitizeKickoffTime,
@@ -60,6 +64,26 @@ export function registerIpcHandlers(): void {
   onIpc(IPC.soundCommand, (_event, command: unknown) => {
     if (command === 'play' || command === 'stop') sendTo(ctx.controlWindow, IPC.soundCommand, command);
   });
+
+  // Verbindung zum TB50 (main/boardLink.ts). An- und Abschalten sowie die
+  // Zugangsdaten nur am Laptop (REMOTE_DENIED).
+  onIpc(IPC.boardLinkSetEnabled, (_event, enabled: unknown) => {
+    setBoardLinkEnabled(enabled === true);
+  });
+  onIpc(IPC.boardLinkSetConfig, (_event, username: unknown, password: unknown, host: unknown) => {
+    const cleanHost = sanitizeBoardHost(host);
+    const cleanUser = sanitizeBoardCredential(username);
+    // Eine unbrauchbare Adresse verwirft die ganze Eingabe, statt still
+    // auf den Rundruf zurückzufallen -- das Feld zeigt danach wieder den
+    // gültigen Stand.
+    if (cleanHost === null || cleanUser === '') return;
+    setBoardLinkConfig({ username: cleanUser, password: sanitizeBoardCredential(password), host: cleanHost });
+  });
+  onIpc(IPC.boardSetBrightness, (_event, percent: unknown) => {
+    const value = sanitizeBoardBrightness(percent);
+    if (value !== null) setBoardBrightness(value);
+  });
+  onIpc(IPC.boardSelectHdmi, () => selectBoardHdmi());
 
   onIpc(IPC.requestState, (event) => {
     event.sender.send(IPC.stateUpdated, store.getState());

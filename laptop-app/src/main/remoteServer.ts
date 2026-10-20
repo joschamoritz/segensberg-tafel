@@ -72,6 +72,10 @@ export const REMOTE_DENIED: ReadonlySet<string> = new Set([
   IPC.soundRead,
   IPC.remoteSetEnabled,
   IPC.remoteNewPin,
+  // Zugang zur Tafel und ob überhaupt verbunden wird: Einstellungen am
+  // Laptop. Helligkeit und HDMI-Umschaltung dürfen dagegen vom iPad.
+  IPC.boardLinkSetEnabled,
+  IPC.boardLinkSetConfig,
 ]);
 
 /** Größte angenommene Anfrage -- ein ganzer Kader passt locker hinein. */

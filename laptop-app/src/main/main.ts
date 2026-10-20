@@ -2,6 +2,7 @@ import { app, BrowserWindow, dialog, powerMonitor } from 'electron';
 import { DEFAULT_HALF_DURATION_MIN, IPC, TeamId } from '../shared/types';
 import { logFatal } from './appInfo';
 import { loadContentConfig } from './content';
+import { initBoardLink, setBoardLinkStatusListener, shutdownBoardLink } from './boardLinkControl';
 import { broadcastState, ctx, sendTo, toControl } from './context';
 import { broadcastStatus, openDisplayWindow, watchScreens } from './displayWindow';
 import { registerIpcHandlers } from './ipcHandlers';
@@ -31,6 +32,8 @@ import { createControlWindow, pickDefaultTargetDisplay } from './windows';
 //   ipcHandlers.ts    alle Handler des Steuerungsfensters und der Fernsteuerung
 //   displayWindow.ts  Anzeigefenster, Zielbildschirm, Status, Wachhalten
 //   remoteControl.ts  Fernsteuerung im WLAN (PIN, Start/Stopp)
+//   boardLinkControl.ts / boardLink.ts / taurus.ts
+//                     Verbindung zum TB50 (Anzeige, Helligkeit)
 //   liveSave.ts       Sicherung des laufenden Spiels und Fortsetzen
 //   persist.ts        Speichern von Teams, Texten und Kadern
 //   dialogs.ts        Dateifenster am Laptop
@@ -43,6 +46,7 @@ let allowControlClose = false;
 let closePromptOpen = false;
 
 setRemoteStatusListener(broadcastStatus);
+setBoardLinkStatusListener(broadcastStatus);
 
 /**
  * Ein zweiter Start (Autostart plus Doppelklick) würde zwei Instanzen
@@ -89,6 +93,7 @@ app.whenReady().then(() => {
   if (!isFirstInstance) return;
 
   initRemoteControl();
+  initBoardLink();
 
   const teamsConfig = loadTeamsConfig();
   const store = new MatchStateStore(teamsConfig);
@@ -207,6 +212,7 @@ app.whenReady().then(() => {
 app.on('before-quit', () => {
   flushLiveMatchSave();
   shutdownRemote();
+  shutdownBoardLink();
 });
 
 app.on('window-all-closed', () => {

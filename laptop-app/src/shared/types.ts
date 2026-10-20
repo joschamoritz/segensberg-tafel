@@ -1249,6 +1249,8 @@ export interface AppStatus {
   displayOpen: boolean;
   /** Fernsteuerung im WLAN, siehe `RemoteStatus` */
   remote: RemoteStatus;
+  /** Verbindung zum TB50, siehe `BoardLinkStatus` */
+  boardLink: BoardLinkStatus;
   /**
    * Beschädigte Konfigurationsdateien, die beim Start beiseitegelegt
    * wurden (siehe `main/configFile.ts`). Meist leer.
@@ -1278,6 +1280,53 @@ export interface RemoteStatus {
 
 /** Port der Fernsteuerung. 28 wie im Vereinsnamen. */
 export const REMOTE_PORT = 8028;
+
+/**
+ * Verbindung zum TB50-Controller im WLAN der Tafel (siehe
+ * `main/boardLink.ts`).
+ *
+ * - `off`: in der Einrichtung abgeschaltet, etwa am Schreibtisch
+ * - `searching` / `not-found`: Suche läuft bzw. ergab nichts -- meist ist
+ *   der Laptop nicht im WLAN `Taurus-…`
+ * - `connecting`: gefunden, Anmeldung läuft
+ * - `connected`: angemeldet, Werte werden laufend gelesen
+ * - `login-failed`: Benutzer oder Passwort falsch
+ * - `error`: gefunden, aber die Verbindung brach ab (Text in `message`)
+ */
+export type BoardLinkState =
+  | 'off'
+  | 'searching'
+  | 'not-found'
+  | 'connecting'
+  | 'connected'
+  | 'login-failed'
+  | 'error';
+
+export interface BoardLinkStatus {
+  enabled: boolean;
+  state: BoardLinkState;
+  /** gefundenes Gerät; null, solange keins gefunden ist */
+  device: { name: string; product: string; sn: string; address: string } | null;
+  /** Helligkeit in Prozent */
+  brightness: number | null;
+  /** Rohwert des Lichtsensors; null ohne Sensor */
+  ambientLight: number | null;
+  /** was die Tafel zeigt: das HDMI-Bild des Laptops oder ihren internen Player */
+  source: 'hdmi' | 'internal' | null;
+  /** ob am HDMI-Eingang ein Signal anliegt */
+  hdmiSignal: boolean | null;
+  /** Pixelgröße der LED-Wand laut Controller */
+  ledSize: BoardSize | null;
+  /** Anmeldename und feste Adresse aus der Einrichtung. Das Passwort steht
+      bewusst NICHT hier: Der Status geht auch an die Geräte im WLAN. */
+  username: string;
+  host: string;
+  /** Fehlertext oder Hinweis; sonst leer */
+  message: string;
+}
+
+export const MIN_BOARD_BRIGHTNESS = 0;
+export const MAX_BOARD_BRIGHTNESS = 100;
 
 /** Tormusik-Befehl von der Fernsteuerung an den Laptop. */
 export type SoundCommand = 'play' | 'stop';
@@ -1384,4 +1433,10 @@ export const IPC = {
   soundCommand: 'sound:command',
   remoteSetEnabled: 'remote:set-enabled',
   remoteNewPin: 'remote:new-pin',
+  /** Verbindung zum TB50 ein/aus -- nur am Laptop */
+  boardLinkSetEnabled: 'board-link:set-enabled',
+  /** Anmeldung und feste Adresse -- nur am Laptop */
+  boardLinkSetConfig: 'board-link:set-config',
+  boardSetBrightness: 'board-link:set-brightness',
+  boardSelectHdmi: 'board-link:select-hdmi',
 } as const;

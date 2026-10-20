@@ -1,6 +1,7 @@
 import { deriveRetroName } from '../../shared/retroMatrix';
 import {
   AppStatus,
+  BoardLinkStatus,
   competitionLabel,
   FlutlichtEffects,
   MatchState,
@@ -18,7 +19,8 @@ import type { LibraryPayload } from '../window';
 import { showError, updateInputIfNotFocused } from './common';
 
 // Einrichtung: Zielbildschirm, Tafel, Design, Wettbewerb, Teams,
-// Logo-Bibliothek, Fernsteuerung und die Leiste, die diese Flächen öffnet.
+// Logo-Bibliothek, Fernsteuerung, Verbindung zur Tafel und die Leiste,
+// die diese Flächen öffnet.
 
 export function renderTeamSettings(team: TeamId, state: MatchState): void {
   const teamState = state[team];
@@ -302,6 +304,166 @@ export function renderStatus(status: AppStatus): void {
   select.value = status.previewMode ? '' : String(status.selectedDisplayId ?? '');
 
   renderRemoteStatus(status.remote);
+  // Fehlt bei einem Status aus einer älteren Fassung -- dann bleibt der
+  // Abschnitt eben stehen, wie er ist.
+  if (status.boardLink) renderBoardLink(status.boardLink);
+}
+
+/** Kurzform für die Kopfzeile; `warn` färbt sie als Hinweis. */
+export function boardLinkSummary(link: BoardLinkStatus): { text: string; tone: 'ok' | 'idle' | 'warn' } {
+  switch (link.state) {
+    case 'off':
+      return { text: '', tone: 'idle' };
+    case 'searching':
+      return { text: 'Tafel: suche …', tone: 'idle' };
+    case 'not-found':
+      return { text: 'Tafel: nicht gefunden', tone: 'idle' };
+    case 'connecting':
+      return { text: 'Tafel: verbinde …', tone: 'idle' };
+    case 'login-failed':
+      return { text: 'Tafel: Anmeldung abgelehnt', tone: 'warn' };
+    case 'error':
+      return { text: 'Tafel: Verbindung gestört', tone: 'warn' };
+    case 'connected': {
+      // Am Spieltag die wichtigste Frage: Zeigt die Tafel wirklich das
+      // Bild des Laptops? Ein im ViPlex-Programm hängengebliebener Player
+      // sieht am Steuerungsfenster sonst völlig normal aus.
+      if (link.source === 'internal') return { text: 'Tafel zeigt eigenes Programm', tone: 'warn' };
+      if (link.hdmiSignal === false) return { text: 'Tafel: kein HDMI-Signal', tone: 'warn' };
+      const brightness = link.brightness === null ? '' : ` · ${link.brightness} %`;
+      return { text: `Tafel verbunden${brightness}`, tone: 'ok' };
+    }
+  }
+}
+
+const SOURCE_LABELS: Record<'hdmi' | 'internal', string> = {
+  hdmi: 'HDMI (Bild des Laptops)',
+  internal: 'interner Player (ViPlex-Programm)',
+};
+
+/**
+ * Abschnitt „Verbindung zur Tafel" und die Kurzanzeige in der Kopfzeile.
+ * Felder, in denen gerade getippt oder gezogen wird, bleiben unangetastet
+ * -- der Status kommt alle paar Sekunden neu und risse sonst den Regler
+ * unter der Maus zurück.
+ */
+function renderBoardLink(link: BoardLinkStatus): void {
+  const summary = boardLinkSummary(link);
+  const pill = document.getElementById('board-link-pill')!;
+  pill.hidden = link.state === 'off';
+  pill.dataset.tone = summary.tone;
+  document.getElementById('board-link-pill-text')!.textContent = summary.text;
+
+  const toggle = document.getElementById('board-link-enabled') as HTMLInputElement;
+  if (document.activeElement !== toggle) toggle.checked = link.enabled;
+  document.getElementById('board-link-details')!.hidden = !link.enabled;
+
+  const device = link.device;
+  const where = device ? `${device.name || device.product || 'Tafel'} (${device.address})` : '';
+  const stateText: Record<BoardLinkStatus['state'], string> = {
+    off: '',
+    searching: 'Suche die Tafel im Netz …',
+    'not-found': 'Keine Tafel gefunden. Ist der Laptop im WLAN „Taurus-…“?',
+    connecting: `Gefunden: ${where} – melde an …`,
+    connected: `Verbunden mit ${where}`,
+    'login-failed': `Gefunden: ${where} – Anmeldung abgelehnt.`,
+    error: device ? `Gefunden: ${where} – Verbindung gestört.` : 'Verbindung gestört.',
+  };
+  // Ein Hinweis in der Kopfzeile braucht hier seinen Grund in Worten --
+  // sonst stünde „Verbunden" in Warnfarbe da.
+  const reason =
+    link.state !== 'connected'
+      ? ''
+      : link.source === 'internal'
+        ? ' – sie zeigt gerade ihr eigenes Programm statt des Laptop-Bilds.'
+        : link.hdmiSignal === false
+          ? ' – am HDMI-Eingang kommt kein Signal an.'
+          : '';
+  const message = reason || (link.message && link.state !== 'login-failed' ? ` ${link.message}` : '');
+  const stateLine = document.getElementById('board-link-state')!;
+  stateLine.textContent = `${stateText[link.state]}${link.state === 'login-failed' ? ' Benutzer und Passwort unter „Zugang zur Tafel“ prüfen.' : message}`;
+  stateLine.dataset.tone = summary.tone;
+
+  const connected = link.state === 'connected';
+  document.getElementById('board-link-source')!.textContent =
+    connected && link.source ? SOURCE_LABELS[link.source] : '–';
+  document.getElementById('board-link-hdmi')!.textContent =
+    connected && link.hdmiSignal !== null ? (link.hdmiSignal ? 'liegt an' : 'fehlt') : '–';
+  document.getElementById('board-link-ambient')!.textContent =
+    connected && link.ambientLight !== null ? String(link.ambientLight) : '–';
+  document.getElementById('board-link-led')!.textContent = link.ledSize
+    ? `${link.ledSize.width} × ${link.ledSize.height} px`
+    : '–';
+
+  const slider = document.getElementById('board-brightness') as HTMLInputElement;
+  slider.disabled = !connected;
+  if (document.activeElement !== slider && link.brightness !== null) slider.value = String(link.brightness);
+  document.getElementById('board-brightness-value')!.textContent =
+    link.brightness === null ? '–' : `${document.activeElement === slider ? slider.value : link.brightness} %`;
+
+  const hdmiButton = document.getElementById('board-select-hdmi') as HTMLButtonElement;
+  hdmiButton.disabled = !connected || link.source === 'hdmi';
+
+  // Nur anbieten, wenn die Tafel etwas anderes meldet als eingestellt --
+  // so beantwortet sich die offene Frage 384×192 gegen 384×224 von selbst.
+  const sizeButton = document.getElementById('board-size-apply') as HTMLButtonElement;
+  const board = boardSizeShown();
+  sizeButton.hidden =
+    !link.ledSize || (board !== null && board.width === link.ledSize.width && board.height === link.ledSize.height);
+  sizeButton.dataset.width = link.ledSize ? String(link.ledSize.width) : '';
+  sizeButton.dataset.height = link.ledSize ? String(link.ledSize.height) : '';
+
+  const username = document.getElementById('board-username') as HTMLInputElement;
+  const host = document.getElementById('board-host') as HTMLInputElement;
+  if (document.activeElement !== username && !username.dataset.dirty) username.value = link.username;
+  if (document.activeElement !== host && !host.dataset.dirty) host.value = link.host;
+}
+
+/** Eingestellte Tafelauflösung, wie sie in den Feldern steht. */
+function boardSizeShown(): { width: number; height: number } | null {
+  const width = Number((document.getElementById('board-width-input') as HTMLInputElement).value);
+  const height = Number((document.getElementById('board-height-input') as HTMLInputElement).value);
+  return width > 0 && height > 0 ? { width, height } : null;
+}
+
+export function wireBoardLink(): void {
+  const toggle = document.getElementById('board-link-enabled') as HTMLInputElement;
+  toggle.addEventListener('change', () => window.api.boardLinkSetEnabled(toggle.checked));
+
+  const slider = document.getElementById('board-brightness') as HTMLInputElement;
+  const value = document.getElementById('board-brightness-value')!;
+  // `input` statt `change`: Die Wirkung soll man an der Tafel beim Ziehen
+  // sehen, wie beim Lautstärkeregler. Der Hauptprozess schickt davon nur
+  // den jeweils jüngsten Wert los.
+  slider.addEventListener('input', () => {
+    value.textContent = `${slider.value} %`;
+    window.api.boardSetBrightness(Number(slider.value));
+  });
+
+  document.getElementById('board-select-hdmi')!.addEventListener('click', () => window.api.boardSelectHdmi());
+
+  const sizeButton = document.getElementById('board-size-apply') as HTMLButtonElement;
+  sizeButton.addEventListener('click', () => {
+    const width = Number(sizeButton.dataset.width);
+    const height = Number(sizeButton.dataset.height);
+    if (width > 0 && height > 0) window.api.setBoardSize({ width, height });
+    sizeButton.hidden = true;
+  });
+
+  const username = document.getElementById('board-username') as HTMLInputElement;
+  const password = document.getElementById('board-password') as HTMLInputElement;
+  const host = document.getElementById('board-host') as HTMLInputElement;
+  // Ein angefangener Eintrag soll den nächsten Status überstehen, auch
+  // wenn das Feld den Fokus schon abgegeben hat.
+  for (const field of [username, host]) {
+    field.addEventListener('input', () => (field.dataset.dirty = '1'));
+  }
+  document.getElementById('board-link-save')!.addEventListener('click', () => {
+    window.api.boardLinkSetConfig(username.value, password.value, host.value);
+    delete username.dataset.dirty;
+    delete host.dataset.dirty;
+    password.value = '';
+  });
 }
 
 /**
@@ -427,6 +589,13 @@ export function wireSetupPanels(): void {
       // wäre der Eintrag der einzige Knopf der Oberfläche, der nichts tut.
       open(document.body.dataset.setup === name ? null : name);
     });
+  }
+
+  // Knöpfe außerhalb der Leiste, die eine Fläche nur öffnen (die
+  // Tafel-Anzeige in der Kopfzeile). Ein zweiter Druck schließt hier
+  // NICHT -- wer auf „Tafel: kein HDMI-Signal" drückt, will hinsehen.
+  for (const opener of document.querySelectorAll<HTMLElement>('[data-setup-open]')) {
+    opener.addEventListener('click', () => open(opener.dataset.setupOpen ?? null));
   }
 
   for (const close of document.querySelectorAll<HTMLButtonElement>('[data-setup-close]')) {

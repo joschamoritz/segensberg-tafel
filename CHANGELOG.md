@@ -10,6 +10,20 @@ dem Baudatum. Welche Stelle wann steigt, steht in
 
 ---
 
+## Noch nicht ausgeliefert
+
+**Neu**
+
+- **Verbindung zur Tafel im WLAN:** Ist der Laptop im WLAN der Tafel
+  („Taurus-…"), steht in der Kopfzeile „Tafel verbunden" mit der
+  Helligkeit. Ein goldener Hinweis erscheint, wenn die Tafel ihr eigenes
+  Programm statt des Laptop-Bilds zeigt oder kein HDMI-Signal ankommt.
+  Ein Druck darauf öffnet die Einrichtung mit Helligkeitsregler und dem
+  Knopf „Tafel auf Laptop-Bild (HDMI) schalten". Am echten Gerät noch
+  nicht ausprobiert – der TB50 ist noch nicht da.
+
+---
+
 ## 1.7.0 – 20.10.2026 (Testfassung)
 
 Mehr Platz für Sponsoren und eine Diashow, die sich zusammenstellen

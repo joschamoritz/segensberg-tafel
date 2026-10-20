@@ -28,6 +28,7 @@ import {
   renderLibrary,
   renderStatus,
   renderTeamSettings,
+  wireBoardLink,
   wireSetupPanels,
   wireTeamSettings,
 } from './setup';
@@ -273,6 +274,7 @@ function main(): void {
   });
 
   wireSetupPanels();
+  wireBoardLink();
   wireInfoControls();
 
   wireClockSet();

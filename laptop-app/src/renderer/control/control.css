@@ -14,6 +14,8 @@
   --svh-wh: #fff;
   --svh-brd: #e0e0e4;
   --svh-loss: #dc2626;
+  /* Verbunden-Punkt der Tafel-Anzeige (DESIGN.md: Sieg-Grün) */
+  --svh-win: #16a34a;
   /* Warnung/Gelb-Rot -- siehe DESIGN.md: keine Hex-Werte in Komponenten */
   --svh-warn: #c2410c;
 
@@ -383,6 +385,7 @@ body[data-setup='sponsoren'] #setup-sponsoren {
 }
 
 .setup-panel > .display-picker,
+.setup-panel > .board-link-settings,
 .setup-panel > .remote-settings,
 .setup-panel > .appearance-settings,
 .setup-panel > .team-settings,
@@ -522,6 +525,114 @@ body[data-setup='sponsoren'] #setup-sponsoren {
   color: var(--svh-loss);
 }
 
+/* ═══ Verbindung zur Tafel (TB50) ═══ */
+
+/* Kurzanzeige in der Kopfzeile. Ein Punkt statt nur Text: Ob die Tafel
+   verbunden ist, soll man aus dem Augenwinkel sehen. Der Hinweis-Ton
+   (`warn`) nimmt dasselbe Gold wie die Statuszeile daneben. */
+.board-link-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border: 1px solid var(--svh-lt);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--svh-wh);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.board-link-pill:hover {
+  background: var(--svh-lt);
+}
+
+.board-link-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--svh-mut);
+}
+
+.board-link-pill[data-tone='ok'] .board-link-dot {
+  background: var(--svh-win);
+}
+
+.board-link-pill[data-tone='warn'] {
+  color: var(--svh-gold);
+  border-color: var(--svh-gold);
+  font-weight: 600;
+}
+
+.board-link-pill[data-tone='warn'] .board-link-dot {
+  background: var(--svh-gold);
+}
+
+.board-link-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--svh-brd);
+  font-size: 14px;
+}
+
+.board-link-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.board-link-state {
+  margin: 0;
+}
+
+.board-link-state[data-tone='warn'] {
+  color: var(--svh-warn);
+  font-weight: 600;
+}
+
+/* Zwei Spalten Beschriftung/Wert, damit die Werte untereinander fluchten. */
+.board-link-facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 2px 16px;
+  margin: 0;
+}
+
+.board-link-facts dt {
+  color: var(--svh-mut);
+}
+
+.board-link-facts dd {
+  margin: 0;
+}
+
+.board-link-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+#board-brightness {
+  width: 240px;
+}
+
+#board-brightness-value {
+  min-width: 3.5em;
+  font-variant-numeric: tabular-nums;
+}
+
+.board-link-access summary {
+  cursor: pointer;
+  color: var(--svh-mut);
+}
+
+.board-link-access .board-link-row {
+  margin-top: 8px;
+}
+
 /* ═══ Steuerung auf dem iPad (body.is-remote) ═══ */
 /* Dieselbe Seite wie am Laptop, ausgeliefert über das WLAN. Maßstab ist
    hier der Finger, nicht die Maus (DESIGN.md: 44 px). */
@@ -564,6 +675,8 @@ body.is-remote {
 /* Was am iPad keinen Sinn hat: Dateidialoge öffneten sich am Laptop, und
    die Fernsteuerung soll sich nicht selbst abschalten. */
 body.is-remote .remote-settings,
+body.is-remote .board-link-toggle,
+body.is-remote .board-link-access,
 body.is-remote #library-folder,
 body.is-remote #home-logo-pick,
 body.is-remote #away-logo-pick,

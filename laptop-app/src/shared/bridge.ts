@@ -164,6 +164,14 @@ export function createApi(t: Transport) {
     remoteSetEnabled: (enabled: boolean) => t.send(IPC.remoteSetEnabled, enabled),
     /** Neue PIN; verbundene Geräte müssen sie danach neu eingeben. */
     remoteNewPin: () => t.send(IPC.remoteNewPin),
+    /** Verbindung zum TB50, siehe `BoardLinkStatus` */
+    boardLinkSetEnabled: (enabled: boolean) => t.send(IPC.boardLinkSetEnabled, enabled),
+    /** Leeres Passwort heißt „unverändert". Leere Adresse: per Rundruf suchen. */
+    boardLinkSetConfig: (username: string, password: string, host: string) =>
+      t.send(IPC.boardLinkSetConfig, username, password, host),
+    /** Helligkeit in Prozent, nur bis zum nächsten Neustart der Tafel */
+    boardSetBrightness: (percent: number) => t.send(IPC.boardSetBrightness, percent),
+    boardSelectHdmi: () => t.send(IPC.boardSelectHdmi),
     } as const;
 }
 
