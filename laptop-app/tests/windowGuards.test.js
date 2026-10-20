@@ -70,3 +70,13 @@ test('Retro: kein Element setzt sich mit visibility: visible über das Ausblende
   const sichtbar = [...css.matchAll(/([^{}]+)\{[^}]*visibility:\s*visible[^}]*\}/g)].map((m) => m[1].trim());
   assert.deepEqual(sichtbar, ["body[data-theme='retro'][data-retro-overlay='slide'] .board-slides"]);
 });
+
+test('Sponsorenlogos stehen ohne weiße Kachel (Nutzerentscheidung 20./21.10.2026)', () => {
+  const css = fs
+    .readFileSync(path.join(__dirname, '..', 'dist', 'renderer', 'display', 'display.css'), 'utf-8')
+    .replace(/\/\*[\s\S]*?\*\//g, '');
+  const regeln = [...css.matchAll(/([^{}]+)\{([^}]*)\}/g)]
+    .filter((m) => /sponsor-(chip|tile)/.test(m[1]) && /background:\s*var\(--svh-wh\)/.test(m[2]))
+    .map((m) => m[1].trim());
+  assert.deepEqual(regeln, []);
+});

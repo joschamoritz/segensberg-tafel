@@ -1654,21 +1654,15 @@ body.goal-lead-change .goal-frame {
   padding: 4cqh 6cqw;
 }
 
-/* Weiße Logofassung (`…_weiß.png`): ohne Kachel direkt auf dem
-   Vereinsblau (Nutzerwunsch 20.10.2026). Bei den „präsentiert von"-Plätzen
-   bleibt die farbige Fassung in der weißen Kachel -- für hellen Grund
-   gezeichnet. Im Sponsoren-Fenster gibt es gar keine Kachel mehr. */
-.sponsor-chip.is-white {
-  background: transparent;
-}
-
 /* ═══════════════════════════════════════════
    „Präsentiert von"-Plätze (alle Designs)
    ═══════════════════════════════════════════ */
-/* Ein Logo in einer kleinen weißen Kachel -- dieselbe Begründung wie im
-   Sponsoren-Fenster: Sponsorenlogos sind für hellen Grund gezeichnet.
-   Höhe und Höchstbreite setzt jeder Platz selbst über --chip-h/--chip-w;
-   das Logo wird eingepasst, nie beschnitten. */
+/* Ein Logo ohne Kachel direkt auf dem Grund (Nutzerentscheidung
+   21.10.2026, wie im Sponsoren-Fenster seit 1.9.1). Bis dahin stand ein
+   farbiges Logo in einer kleinen weißen Kachel. Für farbige Logos mit
+   dunkler Schrift gibt es die weiße Fassung (`…_weiß.png`), die
+   bevorzugt wird. Höhe und Höchstbreite setzt jeder Platz selbst über
+   --chip-h/--chip-w; das Logo wird eingepasst, nie beschnitten. */
 
 .sponsor-chip {
   flex: 0 0 auto;
@@ -1678,8 +1672,6 @@ body.goal-lead-change .goal-frame {
   height: var(--chip-h, 14cqh);
   max-width: var(--chip-w, 28cqw);
   padding: 1cqh 1.4cqw;
-  background: var(--svh-wh);
-  border-radius: 0.6cqh;
 }
 
 .sponsor-chip-img {

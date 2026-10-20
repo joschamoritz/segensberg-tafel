@@ -183,12 +183,14 @@ damit sie beim Hochzählen nicht springen.
   **Weiße Logofassung** (`…_weiß.png`, `.is-white`): wird bevorzugt.
   Beim „präsentiert von"-Platz steht sie ohne Kachel, die farbige dort
   weiter in der kleinen weißen Kachel.
-- **„Präsentiert von"-Kachel** (`.sponsor-chip`, Display): Logo in
-  einer kleinen weißen Kachel, eingepasst; Höhe und Höchstbreite je
-  Platz über `--chip-h`/`--chip-w` (Begegnung und Aufstellung 13cqh,
+- **„Präsentiert von"-Platz** (`.sponsor-chip`, Display): Logo ohne
+  Kachel direkt auf dem Grund (seit 21.10.2026, wie im
+  Sponsoren-Fenster), eingepasst; Höhe und Höchstbreite je Platz über
+  `--chip-h`/`--chip-w` (Begegnung 13cqh, Einzel-Aufstellung 12cqh,
   Torjubel 15cqh, Ecken-Leiste 16cqh). Daneben „PRÄSENTIERT VON" in
   `--svh-gold`, 5,5cqh – außer in der Aufstellung, deren Kopfzeile schon
-  Wappen und Titel trägt. Ohne Logo verschwindet der ganze Platz samt
+  Wappen und Titel trägt. Eine weiße Fläche hinter Sponsorenlogos gibt
+  es nirgends mehr (`tests/windowGuards.test.js`). Ohne Logo verschwindet der ganze Platz samt
   Schriftzug. Der Tor-Sponsor steht nur beim eigenen Tor. Die
   Halbzeit-Folie ist das große Partner-Fenster mit Titel „HALBZEIT
   PRÄSENTIERT VON".
