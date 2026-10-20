@@ -109,3 +109,51 @@ test('fehlende Datei ist der Normalfall: keine Warnung, nichts beiseitegelegt', 
   assert.equal(configWarnings().length, vorher);
   assert.deepEqual(fs.readdirSync(userData), []);
 });
+
+// --------------------------------------------------------------------
+// Was aus dem Zustand nach teams.json wandert (Review 2026-10, T4)
+// --------------------------------------------------------------------
+
+const { MatchStateStore } = load('main/state');
+const { teamsConfigFromState } = load('main/persistence');
+
+test('teams.json: Stammdaten und Geräteeinstellungen überstehen den Neustart', () => {
+  aufräumen();
+  const store = new MatchStateStore();
+  store.applyLibraryTeam('away', 'FC Gegner', 'data:image/png;base64,AA', [], 'Trainer', 'color');
+  store.setTeamRetroName('away', 'GEGNER');
+  store.setHalfDuration(35);
+  store.setBoardSize({ width: 384, height: 224 });
+  store.setCompetition('03_Pokal.jpg');
+  store.setAppearance({ theme: 'retro', effects: store.getState().appearance.effects, retroColor: 'weiss' });
+
+  saveTeamsConfig(teamsConfigFromState(store.getState(), 'D:\Logos'));
+  const geladen = loadTeamsConfig();
+
+  const neu = new MatchStateStore(geladen);
+  assert.equal(neu.getState().away.name, 'FC Gegner');
+  assert.equal(neu.getState().away.logoDataUrl, 'data:image/png;base64,AA');
+  assert.equal(neu.getState().away.logoVariant, 'color');
+  assert.equal(neu.getState().away.retroName, 'GEGNER');
+  assert.equal(geladen.logoLibraryPath, 'D:\Logos');
+  assert.equal(geladen.halfDurationMin, 35);
+  assert.deepEqual(geladen.board, { width: 384, height: 224 });
+  assert.equal(geladen.competition, '03_Pokal.jpg');
+  assert.equal(geladen.appearance.theme, 'retro');
+});
+
+test('teams.json: jedes Feld einer Mannschaft ist bewusst gespeichert oder bewusst ausgenommen', () => {
+  // Ein neues Feld an TeamState muss hier eine Entscheidung bekommen --
+  // sonst ginge es beim nächsten Start still verloren.
+  const AUSGENOMMEN = {
+    score: 'gehört zum Spiel, steht in live-match.json',
+    coach: 'gehört zum Kader, steht in squads.json',
+  };
+  const store = new MatchStateStore();
+  store.applyLibraryTeam('home', 'SV Test', 'data:x', [], '', 'white');
+  store.setTeamRetroName('home', 'TEST');
+  const zustand = Object.keys(store.getState().home).sort();
+  const gespeichert = Object.keys(teamsConfigFromState(store.getState(), '').home);
+  const erwartet = zustand.filter((k) => !(k in AUSGENOMMEN)).sort();
+  assert.deepEqual(gespeichert.sort(), erwartet);
+});

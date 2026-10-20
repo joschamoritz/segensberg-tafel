@@ -155,6 +155,8 @@ export function createApi(t: Transport) {
     },
     /** Fernsteuerung im WLAN ein- oder ausschalten, siehe `RemoteStatus`. */
     remoteSetEnabled: (enabled: boolean) => t.send(IPC.remoteSetEnabled, enabled),
+    /** Neue PIN; verbundene Geräte müssen sie danach neu eingeben. */
+    remoteNewPin: () => t.send(IPC.remoteNewPin),
     } as const;
 }
 

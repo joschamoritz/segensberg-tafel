@@ -365,6 +365,9 @@ function wlanBrücke(t) {
   win.EventSource = class {
     static OPEN = 1;
     readyState = 1;
+    close() {
+      this.readyState = 2;
+    }
   };
   win.eval(fs.readFileSync(path.join(RENDERER, 'remote', 'remote.js'), 'utf8'));
   t.after(() => win.close());
@@ -394,4 +397,48 @@ test('ein zweiter Tipp auf "Tor" während der erste unterwegs ist, zählt nicht 
   assert.ok(!b.win.document.body.classList.contains('is-sending'));
   b.win.api.incrementScore('home', 1);
   assert.equal(tore(), 3, 'danach zählt ein neues Tor wieder');
+});
+
+// --------------------------------------------------------------------
+// Neue PIN und Adressen (Review 2026-10, N6)
+// --------------------------------------------------------------------
+
+test('virtuelle Netzwerkadapter erscheinen nicht unter den Adressen', () => {
+  const os = require('os');
+  const original = os.networkInterfaces;
+  os.networkInterfaces = () => ({
+    WLAN: [{ family: 'IPv4', internal: false, address: '192.168.178.23' }],
+    'vEthernet (WSL)': [{ family: 'IPv4', internal: false, address: '172.20.0.1' }],
+    'VirtualBox Host-Only Network': [{ family: 'IPv4', internal: false, address: '192.168.56.1' }],
+    'Loopback Pseudo-Interface 1': [{ family: 'IPv4', internal: true, address: '127.0.0.1' }],
+  });
+  try {
+    assert.deepEqual(load('main/remoteServer').localUrls(8028), ['http://192.168.178.23:8028']);
+  } finally {
+    os.networkInterfaces = original;
+  }
+});
+
+test('eine neue PIN vergibt nur der Laptop', () => {
+  assert.ok(REMOTE_DENIED.has(IPC.remoteNewPin));
+});
+
+test('abgelehnte PIN: das iPad fragt neu, statt in die Sperre zu laufen', async (t) => {
+  const b = wlanBrücke(t);
+  await warten(20);
+  b.antworten();
+  await warten(450);
+
+  let gefragt = 0;
+  b.win.prompt = () => {
+    gefragt += 1;
+    return null; // abgebrochen
+  };
+  // Ab jetzt lehnt der Laptop die alte PIN ab.
+  b.win.fetch = (url) => Promise.resolve({ status: 401, ok: false, url });
+
+  b.win.api.incrementScore('home', 1);
+  await warten(50);
+  assert.equal(gefragt, 1);
+  assert.match(b.win.document.getElementById('remote-offline').textContent, /PIN/);
 });

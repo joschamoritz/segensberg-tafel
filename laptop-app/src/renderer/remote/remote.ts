@@ -63,10 +63,13 @@ async function post(path: string, channel: string, args: unknown[]): Promise<Res
 
   if (!response) {
     setOffline(true);
-  } else if (response.status === 401 || response.status === 429) {
+  } else if (response.status === 401) {
     // Bisher blieb eine Ablehnung stumm -- man tippte auf Knöpfe, die
-    // nichts taten, und suchte den Fehler an der Tafel.
-    setOffline(true, 'Der Laptop nimmt keine Befehle mehr an (PIN) – Seite neu laden.');
+    // nichts taten, und suchte den Fehler an der Tafel. Meist wurde am
+    // Laptop eine neue PIN vergeben.
+    void reauthenticate();
+  } else if (response.status === 429) {
+    setOffline(true, 'Zu viele falsche PIN-Versuche – bitte ein paar Minuten warten.');
   } else if (source?.readyState === EventSource.OPEN) {
     // Der Hinweis wurde bisher nur beim Wiederaufbau der Ereignis-
     // verbindung entfernt. Blieb die bestehen, stand er nach einem einzigen
@@ -137,6 +140,32 @@ function setOffline(
   banner.hidden = !offline;
 }
 
+/**
+ * Die PIN gilt nicht mehr (am Laptop wurde eine neue vergeben): Verbindung
+ * schließen und neu fragen. Ohne das versuchte der Browser die
+ * Ereignisverbindung alle paar Sekunden mit der alten PIN neu -- und lief
+ * nach zehn Versuchen in die Sperre, bevor jemand die neue eingeben konnte.
+ */
+let reauthenticating = false;
+
+async function reauthenticate(): Promise<void> {
+  if (reauthenticating) return;
+  reauthenticating = true;
+  source?.close();
+  source = null;
+  setOffline(true, 'Die PIN hat sich geändert – bitte die neue eingeben.');
+  pin = '';
+  const ok = await ensurePin();
+  reauthenticating = false;
+  if (!ok) {
+    setOffline(true, 'Ohne PIN keine Verbindung – Seite neu laden, um sie einzugeben.');
+    return;
+  }
+  connect();
+  window.api.requestState();
+  window.api.requestStatus();
+}
+
 function connect(): void {
   const events = new EventSource(`/api/events?pin=${encodeURIComponent(pin)}`);
   source = events;
@@ -155,6 +184,13 @@ function connect(): void {
   events.onerror = () => {
     wasOffline = true;
     setOffline(true);
+    // Abgelehnte PIN oder nur ein Funkloch? Ein EventSource verrät den
+    // Statuscode nicht, die Prüfadresse schon.
+    void fetch('/api/check', { headers: { 'x-pin': pin } })
+      .then((answer) => {
+        if (answer.status === 401 && source === events) void reauthenticate();
+      })
+      .catch(() => undefined);
   };
   events.onmessage = (message) => {
     const { channel, args } = JSON.parse(message.data) as { channel: string; args: unknown[] };

@@ -42,11 +42,15 @@ import { detectLogoVariant, readImageAsDataUrl } from './images';
 import {
   clearLiveMatch,
   isResumable,
-  isWorthSaving,
   loadLiveMatch,
-  saveLiveMatch,
+  syncLiveMatch,
 } from './liveMatch';
-import { loadTeamsConfig, resolveDefaultLibraryPath, saveTeamsConfig } from './persistence';
+import {
+  loadTeamsConfig,
+  resolveDefaultLibraryPath,
+  saveTeamsConfig,
+  teamsConfigFromState,
+} from './persistence';
 import {
   isCardColor,
   isEventId,
@@ -181,7 +185,7 @@ function currentStatus(): AppStatus {
     previewMode: target === null,
     displayOpen: displayWindow !== null && !displayWindow.isDestroyed(),
     remote: remoteStatus(),
-    warnings: configWarnings(),
+    warnings: [...configWarnings(), ...runtimeWarnings],
   };
 }
 
@@ -338,9 +342,7 @@ function flushLiveMatchSave(): void {
     liveSaveTimer = null;
   }
   if (!store) return;
-  const state = store.getState();
-  if (!isWorthSaving(state)) return;
-  saveLiveMatch(state);
+  syncLiveMatch(store.getState());
 }
 
 /** Verwirft die Sicherung samt vorgemerktem Schreibvorgang. */
@@ -354,28 +356,7 @@ function discardLiveMatch(): void {
 
 /** Persistiert nur die Team-Stammdaten (nicht Spielstand/Uhr), siehe persistence.ts */
 function persistTeams(): void {
-  const state = store.getState();
-  saveTeamsConfig({
-    home: {
-      name: state.home.name,
-      shortName: state.home.shortName,
-      logoDataUrl: state.home.logoDataUrl,
-      logoVariant: state.home.logoVariant,
-      retroName: state.home.retroName,
-    },
-    away: {
-      name: state.away.name,
-      shortName: state.away.shortName,
-      logoDataUrl: state.away.logoDataUrl,
-      logoVariant: state.away.logoVariant,
-      retroName: state.away.retroName,
-    },
-    logoLibraryPath: library.getRootPath(),
-    halfDurationMin: store.getState().halfDurationMin,
-    board: store.getState().board,
-    appearance: store.getState().appearance,
-    competition: store.getState().competition,
-  });
+  saveTeamsConfig(teamsConfigFromState(store.getState(), library.getRootPath()));
 }
 
 /** Persistiert die redaktionellen Texte, siehe content.ts */
@@ -489,6 +470,13 @@ async function pickLogo(team: TeamId): Promise<void> {
  */
 let lastTargetBounds = '';
 
+/** Zeitpunkte der letzten automatischen Neustarts des Anzeigefensters. */
+let displayRestarts: number[] = [];
+const DISPLAY_RESTART_LIMIT = 3;
+
+/** Hinweise aus dem Betrieb, die wie die Konfigurationshinweise ins Banner gehen. */
+const runtimeWarnings: string[] = [];
+
 function boundsKey(display: Display | null): string {
   if (!display) return '';
   const { x, y, width, height } = display.bounds;
@@ -523,8 +511,24 @@ function openDisplayWindow(displayId: number | null): void {
 
   // Stirbt der Renderer des Anzeigefensters (Grafiktreiber, Speicher),
   // bliebe sonst eine schwarze Tafel stehen, ohne dass es jemand merkt.
+  // Höchstens DISPLAY_RESTART_LIMIT Mal pro Minute: Stürzt er immer wieder
+  // ab, liefe das Neuöffnen sonst ohne Pause im Kreis (Review N3).
   win.webContents.on('render-process-gone', () => {
-    if (displayWindow === win) openDisplayWindow(selectedDisplayId);
+    if (displayWindow !== win) return;
+    const now = Date.now();
+    displayRestarts = displayRestarts.filter((t) => now - t < 60_000);
+    if (displayRestarts.length >= DISPLAY_RESTART_LIMIT) {
+      runtimeWarnings.push(
+        'Das Anzeigefenster ist mehrfach hintereinander abgestürzt und wurde nicht erneut geöffnet. ' +
+          'Über „Anzeigefenster neu öffnen“ versuchen, sonst die App neu starten.'
+      );
+      displayWindow = null;
+      keepAwake(false);
+      broadcastStatus();
+      return;
+    }
+    displayRestarts.push(now);
+    openDisplayWindow(selectedDisplayId);
   });
 
   broadcastStatus();
@@ -784,6 +788,18 @@ app.whenReady().then(() => {
   onIpc(IPC.remoteSetEnabled, (_event, enabled: unknown) => {
     void setRemoteEnabled(enabled === true);
   });
+  // Neue PIN -- etwa wenn sie in falsche Hände geraten ist. Der Server
+  // startet dafür neu; verbundene Geräte fragen beim nächsten Befehl
+  // wieder nach der PIN (Review N6).
+  onIpc(IPC.remoteNewPin, () => {
+    remoteConfig = { ...remoteConfig, pin: generatePin() };
+    saveRemoteConfig();
+    if (remote) {
+      void stopRemote().then(startRemote);
+    } else {
+      broadcastStatus();
+    }
+  });
   // Tormusik von der Fernsteuerung: läuft am Laptop, also nur an dessen
   // Steuerungsfenster -- nicht zurück an die Geräte.
   onIpc(IPC.soundCommand, (_event, command: unknown) => {
@@ -813,7 +829,12 @@ app.whenReady().then(() => {
     store.setClock(elapsedMs);
     flushLiveMatchSave();
   });
-  onIpc(IPC.selectDisplay, (_event, id: number | null) => openDisplayWindow(id));
+  onIpc(IPC.selectDisplay, (_event, id: unknown) => {
+    // null heißt "Vorschau"; eine unbekannte Id landet über
+    // findDisplayById() ebenfalls dort.
+    if (id !== null && (typeof id !== 'number' || !Number.isFinite(id))) return;
+    openDisplayWindow(id);
+  });
 
   onIpc(IPC.requestLibrary, () => {
     // Bei jeder Anfrage neu einlesen -- so tauchen zwischenzeitlich
@@ -824,7 +845,8 @@ app.whenReady().then(() => {
   onIpc(IPC.libraryChooseFolder, () => {
     void chooseLibraryFolder();
   });
-  onIpc(IPC.libraryPick, (_event, team: TeamId, id: string) => {
+  onIpc(IPC.libraryPick, (_event, team: unknown, id: unknown) => {
+    if (!isTeamId(team) || typeof id !== 'string') return;
     const name = library.getName(id);
     if (!name) return;
     const stored = squads.get(name);
@@ -840,17 +862,23 @@ app.whenReady().then(() => {
     persistTeams();
   });
 
-  onIpc(IPC.squadPickFile, (_event, team: TeamId) => {
+  onIpc(IPC.squadPickFile, (_event, team: unknown) => {
+    if (!isTeamId(team)) return;
     void pickSquadFile(team);
   });
-  onIpc(IPC.squadLoadByName, (_event, team: TeamId, name: string) => {
+  onIpc(IPC.squadLoadByName, (_event, team: unknown, rawName: unknown) => {
+    // Nur gespeicherte Kader -- die Auswahl bietet auch nichts anderes an.
+    if (!isTeamId(team) || typeof rawName !== 'string' || !squads.listNames().includes(rawName)) return;
+    const name = rawName;
     const stored = squads.get(name);
     // Name der Mannschaft mitziehen -- sonst stünde auf der Tafel die
     // 1. Mannschaft, während der Kader der U19 geladen ist.
     store.applyLibraryTeam(team, name, store.getState()[team].logoDataUrl, stored.players, stored.coach);
     persistTeams();
   });
-  onIpc(IPC.showLineup, (_event, team: TeamId) => store.showLineup(team));
+  onIpc(IPC.showLineup, (_event, team: unknown) => {
+    if (isTeamId(team)) store.showLineup(team);
+  });
   onIpc(IPC.hideLineup, () => store.hideLineup());
   onIpc(IPC.showScorer, (_event, eventId: unknown) => {
     if (!isEventId(eventId)) return;
@@ -944,10 +972,14 @@ app.whenReady().then(() => {
     persistContent();
   });
 
-  onIpc(IPC.playerPickPhoto, (_event, team: TeamId, playerId: string) => {
+  onIpc(IPC.playerPickPhoto, (_event, team: unknown, rawId: unknown) => {
+    const playerId = sanitizeOptionalId(rawId);
+    if (!isTeamId(team) || !playerId) return;
     void pickPlayerPhoto(team, playerId);
   });
-  onIpc(IPC.playerClearPhoto, (_event, team: TeamId, playerId: string) => {
+  onIpc(IPC.playerClearPhoto, (_event, team: unknown, rawId: unknown) => {
+    const playerId = sanitizeOptionalId(rawId);
+    if (!isTeamId(team) || !playerId) return;
     store.setPlayerPhoto(team, playerId, undefined);
     persistSquad(team);
   });
@@ -958,7 +990,8 @@ app.whenReady().then(() => {
     persistSquad(team);
   });
 
-  onIpc(IPC.squadAddPlayer, (_event, team: TeamId) => {
+  onIpc(IPC.squadAddPlayer, (_event, team: unknown) => {
+    if (!isTeamId(team)) return;
     const player: Player = {
       id: randomUUID(),
       number: null,
@@ -1001,7 +1034,9 @@ app.whenReady().then(() => {
       updateSquad(team, [...existing, ...imported]);
     }
   );
-  onIpc(IPC.squadRemovePlayer, (_event, team: TeamId, playerId: string) => {
+  onIpc(IPC.squadRemovePlayer, (_event, team: unknown, rawId: unknown) => {
+    const playerId = sanitizeOptionalId(rawId);
+    if (!isTeamId(team) || !playerId) return;
     updateSquad(
       team,
       store.getState().squads[team].filter((p) => p.id !== playerId)
@@ -1105,10 +1140,12 @@ app.whenReady().then(() => {
     store.setTeamRetroName(team, sanitizeText(retroName, MAX_RETRO_NAME_LENGTH));
     persistTeams();
   });
-  onIpc(IPC.teamPickLogo, (_event, team: TeamId) => {
+  onIpc(IPC.teamPickLogo, (_event, team: unknown) => {
+    if (!isTeamId(team)) return;
     void pickLogo(team);
   });
-  onIpc(IPC.teamClearLogo, (_event, team: TeamId) => {
+  onIpc(IPC.teamClearLogo, (_event, team: unknown) => {
+    if (!isTeamId(team)) return;
     store.setTeamLogo(team, undefined);
     persistTeams();
   });

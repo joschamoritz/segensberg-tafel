@@ -199,3 +199,16 @@ test('die Sicherung bleibt auch mit den neuen Feldern klein', () => {
   store.setAttendance(312);
   assert.ok(JSON.stringify(live.toSnapshot(store.getState())).length < 2000);
 });
+
+test('nach Rücknahme bis vor den Anpfiff verschwindet die Sicherung (Review N5)', () => {
+  const store = new MatchStateStore();
+  store.kickoff();
+  store.stopClock();
+  live.syncLiveMatch(store.getState());
+  assert.notEqual(live.loadLiveMatch(), null, 'das laufende Spiel ist gesichert');
+
+  store.revertPhase();
+  assert.equal(store.getState().phase, 'pre-match');
+  live.syncLiveMatch(store.getState());
+  assert.equal(live.loadLiveMatch(), null, 'sonst böte der nächste Start ein zurückgenommenes Spiel an');
+});

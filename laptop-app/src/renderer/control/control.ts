@@ -1,4 +1,4 @@
-import { parseLineup, ParsedPlayer } from '../../shared/lineupParser';
+import { parseLineup } from '../../shared/lineupParser';
 import { controlPhaseLabel, revertTargetLabel } from '../../shared/phaseLabels';
 import { deriveRetroName } from '../../shared/retroMatrix';
 import { lineupNow } from '../../shared/substitutions';
@@ -307,7 +307,7 @@ function syncSquadRows(team: TeamId, players: Player[]): void {
     list.appendChild(row.element);
   }
 
-  applySquadOrder(team, list, state, sorted.map((p) => p.id));
+  applySquadOrder(list, state, sorted.map((p) => p.id));
 }
 
 /**
@@ -318,7 +318,6 @@ function syncSquadRows(team: TeamId, players: Player[]): void {
  * wird -- sonst spränge der Cursor beim Eintragen einer Nummer weg.
  */
 function applySquadOrder(
-  team: TeamId,
   list: HTMLElement,
   state: SquadList,
   order: string[]
@@ -348,7 +347,7 @@ function initSquadList(team: TeamId, list: HTMLElement): SquadList {
     const next = (event as FocusEvent).relatedTarget;
     if (next instanceof Node && list.contains(next)) return;
     if (!state.pendingOrder) return;
-    applySquadOrder(team, list, state, state.pendingOrder);
+    applySquadOrder(list, state, state.pendingOrder);
   });
 
   return state;
@@ -993,17 +992,6 @@ function renderSoundControls(state: MatchState): void {
 }
 
 /**
- * Diashow-Knöpfe und Ankündigungen.
- *
- * Die Schau läuft in jeder Phase außer dem laufenden Spiel -- dort
- * gehört der Spielstand auf die Tafel. Nach dem Abpfiff läuft sie mit
- * (Nutzerwunsch 20.08.2026): Sie startet ohnehin nur auf Knopfdruck und
- * verdrängt den Endstand also nur, wenn jemand das will. Findet sich
- * kein Motiv, sagt der Hinweis deutlich WO
- * gesucht wurde: Bei der Logo-Bibliothek war ein wortlos leeres Ergebnis
- * der schlechteste Fall.
- */
-/**
  * Design-Auswahl und Effektschalter. Die Schalter wirken nur im
  * Flutlicht-Design und sind im klassischen deshalb gesperrt.
  */
@@ -1026,6 +1014,17 @@ function renderAppearanceControls(state: MatchState): void {
   }
 }
 
+/**
+ * Diashow-Knöpfe und Ankündigungen.
+ *
+ * Die Schau läuft in jeder Phase außer dem laufenden Spiel -- dort
+ * gehört der Spielstand auf die Tafel. Nach dem Abpfiff läuft sie mit
+ * (Nutzerwunsch 20.08.2026): Sie startet ohnehin nur auf Knopfdruck und
+ * verdrängt den Endstand also nur, wenn jemand das will. Findet sich
+ * kein Motiv, sagt der Hinweis deutlich WO
+ * gesucht wurde: Bei der Logo-Bibliothek war ein wortlos leeres Ergebnis
+ * der schlechteste Fall.
+ */
 function renderSlideshowControls(state: MatchState): void {
   const available = slideshowAvailable(state.phase);
   const running = state.slideshowRequest !== null;
@@ -1360,6 +1359,11 @@ function main(): void {
 
   const remoteToggle = document.getElementById('remote-enabled') as HTMLInputElement;
   remoteToggle.addEventListener('change', () => window.api.remoteSetEnabled(remoteToggle.checked));
+  document.getElementById('remote-new-pin')!.addEventListener('click', () => {
+    if (confirm('Neue PIN vergeben? Verbundene Geräte müssen sie danach neu eingeben.')) {
+      window.api.remoteNewPin();
+    }
+  });
   window.api.onLibraryUpdated(renderLibrary);
   window.api.requestState();
   window.api.requestStatus();

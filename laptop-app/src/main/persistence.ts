@@ -8,6 +8,8 @@ import {
   DEFAULT_BOARD_SIZE,
   DEFAULT_HALF_DURATION_MIN,
   LogoVariant,
+  MatchState,
+  TeamState,
 } from '../shared/types';
 import { readJsonFile } from './configFile';
 
@@ -35,6 +37,31 @@ export interface TeamsConfig {
   appearance?: DisplayAppearance;
   /** Gewählter Wettbewerb, siehe `MatchState.competition`. */
   competition?: string | null;
+}
+
+/**
+ * Was aus dem Zustand nach `teams.json` wandert: Stammdaten und
+ * Geräteeinstellungen, nichts vom laufenden Spiel. Der Trainer gehört zum
+ * Kader und steht in `squads.json`. Hier statt in `main.ts`, damit ein
+ * vergessenes Feld im Test auffällt (Review 2026-10, T4).
+ */
+export function teamsConfigFromState(state: MatchState, logoLibraryPath: string): TeamsConfig {
+  const team = (t: TeamState): PersistedTeamInfo => ({
+    name: t.name,
+    shortName: t.shortName,
+    logoDataUrl: t.logoDataUrl,
+    logoVariant: t.logoVariant,
+    retroName: t.retroName,
+  });
+  return {
+    home: team(state.home),
+    away: team(state.away),
+    logoLibraryPath,
+    halfDurationMin: state.halfDurationMin,
+    board: state.board,
+    appearance: state.appearance,
+    competition: state.competition,
+  };
 }
 
 /**

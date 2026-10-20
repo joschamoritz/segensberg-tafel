@@ -1095,4 +1095,5 @@ export const IPC = {
   /** Tormusik von der Fernsteuerung am Laptop abspielen, siehe `SoundCommand` */
   soundCommand: 'sound:command',
   remoteSetEnabled: 'remote:set-enabled',
+  remoteNewPin: 'remote:new-pin',
 } as const;

@@ -1,4 +1,4 @@
-import { createHash } from 'crypto';
+import { createHash, randomInt } from 'crypto';
 import * as fs from 'fs';
 import * as http from 'http';
 import * as os from 'os';
@@ -61,7 +61,8 @@ export interface RemoteServerOptions {
  * Nur am Laptop erlaubt. Die Dateidialoge gingen am Laptop auf, während
  * jemand am iPad auf eine Antwort wartet. Die Tormusik wird nicht als
  * Datei übertragen -- sie läuft am Laptop (`IPC.soundCommand`). Und die
- * Fernsteuerung soll sich nicht selbst abschalten können.
+ * Fernsteuerung soll sich nicht selbst abschalten oder eine neue PIN
+ * vergeben können.
  */
 export const REMOTE_DENIED: ReadonlySet<string> = new Set([
   IPC.teamPickLogo,
@@ -70,6 +71,7 @@ export const REMOTE_DENIED: ReadonlySet<string> = new Set([
   IPC.squadPickFile,
   IPC.soundRead,
   IPC.remoteSetEnabled,
+  IPC.remoteNewPin,
 ]);
 
 /** Größte angenommene Anfrage -- ein ganzer Kader passt locker hinein. */
@@ -445,10 +447,16 @@ function readBody(req: http.IncomingMessage): Promise<string> {
   });
 }
 
+const VIRTUAL_ADAPTER = /vEthernet|Hyper-V|WSL|VirtualBox|VMware|vbox|Loopback|TAP-|WireGuard|OpenVPN|Tailscale|ZeroTier/i;
+
 /** Adressen des Laptops im lokalen Netz, z. B. `http://192.168.178.23:8028`. */
 export function localUrls(port: number): string[] {
   const urls: string[] = [];
-  for (const entries of Object.values(os.networkInterfaces())) {
+  for (const [name, entries] of Object.entries(os.networkInterfaces())) {
+    // Virtuelle Adapter (Hyper-V, WSL, VirtualBox, VMware, VPN) erreicht
+    // das iPad nicht. Am Laptop standen sonst mehrere Adressen, von denen
+    // nur eine funktionierte (Review N6).
+    if (VIRTUAL_ADAPTER.test(name)) continue;
     for (const entry of entries ?? []) {
       if (entry.family === 'IPv4' && !entry.internal) urls.push(`http://${entry.address}:${port}`);
     }
@@ -457,6 +465,6 @@ export function localUrls(port: number): string[] {
 }
 
 /** Sechsstellige PIN. Nicht kryptografisch wertvoll, aber im WLAN nicht zu raten. */
-export function generatePin(random: () => number = Math.random): string {
+export function generatePin(random: () => number = () => randomInt(1_000_000) / 1_000_000): string {
   return String(Math.floor(random() * 1_000_000)).padStart(6, '0');
 }

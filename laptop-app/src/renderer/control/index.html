@@ -113,11 +113,14 @@
     </label>
     <div class="remote-details" id="remote-details" hidden>
       <p>Im Browser des iPads öffnen: <strong id="remote-urls"></strong></p>
-      <p>PIN: <strong class="remote-pin" id="remote-pin"></strong> · <span id="remote-clients"></span></p>
+      <p>PIN: <strong class="remote-pin" id="remote-pin"></strong> · <span id="remote-clients"></span>
+        <button id="remote-new-pin" class="btn btn-small">Neue PIN</button></p>
       <p class="remote-hint">
         iPad und Laptop müssen im selben WLAN sein. Beim ersten Einschalten
         fragt Windows nach der Firewall – „Private Netzwerke" erlauben.
         Auf dem iPad über „Teilen → Zum Home-Bildschirm" ein Symbol anlegen.
+        Die PIN geht unverschlüsselt durchs WLAN: Ist das Vereins-WLAN offen
+        (ohne Kennwort), kann sie mitgelesen werden.
       </p>
     </div>
     <p class="remote-error" id="remote-error" hidden></p>

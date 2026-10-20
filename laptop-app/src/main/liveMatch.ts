@@ -87,6 +87,18 @@ export function saveLiveMatch(state: MatchState): void {
   }
 }
 
+/**
+ * Schreibt die Sicherung -- oder entfernt sie, wenn es nichts mehr zu
+ * retten gibt. Das ist etwa nach "Phase zurück" bis vor den Anpfiff der
+ * Fall: Eine ältere Sicherung mit `phase: 'live'` bliebe sonst liegen, und
+ * der nächste Start böte ein Spiel zum Fortsetzen an, das bewusst
+ * zurückgenommen wurde (Review 2026-10, N5).
+ */
+export function syncLiveMatch(state: MatchState): void {
+  if (isWorthSaving(state)) saveLiveMatch(state);
+  else clearLiveMatch();
+}
+
 export function clearLiveMatch(): void {
   try {
     fs.rmSync(filePath(), { force: true });
