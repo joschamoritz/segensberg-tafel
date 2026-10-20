@@ -75,6 +75,11 @@ body {
   height: 100%;
   overflow: hidden;
   background: var(--stage-void);
+  /* Die Tafel ist ein ERWEITERTER Bildschirm: Wer die Maus über den Rand
+     des Laptops hinausschiebt, zeigte sonst den Windows-Zeiger auf der
+     Wand -- dort ein Sechstel der Tafelhöhe groß (Review 2026-10, W1).
+     Bedient wird diese Fläche nie, auch in der Vorschau nicht. */
+  cursor: none;
 }
 
 /* Die Bühne zentriert im Fenster. Was daneben liegt, bleibt schwarz. */

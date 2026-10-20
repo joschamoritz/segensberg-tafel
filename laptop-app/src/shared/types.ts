@@ -904,6 +904,11 @@ export interface AppStatus {
   displayOpen: boolean;
   /** Fernsteuerung im WLAN, siehe `RemoteStatus` */
   remote: RemoteStatus;
+  /**
+   * Beschädigte Konfigurationsdateien, die beim Start beiseitegelegt
+   * wurden (siehe `main/configFile.ts`). Meist leer.
+   */
+  warnings: string[];
 }
 
 /**

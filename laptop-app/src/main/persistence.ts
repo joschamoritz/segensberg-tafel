@@ -9,6 +9,7 @@ import {
   DEFAULT_HALF_DURATION_MIN,
   LogoVariant,
 } from '../shared/types';
+import { readJsonFile } from './configFile';
 
 export interface PersistedTeamInfo {
   name: string;
@@ -133,21 +134,18 @@ function configPath(): string {
  */
 export function loadTeamsConfig(): TeamsConfig {
   const fallback = defaults();
-  try {
-    const raw = fs.readFileSync(configPath(), 'utf-8');
-    const parsed = JSON.parse(raw) as Partial<TeamsConfig>;
-    return {
-      home: { ...fallback.home, ...parsed.home },
-      away: { ...fallback.away, ...parsed.away },
-      logoLibraryPath: parsed.logoLibraryPath ?? fallback.logoLibraryPath,
-      halfDurationMin: parsed.halfDurationMin ?? fallback.halfDurationMin,
-      board: parsed.board ?? fallback.board,
-      appearance: parsed.appearance ?? fallback.appearance,
-      competition: parsed.competition ?? null,
-    };
-  } catch {
-    return fallback;
-  }
+  const raw = readJsonFile(configPath());
+  if (!raw || typeof raw !== 'object') return fallback;
+  const parsed = raw as Partial<TeamsConfig>;
+  return {
+    home: { ...fallback.home, ...parsed.home },
+    away: { ...fallback.away, ...parsed.away },
+    logoLibraryPath: parsed.logoLibraryPath ?? fallback.logoLibraryPath,
+    halfDurationMin: parsed.halfDurationMin ?? fallback.halfDurationMin,
+    board: parsed.board ?? fallback.board,
+    appearance: parsed.appearance ?? fallback.appearance,
+    competition: parsed.competition ?? null,
+  };
 }
 
 /**

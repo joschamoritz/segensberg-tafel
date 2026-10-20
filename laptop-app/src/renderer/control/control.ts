@@ -16,6 +16,7 @@ import {
   FlutlichtEffects,
   formatClock,
   formatEventMinute,
+  GoalEvent,
   MatchState,
   parseClockInput,
   Player,
@@ -742,6 +743,16 @@ function renderPhaseControls(state: MatchState): void {
     btn.classList.toggle('btn-next', next);
   }
 
+  // "Neues Spiel" ist der einzige Schritt ohne Rückweg: Spielstand,
+  // Chronik und Absturzsicherung sind danach weg. Im laufenden Spiel und in
+  // der Pause stand er als roter Knopf direkt neben "Abpfiff"
+  // (Nutzerentscheidung 20.10.2026, Review W8). Für einen Abbruch zuerst
+  // abpfeifen.
+  const reset = document.getElementById('match-reset') as HTMLButtonElement;
+  const matchRunning = isLive || state.phase === 'half-time';
+  reset.disabled = matchRunning;
+  reset.title = matchRunning ? 'Erst nach dem Abpfiff -- für einen Abbruch zuerst „Abpfiff“.' : '';
+
   // Rückfallebene für versehentliche Phasenwechsel
   const revert = document.getElementById('phase-revert') as HTMLButtonElement;
   const target = revertTargetLabel(state.phase, state.half);
@@ -1129,7 +1140,19 @@ function renderState(state: MatchState): void {
   renderTeamSettings('away', state);
 }
 
+/** Schon im Banner gezeigte Hinweise -- der Status kommt bei jedem
+    Bildschirmereignis erneut. */
+const shownWarnings = new Set<string>();
+
 function renderStatus(status: AppStatus): void {
+  // Beschädigte Konfigurationsdatei: gehört gut sichtbar ins rote Banner,
+  // sonst fiele es erst beim nächsten Spiel an den fehlenden Kadern auf.
+  for (const warning of status.warnings ?? []) {
+    if (shownWarnings.has(warning)) continue;
+    shownWarnings.add(warning);
+    showError(`Hinweis: ${warning}`);
+  }
+
   const banner = document.getElementById('display-status')!;
   if (!status.displayOpen) {
     // Das Anzeigefenster steht randlos und ohne Taskleisteneintrag auf dem
@@ -1337,6 +1360,7 @@ function main(): void {
     btn.addEventListener('click', () => {
       const team = btn.dataset.team as TeamId;
       const delta = Number(btn.dataset.delta);
+      if (delta < 0 && !confirmGoalRemoval(team)) return;
       window.api.incrementScore(team, delta);
     });
   });
@@ -1367,7 +1391,10 @@ function main(): void {
 
   document
     .getElementById('phase-kickoff')!
-    .addEventListener('click', confirmPhase('Anpfiff? Die Uhr startet bei 00:00.', () => window.api.phaseKickoff()));
+    .addEventListener('click', () => {
+      const frage = lastRenderedState ? kickoffQuestion(lastRenderedState) : 'Anpfiff?';
+      if (confirm(frage)) window.api.phaseKickoff();
+    });
   document
     .getElementById('phase-halftime')!
     .addEventListener('click', confirmPhase('Halbzeitpfiff? Die Uhr wird angehalten.', () => window.api.phaseHalfTime()));
@@ -1438,6 +1465,53 @@ function main(): void {
 
     wireLineupPaste(team);
   }
+}
+
+/**
+ * "−" am Spielstand nimmt das jüngste Tor dieser Mannschaft zurück -- samt
+ * Minute und Torschütze. Ist ein Schütze schon eingetragen, wäre ein
+ * Fehlklick nicht mehr mit "+" zu beheben: Das neue Tor stünde zur
+ * aktuellen Minute und ohne Namen da. Dann wird nachgefragt
+ * (Nutzerentscheidung 20.10.2026, Review W7); ohne Schützen bleibt "−" der
+ * schnelle Gegenknopf zu "+".
+ */
+function confirmGoalRemoval(team: TeamId): boolean {
+  const state = lastRenderedState;
+  if (!state) return true;
+  const goal = [...state.events]
+    .reverse()
+    .find((e): e is GoalEvent => e.type === 'goal' && e.team === team);
+  if (!goal || !goal.scorerId) return true;
+  const scorer = state.squads[team].find((p) => p.id === goal.scorerId);
+  const name = scorer ? playerLabel(scorer) : 'eingetragenem Torschützen';
+  return confirm(
+    `Tor von ${name} (${formatEventMinute(goal)}) zurücknehmen? Torschütze und Minute gehen dabei verloren.`
+  );
+}
+
+/**
+ * Rückfrage zum Anpfiff. Stehen schon Tore, Einträge oder Ecken da -- meist
+ * vom Ausprobieren beim Aufbau --, nennt sie sie ausdrücklich: `kickoff()`
+ * setzt nur die Uhr zurück, die Reste gingen sonst ins Spiel mit
+ * (Review W6).
+ */
+function kickoffQuestion(state: MatchState): string {
+  const reste: string[] = [];
+  if (state.home.score > 0 || state.away.score > 0) {
+    reste.push(`Spielstand ${state.home.score}:${state.away.score}`);
+  }
+  if (state.events.length > 0) {
+    reste.push(state.events.length === 1 ? '1 Eintrag im Spielverlauf' : `${state.events.length} Einträge im Spielverlauf`);
+  }
+  if (state.corners.home > 0 || state.corners.away > 0) {
+    reste.push(`Ecken ${state.corners.home}:${state.corners.away}`);
+  }
+  if (reste.length === 0) return 'Anpfiff? Die Uhr startet bei 00:00.';
+  return (
+    `Achtung, es steht schon etwas da: ${reste.join(', ')}.\n\n` +
+    'Das geht so ins Spiel mit. Zum Leeren abbrechen und „Neues Spiel“ wählen.\n\n' +
+    'Trotzdem anpfeifen?'
+  );
 }
 
 /**

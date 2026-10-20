@@ -176,3 +176,64 @@ test('Spielzeit-Eingabe weist Unsinn ab', () => {
     assert.equal(parseClockInput(eingabe), null, `"${eingabe}" hätte null ergeben müssen`);
   }
 });
+
+/**
+ * Zeitquelle zum Weiterdrehen von Hand. Die Uhr fragt sie bei jedem Tick
+ * und beim Stoppen ab -- so lässt sich eine blockierte Ereignisschleife
+ * nachstellen, ohne wirklich zu warten.
+ */
+function handuhr() {
+  let jetzt = 1000;
+  return {
+    now: () => jetzt,
+    vor: (ms) => {
+      jetzt += ms;
+    },
+  };
+}
+
+test('blockierte Ereignisschleife: die Zeit geht nicht verloren (Review W2)', () => {
+  // Bis 1.6.0 zählte ein Tick höchstens 1 s. Stand eine Rückfrage des
+  // Hauptprozesses 20 s offen, ging die Uhr danach 19 s nach.
+  const zeit = handuhr();
+  const store = new MatchStateStore(undefined, zeit.now);
+  store.startClock();
+  zeit.vor(20_000);
+  store.stopClock();
+  assert.equal(store.getState().clock.elapsedMs, 20_000);
+});
+
+test('Standby zählt nicht auf die Spielzeit', () => {
+  const zeit = handuhr();
+  const store = new MatchStateStore(undefined, zeit.now);
+  store.startClock();
+  zeit.vor(5_000);
+  store.suspendClock();
+  zeit.vor(60 * MIN);
+  store.resumeClock();
+  zeit.vor(1_000);
+  store.stopClock();
+  assert.equal(store.getState().clock.elapsedMs, 6_000);
+});
+
+test('ohne Standby-Meldung fängt die Schwelle eine sehr lange Lücke ab', () => {
+  const zeit = handuhr();
+  const store = new MatchStateStore(undefined, zeit.now);
+  store.startClock();
+  zeit.vor(30 * MIN);
+  store.stopClock();
+  assert.equal(store.getState().clock.elapsedMs, 0);
+});
+
+test('Rundungen summieren sich nicht auf', () => {
+  const zeit = handuhr();
+  const store = new MatchStateStore(undefined, zeit.now);
+  store.startClock();
+  // 1000 Ticks zu je 200,4 ms: ohne Übertrag gingen 400 ms verloren.
+  for (let i = 0; i < 1000; i++) {
+    zeit.vor(200.4);
+    store['tick']();
+  }
+  store.stopClock();
+  assert.ok(Math.abs(store.getState().clock.elapsedMs - 200_400) <= 1);
+});

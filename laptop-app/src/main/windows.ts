@@ -39,6 +39,20 @@ export function findDisplayById(id: number): Display | null {
 }
 
 /**
+ * Hält ein Fenster auf seiner eigenen Seite.
+ *
+ * Electron navigiert beim Ablegen einer Datei standardmäßig zu ihr. Wer
+ * Logos oder Portraits vorbereitet, zieht leicht ein Bild aus dem Explorer
+ * aufs Fenster -- danach stand dort nur noch das Bild, ohne einen Knopf
+ * und ohne Weg zurück (Review 2026-10, W5). Neue Fenster gibt es aus
+ * demselben Grund nicht.
+ */
+export function lockNavigation(win: BrowserWindow): void {
+  win.webContents.on('will-navigate', (event) => event.preventDefault());
+  win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+}
+
+/**
  * Das Steuerungsfenster merkt sich Größe, Position und Maximierung.
  *
  * Ohne das öffnete es starr bei 1000x700 -- rund 660px nutzbare Höhe für
@@ -67,6 +81,7 @@ export function createControlWindow(): BrowserWindow {
     },
   });
 
+  lockNavigation(win);
   if (gemerkt.maximized) win.maximize();
   trackWindowState(win);
   win.loadFile(path.join(__dirname, '..', 'renderer', 'control', 'index.html'));
@@ -144,6 +159,7 @@ export function createDisplayWindow(
     });
   }
 
+  lockNavigation(win);
   win.loadFile(path.join(__dirname, '..', 'renderer', 'display', 'index.html'));
   return win;
 }

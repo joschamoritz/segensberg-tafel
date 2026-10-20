@@ -6,6 +6,7 @@ import {
   DEFAULT_SOUND_SETTINGS,
   SoundSettings,
 } from '../shared/types';
+import { readJsonFile } from './configFile';
 
 /**
  * Redaktionelle Inhalte, die auf der Tafel erscheinen, aber weder zu einer
@@ -43,30 +44,28 @@ function configPath(): string {
  */
 export function loadContentConfig(): ContentConfig {
   const fallback = defaults();
-  try {
-    const parsed = JSON.parse(fs.readFileSync(configPath(), 'utf-8')) as Partial<ContentConfig>;
-    return {
-      attendanceMessage:
-        typeof parsed.attendanceMessage === 'string' && parsed.attendanceMessage.trim() !== ''
-          ? parsed.attendanceMessage
-          : fallback.attendanceMessage,
-      // Einzeln geprüft: Eine von Hand bearbeitete Datei könnte hier auch
-      // Zahlen oder Objekte stehen haben, und die landeten sonst auf der
-      // Tafel.
-      announcements: Array.isArray(parsed.announcements)
-        ? parsed.announcements.filter((entry): entry is string => typeof entry === 'string')
-        : fallback.announcements,
-      sound: {
-        volume:
-          typeof parsed.sound?.volume === 'number' && Number.isFinite(parsed.sound.volume)
-            ? Math.min(100, Math.max(0, Math.round(parsed.sound.volume)))
-            : fallback.sound.volume,
-        muted: parsed.sound?.muted === true,
-      },
-    };
-  } catch {
-    return fallback;
-  }
+  const raw = readJsonFile(configPath());
+  if (!raw || typeof raw !== 'object') return fallback;
+  const parsed = raw as Partial<ContentConfig>;
+  return {
+    attendanceMessage:
+      typeof parsed.attendanceMessage === 'string' && parsed.attendanceMessage.trim() !== ''
+        ? parsed.attendanceMessage
+        : fallback.attendanceMessage,
+    // Einzeln geprüft: Eine von Hand bearbeitete Datei könnte hier auch
+    // Zahlen oder Objekte stehen haben, und die landeten sonst auf der
+    // Tafel.
+    announcements: Array.isArray(parsed.announcements)
+      ? parsed.announcements.filter((entry): entry is string => typeof entry === 'string')
+      : fallback.announcements,
+    sound: {
+      volume:
+        typeof parsed.sound?.volume === 'number' && Number.isFinite(parsed.sound.volume)
+          ? Math.min(100, Math.max(0, Math.round(parsed.sound.volume)))
+          : fallback.sound.volume,
+      muted: parsed.sound?.muted === true,
+    },
+  };
 }
 
 /**

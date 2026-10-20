@@ -41,11 +41,21 @@ type ClockListener = (clock: ClockState) => void;
 const TICK_MS = 200;
 
 /**
- * Obergrenze für ein einzelnes Uhr-Delta. Auch eine monotone Zeitquelle
- * liefert nach einem Standby oder unter Last große Sprünge -- ohne Deckel
- * landete die gesamte Pause auf der Spielzeit.
+ * Lücke zwischen zwei Ticks, ab der sie als Standby gilt und nicht auf die
+ * Spielzeit zählt.
+ *
+ * Bis Fassung 1.6.0 lag der Deckel bei einer Sekunde. Das fing einen
+ * Standby ab, zählte aber auch jede andere Lücke nicht mit -- etwa die
+ * Zeit, in der eine Rückfrage des Hauptprozesses (`showMessageBoxSync`)
+ * die Ereignisschleife blockierte. Die Uhr ging danach um genau diese Zeit
+ * nach (Review 2026-10, W2). Den Standby meldet jetzt `powerMonitor`
+ * ausdrücklich (`suspendClock`/`resumeClock`); diese Schwelle ist nur noch
+ * das Netz darunter, falls die Meldung einmal ausbleibt.
  */
-const MAX_TICK_DELTA_MS = TICK_MS * 5;
+const STANDBY_GAP_MS = 2 * 60 * 1000;
+
+/** Zeitquelle der Uhr -- in den Tests ersetzbar. */
+export type TimeSource = () => number;
 
 /**
  * Kürzel aus einem Vereinsnamen ableiten -- dient nur als Rückfallebene,
@@ -160,12 +170,23 @@ export class MatchStateStore {
    */
   private secondHalfResumeMs: number | null = null;
 
-  constructor(persistedTeams?: TeamsConfig) {
+  /** gesetzt, solange der Rechner im Standby ist (siehe `suspendClock`) */
+  private suspended = false;
+
+  constructor(
+    persistedTeams?: TeamsConfig,
+    // performance.now() statt Date.now(): monoton steigend, also
+    // unempfindlich gegen Zeitsynchronisation und Sommerzeitumstellung.
+    private readonly now: TimeSource = () => performance.now()
+  ) {
     this.teams = persistedTeams;
     this.applyTeams();
   }
 
-  /** Übernimmt Name/Kürzel/Logo aus der persistierten Konfiguration. */
+  /**
+   * Übernimmt Name/Kürzel/Logo aus der persistierten Konfiguration. Nur
+   * beim Start -- „Neues Spiel“ behält die aktuellen Mannschaften.
+   */
   private applyTeams(): void {
     if (!this.teams) return;
     this.state = {
@@ -928,7 +949,15 @@ export class MatchStateStore {
     // Konfiguration, keine Spieldaten -- sie gehören zum Verein bzw. zum
     // Gerät, nicht zur einzelnen Begegnung. Der Wettbewerb bleibt ebenfalls:
     // Auf ein Ligaspiel folgt meist das nächste.
+    //
+    // Die Mannschaften kommen aus dem AKTUELLEN Zustand, nicht aus der
+    // Startkonfiguration (`this.teams`): Wer seit dem Start einen anderen
+    // Gegner gewählt hat, bekam sonst den alten zurück -- mit dem Kader des
+    // neuen, der beim nächsten Speichern unter dem alten Namen landete und
+    // dessen Kader überschrieb. Auch der Trainer steht nur hier.
     const {
+      home,
+      away,
       squads,
       halfDurationMin,
       board,
@@ -941,9 +970,10 @@ export class MatchStateStore {
     } = this.state;
     const previous = this.state.revisions;
     this.state = initialState();
-    this.applyTeams();
     this.state = {
       ...this.state,
+      home: { ...home, score: 0 },
+      away: { ...away, score: 0 },
       squads,
       halfDurationMin,
       board,
@@ -976,7 +1006,7 @@ export class MatchStateStore {
     // Flag und Timer je auseinandergelaufen, liefen sonst zwei Intervalle
     // parallel und die Uhr tickte doppelt so schnell.
     this.stopTicking();
-    this.lastTickAt = performance.now();
+    this.lastTickAt = this.now();
     this.state = { ...this.state, clock: { ...this.state.clock, running: true } };
     this.tickTimer = setInterval(() => this.tick(), TICK_MS);
     this.emit();
@@ -1005,7 +1035,7 @@ export class MatchStateStore {
    */
   setClock(elapsedMs: number): void {
     if (!Number.isFinite(elapsedMs)) return;
-    this.lastTickAt = performance.now();
+    this.lastTickAt = this.now();
     this.state = {
       ...this.state,
       clock: { ...this.state.clock, elapsedMs: Math.max(0, Math.round(elapsedMs)) },
@@ -1024,14 +1054,39 @@ export class MatchStateStore {
     this.tickTimer = null;
   }
 
+  /**
+   * Der Rechner geht in den Standby (`powerMonitor`). Bis hierher zählt die
+   * Zeit, die Dauer des Standby nicht -- niemand weiß, ob in der Zeit
+   * gespielt wurde. Danach läuft die Uhr dort weiter, wo sie stand.
+   */
+  suspendClock(): void {
+    if (this.suspended) return;
+    if (this.state.clock.running) this.tick();
+    this.suspended = true;
+  }
+
+  resumeClock(): void {
+    if (!this.suspended) return;
+    this.suspended = false;
+    this.lastTickAt = this.now();
+  }
+
   private tick(): void {
-    // performance.now() statt Date.now(): monoton steigend, also unempfindlich
-    // gegen Zeitsynchronisation und Sommerzeitumstellung mitten im Spiel.
-    const now = performance.now();
+    const now = this.now();
+    const raw = Math.max(0, now - this.lastTickAt);
+
+    // Standby: die Lücke nicht mitzählen (siehe STANDBY_GAP_MS).
+    if (this.suspended || raw > STANDBY_GAP_MS) {
+      this.lastTickAt = now;
+      return;
+    }
+
     // Auf ganze Millisekunden runden: performance.now() liefert
     // Nachkommastellen, die sonst bis in die Sicherungsdatei durchschlagen.
-    const delta = Math.round(Math.min(Math.max(0, now - this.lastTickAt), MAX_TICK_DELTA_MS));
-    this.lastTickAt = now;
+    // Der Rest bleibt im Anker stehen und zählt beim nächsten Tick mit --
+    // sonst summierten sich die Rundungen über 90 Minuten auf.
+    const delta = Math.round(raw);
+    this.lastTickAt += delta;
     this.state = {
       ...this.state,
       clock: { ...this.state.clock, elapsedMs: this.state.clock.elapsedMs + delta },

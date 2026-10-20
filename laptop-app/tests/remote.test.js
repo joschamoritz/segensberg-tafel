@@ -299,6 +299,7 @@ test('control: Adresse, PIN und Geräte stehen in der Einrichtung', (t) => {
     previewMode: true,
     displayOpen: true,
     remote: { enabled: true, urls: ['http://192.168.178.23:8028'], pin: '482913', clients: 2, error: '' },
+    warnings: [],
   });
   assert.equal(r.document.getElementById('remote-enabled').checked, true);
   assert.equal(r.document.getElementById('remote-details').hidden, false);

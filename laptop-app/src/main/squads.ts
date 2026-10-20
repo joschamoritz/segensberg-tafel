@@ -2,6 +2,7 @@ import { app } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
 import { Player } from '../shared/types';
+import { readJsonFile } from './configFile';
 
 /**
  * Kader werden **pro Verein** gespeichert, nicht pro Heim/Gast-Platz: In
@@ -49,11 +50,11 @@ export class SquadStore {
   }
 
   private load(): void {
-    try {
-      this.byClub = JSON.parse(fs.readFileSync(configPath(), 'utf-8')) as SquadsByClub;
-    } catch {
-      this.byClub = {};
-    }
+    // Eine beschädigte Datei legt readJsonFile() beiseite -- sonst
+    // überschriebe das nächste Speichern alle Kader mit diesem leeren Stand.
+    const parsed = readJsonFile(configPath());
+    this.byClub =
+      parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? (parsed as SquadsByClub) : {};
   }
 
   private save(): void {

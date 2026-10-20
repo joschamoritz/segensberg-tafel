@@ -1,4 +1,14 @@
-import { app, BrowserWindow, dialog, ipcMain, net, protocol, screen } from 'electron';
+import {
+  app,
+  BrowserWindow,
+  dialog,
+  ipcMain,
+  net,
+  powerMonitor,
+  powerSaveBlocker,
+  protocol,
+  screen,
+} from 'electron';
 import { randomUUID } from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -17,6 +27,7 @@ import {
   Player,
   TeamId,
 } from '../shared/types';
+import { configWarnings } from './configFile';
 import { loadContentConfig, saveContentConfig } from './content';
 import { MediaLibrary } from './media';
 import {
@@ -84,6 +95,28 @@ let liveSaveTimer: ReturnType<typeof setTimeout> | null = null;
 
 /** Gesetzt, sobald das Beenden trotz laufendem Spiel bestätigt wurde. */
 let allowControlClose = false;
+/** Die Rückfrage beim Schließen steht gerade -- kein zweites Mal öffnen. */
+let closePromptOpen = false;
+
+/**
+ * Hält Bildschirme und Rechner wach, solange die Tafel bespielt wird.
+ *
+ * Ohne das schaltet Windows auf Akku nach wenigen Minuten ohne Eingabe die
+ * Bildschirme ab -- der HDMI-Ausgang zur Tafel geht mit, und in einer
+ * Halbzeit ohne Tor fasst niemand den Laptop an (Review 2026-10, K2).
+ * Nur mit echtem Zielbildschirm: In der Vorschau am Schreibtisch soll
+ * der Laptop schlafen dürfen wie sonst.
+ */
+let powerBlockId: number | null = null;
+
+function keepAwake(active: boolean): void {
+  if (active && powerBlockId === null) {
+    powerBlockId = powerSaveBlocker.start('prevent-display-sleep');
+  } else if (!active && powerBlockId !== null) {
+    powerSaveBlocker.stop(powerBlockId);
+    powerBlockId = null;
+  }
+}
 
 /**
  * Eigenes Protokoll für die Diashow-Bilder.
@@ -148,6 +181,7 @@ function currentStatus(): AppStatus {
     previewMode: target === null,
     displayOpen: displayWindow !== null && !displayWindow.isDestroyed(),
     remote: remoteStatus(),
+    warnings: configWarnings(),
   };
 }
 
@@ -473,10 +507,12 @@ function openDisplayWindow(displayId: number | null): void {
   // neue Fenster auf null -- die Anzeige bekam danach keine Updates mehr.
   const win = createDisplayWindow(target, store.getState().board);
   displayWindow = win;
+  keepAwake(target !== null);
 
   win.on('closed', () => {
     if (displayWindow === win) {
       displayWindow = null;
+      keepAwake(false);
       broadcastStatus();
     }
   });
@@ -688,28 +724,38 @@ app.whenReady().then(() => {
   controlWindow = createControlWindow();
 
   // Ein Fehlklick aufs Fensterkreuz beendete bisher mitten im Spiel alles.
+  // Auch in der Halbzeitpause: Dann wird am Laptop am meisten geklickt.
+  //
+  // Bewusst die asynchrone Rückfrage: `showMessageBoxSync` blockierte den
+  // Hauptprozess, und solange sie offen stand, lief die Uhr nicht -- weder
+  // im Zustand noch auf der Tafel (Review 2026-10, W2).
   controlWindow.on('close', (event) => {
     if (allowControlClose) return;
     const state = store.getState();
-    if (state.phase !== 'live') return;
+    if (state.phase !== 'live' && state.phase !== 'half-time') return;
 
     event.preventDefault();
-    const choice = dialog.showMessageBoxSync({
-      type: 'warning',
-      title: 'Es läuft noch ein Spiel',
-      message: `${state.home.name} ${state.home.score}:${state.away.score} ${state.away.name}`,
-      detail:
-        'Das Spiel läuft noch. Der Spielstand wird gesichert und lässt sich ' +
-        'beim nächsten Start fortsetzen. Trotzdem jetzt beenden?',
-      buttons: ['Weiterspielen', 'Beenden'],
-      defaultId: 0,
-      cancelId: 0,
-    });
-    if (choice !== 1) return;
-
-    allowControlClose = true;
-    flushLiveMatchSave();
-    controlWindow?.close();
+    if (closePromptOpen || !controlWindow) return;
+    closePromptOpen = true;
+    void dialog
+      .showMessageBox(controlWindow, {
+        type: 'warning',
+        title: 'Es läuft noch ein Spiel',
+        message: `${state.home.name} ${state.home.score}:${state.away.score} ${state.away.name}`,
+        detail:
+          'Das Spiel läuft noch. Der Spielstand wird gesichert und lässt sich ' +
+          'beim nächsten Start fortsetzen. Trotzdem jetzt beenden?',
+        buttons: ['Weiterspielen', 'Beenden'],
+        defaultId: 0,
+        cancelId: 0,
+      })
+      .then(({ response }) => {
+        closePromptOpen = false;
+        if (response !== 1) return;
+        allowControlClose = true;
+        flushLiveMatchSave();
+        controlWindow?.close();
+      });
   });
 
   controlWindow.on('closed', () => {
@@ -1003,6 +1049,11 @@ app.whenReady().then(() => {
     flushLiveMatchSave();
   });
   onIpc(IPC.matchReset, () => {
+    // Im Steuerungsfenster ist der Knopf in diesen Phasen gesperrt; hier
+    // noch einmal, weil ein Gerät im WLAN mit älterem Stand der Seite ihn
+    // sonst trotzdem schicken könnte (Review W8).
+    const phase = store.getState().phase;
+    if (phase === 'live' || phase === 'half-time') return;
     store.resetMatch();
     // Sicherung mitentfernen: Sonst böte der nächste Start an, das gerade
     // bewusst verworfene Spiel fortzusetzen.
@@ -1041,7 +1092,28 @@ app.whenReady().then(() => {
   // Falls sich die Monitor-Konfiguration während der Laufzeit ändert
   // (Kabel gezogen/gesteckt), Status neu melden und das Anzeigefenster
   // nachziehen.
-  screen.on('display-added', broadcastStatus);
+  // Ein später eingestecktes HDMI-Kabel holt die Anzeige auf die Tafel,
+  // sofern sie gerade in der Vorschau läuft -- dieselbe Regel wie beim
+  // Start. Beim Aufbau am Platz kommt das Kabel oft erst nach dem
+  // Programmstart dran, und die Tafel zeigte dann den leeren Desktop
+  // (Review 2026-10, W4). Ist schon ein Bildschirm bespielt, bleibt es
+  // dabei: Dort hat ihn jemand bewusst gewählt.
+  screen.on('display-added', () => {
+    if (selectedDisplayId === null || findDisplayById(selectedDisplayId) === null) {
+      const target = pickDefaultTargetDisplay();
+      if (target) {
+        openDisplayWindow(target.id);
+        return;
+      }
+    }
+    broadcastStatus();
+  });
+
+  // Standby: Die Uhr soll die Zeit, in der der Rechner schlief, nicht
+  // mitzählen. Zuverlässiger als eine Schwelle im Tick -- die konnte
+  // Standby und eine blockierte Ereignisschleife nicht unterscheiden.
+  powerMonitor.on('suspend', () => store.suspendClock());
+  powerMonitor.on('resume', () => store.resumeClock());
   screen.on('display-removed', (_event, display) => {
     // Ist ausgerechnet der bespielte Bildschirm weg, liefe das Fenster ins
     // Leere. Dann zurück in die Vorschau, statt eine unsichtbare Anzeige

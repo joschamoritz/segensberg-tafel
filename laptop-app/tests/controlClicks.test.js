@@ -360,12 +360,91 @@ test('folgenreiche Knöpfe fragen nach, und ein Nein hält sie auf', (t) => {
   r.emit('onStateUpdated', store.getState());
   r.drainErrors();
 
-  for (const id of ['phase-halftime', 'phase-fulltime', 'phase-revert', 'match-reset', 'clock-reset']) {
+  for (const id of ['phase-halftime', 'phase-fulltime', 'phase-revert', 'clock-reset']) {
     gefragt.length = 0;
     assert.deepStrictEqual(namen(r.click(id)), [], `"${id}" darf bei einem Nein nichts auslösen`);
     assert.strictEqual(gefragt.length, 1, `"${id}" muss genau einmal nachfragen`);
   }
 
+  r.close();
+});
+
+test('"Neues Spiel" ist im Spiel und in der Pause gesperrt, davor und danach fragt es nach (Review W8)', (t) => {
+  const store = angepfiffen();
+  const r = openRenderer('control', t);
+  let gefragt = 0;
+  r.window.confirm = () => {
+    gefragt += 1;
+    return false;
+  };
+
+  r.emit('onStateUpdated', store.getState());
+  assert.strictEqual(r.document.getElementById('match-reset').disabled, true, 'im laufenden Spiel');
+  assert.deepStrictEqual(namen(r.click('match-reset')), []);
+
+  store.goToHalfTime();
+  r.emit('onStateUpdated', store.getState());
+  assert.strictEqual(r.document.getElementById('match-reset').disabled, true, 'in der Halbzeitpause');
+
+  store.startSecondHalf();
+  store.stopClock();
+  store.goToFullTime();
+  r.emit('onStateUpdated', store.getState());
+  assert.strictEqual(r.document.getElementById('match-reset').disabled, false, 'nach dem Abpfiff');
+  assert.deepStrictEqual(namen(r.click('match-reset')), [], 'ein Nein hält es auf');
+  assert.strictEqual(gefragt, 1);
+  r.close();
+});
+
+test('"−" fragt nach, wenn das Tor schon einen Torschützen hat (Review W7)', (t) => {
+  const store = angepfiffen();
+  store.setSquad('home', [player({ id: 's1', number: 9, lastName: 'Lange' })]);
+  store.incrementScore('home', 1);
+  const r = openRenderer('control', t);
+  const fragen = [];
+  let antwort = false;
+  r.window.confirm = (frage) => {
+    fragen.push(frage);
+    return antwort;
+  };
+  r.emit('onStateUpdated', store.getState());
+
+  // Ohne Schützen: schneller Gegenknopf, keine Rückfrage
+  assert.deepStrictEqual(namen(r.clickSelector('button[data-team="home"][data-delta="-1"]')), ['incrementScore']);
+  assert.strictEqual(fragen.length, 0);
+
+  store.setGoalScorer(store.getState().events.at(-1).id, 's1');
+  r.emit('onStateUpdated', store.getState());
+  assert.deepStrictEqual(namen(r.clickSelector('button[data-team="home"][data-delta="-1"]')), [], 'Nein hält es auf');
+  assert.strictEqual(fragen.length, 1);
+  assert.match(fragen[0], /Lange/);
+
+  antwort = true;
+  assert.deepStrictEqual(namen(r.clickSelector('button[data-team="home"][data-delta="-1"]')), ['incrementScore']);
+  r.close();
+});
+
+test('Anpfiff nennt Tore und Einträge, die schon dastehen (Review W6)', (t) => {
+  const store = new MatchStateStore();
+  const r = openRenderer('control', t);
+  const fragen = [];
+  r.window.confirm = (frage) => {
+    fragen.push(frage);
+    return false;
+  };
+
+  r.emit('onStateUpdated', store.getState());
+  r.click('phase-kickoff');
+  assert.doesNotMatch(fragen.at(-1), /Achtung/, 'ohne Reste die gewohnte Frage');
+
+  store.incrementScore('home', 1);
+  store.addCard('away', 'yellow');
+  store.adjustCorners('home', 2);
+  r.emit('onStateUpdated', store.getState());
+  assert.deepStrictEqual(namen(r.click('phase-kickoff')), []);
+  assert.match(fragen.at(-1), /Spielstand 1:0/);
+  assert.match(fragen.at(-1), /2 Einträge/);
+  assert.match(fragen.at(-1), /Ecken 2:0/);
   r.close();
 });
 
