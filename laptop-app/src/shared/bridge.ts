@@ -8,6 +8,7 @@ import {
   InfoOverlay,
   IPC,
   LibraryTeam,
+  LogoVariant,
   LineupStyle,
   MatchState,
   Player,
@@ -71,7 +72,8 @@ export function createApi(t: Transport) {
     },
     requestLibrary: () => t.send(IPC.requestLibrary),
     libraryChooseFolder: () => t.send(IPC.libraryChooseFolder),
-    libraryPick: (team: TeamId, id: string) => t.send(IPC.libraryPick, team, id),
+    libraryPick: (team: TeamId, id: string, variant?: LogoVariant) =>
+      t.send(IPC.libraryPick, team, id, variant),
     squadAddPlayer: (team: TeamId) => t.send(IPC.squadAddPlayer, team),
     squadUpdatePlayer: (team: TeamId, player: Player) =>
       t.send(IPC.squadUpdatePlayer, team, player),

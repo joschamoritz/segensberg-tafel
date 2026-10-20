@@ -285,27 +285,11 @@ body[data-phase='live'] .phase-label {
   font-size: 16cqh;
 }
 
-/* --- Kontrastfläche hinter farbigen Wappen ----------------------------- */
-/* Die Anzeige hat einen blauen Grund. Weiße Logovarianten stehen darauf
-   bestens -- und für alle 32 Vereine der Bibliothek gibt es eine. Fehlt
-   sie einmal, greift die farbige Variante, und die ist für helle
-   Untergründe gezeichnet: Ihre dunklen Linien verschwänden auf dem Blau.
-   Dafür, und nur dafür, kommt diese Fläche.
-
-   Sie sitzt am Bild und nicht am umgebenden `.crest`: Das ist im
-   laufenden Spiel spaltenbreit, eine Fläche darauf wäre ein weißer
-   Balken quer über die Tafel. Am Bild schmiegt sie sich ans Logo.
-
-   Ecken bewusst klein (siehe Guardrail) -- große Rundungen wirken auf
-   einer niedrig auflösenden Matrix treppig. */
-
-.crest-img.has-plate,
-.lineup-logo.has-plate,
-.goal-crest.has-plate {
-  background: var(--svh-wh);
-  border-radius: 1cqh;
-  padding: 0.8cqh 0.8cqw;
-}
+/* --- Keine Kontrastfläche hinter Wappen ------------------------------- */
+/* Bis 1.9.0 lag hinter farbigen Logovarianten eine weiße Fläche (Block D,
+   Etappe 3). Im Probelauf störte sie; entfernt (Nutzerentscheidung
+   20.10.2026). Für einen Verein, dessen farbiges Logo auf dem Blau
+   untergeht, wählt man in der Vereinsauswahl die weiße Fassung. */
 
 /* --- Ansicht vor dem Anpfiff ------------------------------------------- */
 
@@ -352,12 +336,19 @@ body[data-phase='live'] .phase-label {
   object-fit: contain;
 }
 
+/* Neben Wappen und Sponsor: Passt der Name nicht, macht `fitLines()`
+   die Schrift kleiner, statt ihn abzuschneiden oder den Sponsor
+   darüber zu legen (Befund aus dem Probelauf, 20.10.2026). */
 .lineup-title {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: pre;
   font-weight: 700;
   font-size: 9cqh;
   letter-spacing: 0.03em;
   text-transform: uppercase;
-  line-height: 1;
+  line-height: 1.35;
 }
 
 /* Zwei Spalten à sechs Zeilen: 11 Spieler + Trainer ergeben genau 12
@@ -1060,20 +1051,25 @@ body.showing-thanks .board-match {
    wirken. Ohne Portrait steht dort das Trikot mit der Rückennummer, beim
    Trainer das Wappen. */
 
+/* Das Bild steht links fest, der Text nimmt den Rest. Vorher war beides
+   gemeinsam zentriert: Ein langer Name schob das Bild nach links, ein
+   kurzer nach rechts -- von Spieler zu Spieler sprang es hin und her
+   (Befund aus dem Probelauf, 20.10.2026). Feste Breite der Bildspalte,
+   damit auch der Text bei jedem Spieler an derselben Kante beginnt;
+   `fitLines()` passt den Namen in die feste Breite ein. */
 .pre-page.card-page {
   flex-direction: row;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 4cqw;
-  padding: 0 6cqw;
+  padding: 0 4cqw 0 6cqw;
 }
 
 .card-visual {
-  flex: 0 0 auto;
+  flex: 0 0 34cqw;
   display: flex;
   align-items: center;
   justify-content: center;
   height: 76cqh;
-  max-width: 34cqw;
 }
 
 .card-photo {
@@ -1114,17 +1110,22 @@ body.showing-thanks .board-match {
   fill: var(--svh-wh);
 }
 
-/* Welche Fassung steht, schaltet lineup.ts über `is-home-kit`. */
+/* Welche Fassung steht, schaltet lineup.ts über `is-home-kit`.
+   Über `opacity`, NICHT über `visibility`: Ein `visibility: visible` am
+   Kind setzt sich über das `visibility: hidden` hinweg, mit dem das
+   Retro-Design alles außer der Punktmatrix ausblendet -- das
+   Vereinstrikot stand dort über dem Raster (Befund aus dem Probelauf,
+   20.10.2026). Abgesichert in tests/windowGuards.test.js. */
 .card-jersey-home {
-  visibility: hidden;
+  opacity: 0;
 }
 
 .card-jersey.is-home-kit .card-jersey-home {
-  visibility: visible;
+  opacity: 1;
 }
 
 .card-jersey.is-home-kit .card-jersey-blank {
-  visibility: hidden;
+  opacity: 0;
 }
 
 /* Rückennummer mittig auf dem Rücken, unterhalb des Schriftzugs. Auf dem
@@ -1146,11 +1147,19 @@ body.showing-thanks .board-match {
 }
 
 .card-body {
+  flex: 1 1 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 2cqh;
   min-width: 0;
+}
+
+/* Sponsor in eigener Zeile unter dem Namen, linksbündig. */
+.card-body .card-sponsor {
+  align-self: flex-start;
+  margin-left: 0;
+  --chip-h: 12cqh;
 }
 
 .card-team {
@@ -1160,15 +1169,18 @@ body.showing-thanks .board-match {
   height: 13cqh;
 }
 
+/* Kein Abschneiden mit „…“ mehr: Passt der Name nicht, macht
+   `fitLines()` die Schrift kleiner. Zeilenhöhe 1.35 für die Unterlängen
+   (g, j, y) -- bei 1 schnitt `overflow: hidden` sie ab. */
 .card-team-name {
+  flex: 1 1 auto;
   font-weight: 700;
   font-size: 7cqh;
   letter-spacing: 0.03em;
   text-transform: uppercase;
-  line-height: 1;
-  white-space: nowrap;
+  line-height: 1.35;
+  white-space: pre;
   overflow: hidden;
-  text-overflow: ellipsis;
   min-width: 0;
 }
 
@@ -1185,7 +1197,10 @@ body.showing-thanks .board-match {
 .card-name {
   font-weight: 700;
   font-size: 16cqh;
-  line-height: 1.05;
+  /* 1.35 statt 1.05: Unterlängen wurden sonst abgeschnitten (gemessen:
+     g/j/y reichen 0,20 em unter die Grundlinie; bei 1.25 sind dort nur
+     0,18 em frei, bei 1.35 0,23 em). */
+  line-height: 1.35;
   white-space: pre;
   overflow: hidden;
 }
@@ -1246,7 +1261,7 @@ body.showing-scorer .board-match {
 .spotlight-name {
   font-weight: 700;
   font-size: 16cqh;
-  line-height: 1.05;
+  line-height: 1.35;
   white-space: pre;
   overflow: hidden;
 }
@@ -1601,6 +1616,11 @@ body.goal-lead-change .goal-frame {
   gap: 3cqh 1.6cqw;
 }
 
+/* Ohne weiße Kachel (Nutzerentscheidung 20.10.2026 nach dem Probelauf):
+   Die weißen Flächen, und erst recht die leeren auf einer nicht voll
+   belegten Seite, störten auf der Tafel. Jedes Logo steht jetzt direkt
+   auf dem Grund; eine leere Kachel ist damit unsichtbar. Für farbige
+   Logos mit dunkler Schrift gibt es die weiße Fassung (`…_weiß.png`). */
 .sponsor-tile {
   min-width: 0;
   min-height: 0;
@@ -1608,8 +1628,6 @@ body.goal-lead-change .goal-frame {
   align-items: center;
   justify-content: center;
   padding: 3.5cqh 3cqw;
-  background: var(--svh-wh);
-  border-radius: 0.6cqh;
 }
 
 /* Eingepasst, nie beschnitten und nie gestreckt -- ein angeschnittenes
@@ -1637,9 +1655,9 @@ body.goal-lead-change .goal-frame {
 }
 
 /* Weiße Logofassung (`…_weiß.png`): ohne Kachel direkt auf dem
-   Vereinsblau (Nutzerwunsch 20.10.2026). Die farbige Fassung bleibt in
-   der weißen Kachel -- für hellen Grund gezeichnet. */
-.sponsor-tile.is-white,
+   Vereinsblau (Nutzerwunsch 20.10.2026). Bei den „präsentiert von"-Plätzen
+   bleibt die farbige Fassung in der weißen Kachel -- für hellen Grund
+   gezeichnet. Im Sponsoren-Fenster gibt es gar keine Kachel mehr. */
 .sponsor-chip.is-white {
   background: transparent;
 }
@@ -2088,7 +2106,7 @@ body[data-theme='flutlicht'] .board-scorer {
 
 body[data-theme='flutlicht'] .spotlight-name {
   font-size: 19cqh;
-  line-height: 1.15;
+  line-height: 1.35;
   /* Die Neigung schiebt die Oberkante nach rechts -- ohne Rand schnitte
      `overflow: hidden` das letzte Zeichen an. */
   padding-right: 0.25em;
@@ -2099,7 +2117,7 @@ body[data-theme='flutlicht'] .spotlight-name {
 /* Einzel-Aufstellung: dieselbe geneigte Schrift wie beim Torschützen. */
 body[data-theme='flutlicht'] .card-name {
   font-size: 19cqh;
-  line-height: 1.15;
+  line-height: 1.35;
   transform: skewX(-12deg);
   transform-origin: left center;
   padding-right: 0.25em;

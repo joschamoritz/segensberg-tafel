@@ -130,26 +130,37 @@ export class TeamLibrary {
   }
 
   list(): LibraryTeam[] {
-    return this.entries.map((e) => ({ id: `${e.league}/${e.name}`, name: e.name, league: e.league }));
+    return this.entries.map((e) => ({
+      id: `${e.league}/${e.name}`,
+      name: e.name,
+      league: e.league,
+      variants: [
+        ...(e.whitePath ? (['white'] as LogoVariant[]) : []),
+        ...(e.colorPath ? (['color'] as LogoVariant[]) : []),
+      ],
+    }));
   }
 
   /**
-   * Logo als data:-URL, dazu die Farbvariante. Bevorzugt wird die weiße,
-   * weil die Anzeige einen blauen Hintergrund hat; sonst die farbige.
+   * Logo als data:-URL, dazu die Farbvariante. Ohne Wunsch wird die
+   * weiße bevorzugt, weil die Anzeige einen blauen Hintergrund hat. Seit
+   * 1.9.1 lässt sich die farbige ausdrücklich wählen (Nutzerwunsch nach
+   * dem Probelauf, 20.10.2026); fehlt die gewünschte, gilt die andere.
    *
    * Die Variante kommt hier direkt aus der Ordnerstruktur und muss nicht
    * geraten werden -- die Bibliothek weiß ja, aus welchem der beiden
-   * Ordner sie die Datei genommen hat. Hinter einer farbigen Variante
-   * legt die Anzeige eine weiße Kontrastfläche.
+   * Ordner sie die Datei genommen hat.
    */
-  getLogo(id: string): { dataUrl: string; variant: LogoVariant } | undefined {
+  getLogo(id: string, wanted?: LogoVariant): { dataUrl: string; variant: LogoVariant } | undefined {
     const entry = this.entries.find((e) => `${e.league}/${e.name}` === id);
-    const white = entry?.whitePath;
-    const file = white ?? entry?.colorPath;
+    if (!entry) return undefined;
+    const variant: LogoVariant =
+      wanted === 'color' ? (entry.colorPath ? 'color' : 'white') : entry.whitePath ? 'white' : 'color';
+    const file = variant === 'white' ? entry.whitePath : entry.colorPath;
     if (!file) return undefined;
     const dataUrl = readImageAsDataUrl(file);
     if (!dataUrl) return undefined;
-    return { dataUrl, variant: white ? 'white' : 'color' };
+    return { dataUrl, variant };
   }
 
   getName(id: string): string | undefined {

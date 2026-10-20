@@ -1029,6 +1029,9 @@ export interface LibraryTeam {
   id: string;
   name: string;
   league: string;
+  /** Welche Logofassungen vorliegen -- bei beiden bietet die Auswahl
+      im Steuerungsfenster beide an. */
+  variants: LogoVariant[];
 }
 
 /** Übliche Halbzeitdauer im Herrenbereich. */

@@ -243,7 +243,7 @@ test('display: die Phasen-Überschrift steht auf der Tafel', (t) => {
   store.goToFullTime();
   r.emit('onStateUpdated', store.getState());
   // Mit Halbzeitstand wie im Spielbericht (Review N12)
-  assert.match(r.text('phase-label'), /^ENDSTAND \(\d+:\d+\)$/);
+  assert.match(r.text('phase-label'), /^ENDSTAND · HZ \d+:\d+$/);
 
   assert.deepEqual(r.drainErrors(), []);
   r.close();

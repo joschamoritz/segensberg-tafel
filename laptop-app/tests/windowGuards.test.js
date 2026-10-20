@@ -57,3 +57,16 @@ test('W1: auf der Tafel gibt es keinen Mauszeiger', () => {
   assert.ok(body, 'Regel für html, body fehlt');
   assert.match(body[0], /cursor:\s*none/);
 });
+
+test('Retro: kein Element setzt sich mit visibility: visible über das Ausblenden hinweg', () => {
+  // Das Retro-Design blendet alles außer der Punktmatrix per
+  // `visibility: hidden` aus. Ein Kind mit `visibility: visible` erbt das
+  // nicht -- so stand das Vereinstrikot der Einzel-Aufstellung über dem
+  // Raster (Probelauf 20.10.2026). Erlaubt ist nur die bewusste Ausnahme
+  // der Diashow-Bilder.
+  const css = fs
+    .readFileSync(path.join(__dirname, '..', 'dist', 'renderer', 'display', 'display.css'), 'utf-8')
+    .replace(/\/\*[\s\S]*?\*\//g, '');
+  const sichtbar = [...css.matchAll(/([^{}]+)\{[^}]*visibility:\s*visible[^}]*\}/g)].map((m) => m[1].trim());
+  assert.deepEqual(sichtbar, ["body[data-theme='retro'][data-retro-overlay='slide'] .board-slides"]);
+});

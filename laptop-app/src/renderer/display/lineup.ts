@@ -1,7 +1,7 @@
 import { lineupSteps, LineupStep } from '../../shared/lineupSteps';
 import { lineupNow } from '../../shared/substitutions';
 import { LINEUP_PAGE_MS, LineupStyle, MatchState, sortPlayersByNumber, TeamId } from '../../shared/types';
-import { applyLogoPlate, fitLines, nameVariants, ui } from './common';
+import { fitLines, nameVariants, ui } from './common';
 import { requestRetroPaint } from './retro';
 
 // Aufstellungsseiten vor dem Anpfiff und ihre Einblendung per Knopf.
@@ -38,7 +38,6 @@ function renderLineupPage(
   } else {
     logo.hidden = true;
   }
-  applyLogoPlate(logo, teamState.logoVariant);
 
   document.getElementById(`${prefix}-title`)!.textContent =
     role === 'start' ? teamState.name : `${teamState.shortName} – Bank`;
@@ -114,6 +113,10 @@ export function renderLineupPages(state: MatchState): void {
 export function showPage(pageName: string): void {
   for (const page of document.querySelectorAll<HTMLElement>('.pre-page')) {
     page.classList.toggle('is-active', page.dataset.page === pageName);
+    // Erst sichtbar hat der Titel ein Layout zum Messen. Ein langer
+    // Vereinsname wird kleiner statt abgeschnitten.
+    const title = page.dataset.page === pageName ? page.querySelector<HTMLElement>('.lineup-title') : null;
+    if (title) fitTitle(title, page);
   }
   // Für die Retro-Matrix, die eine volle Aufstellung zur Hälfte der
   // Standzeit weiterblättert -- dafür braucht sie einen eigenen Anstoß,
@@ -121,6 +124,22 @@ export function showPage(pageName: string): void {
   ui.activePageSince = Date.now();
   if (retroPageTimer) clearTimeout(retroPageTimer);
   retroPageTimer = setTimeout(requestRetroPaint, LINEUP_PAGE_MS / 2 + 10);
+}
+
+/**
+ * Passt einen Vereinsnamen in seine Zeile ein -- sofort und noch einmal,
+ * sobald Schrift und Bilder der Seite geladen sind. Beim ersten Messen
+ * fehlte sonst das Wappen daneben noch (data:-Bilder dekodieren
+ * asynchron) oder die Schrift war noch die Ersatzschrift: Der Name passte
+ * scheinbar und wurde danach doch abgeschnitten (Probelauf 20.10.2026).
+ */
+function fitTitle(element: HTMLElement, page: HTMLElement): void {
+  const fit = (): void => fitLines(element, [[element.textContent ?? '']]);
+  fit();
+  for (const img of page.querySelectorAll('img')) {
+    if (!img.complete) img.addEventListener('load', fit, { once: true });
+  }
+  void document.fonts?.ready.then(fit);
 }
 
 function clearLineupTimers(): void {
@@ -144,7 +163,6 @@ function fillCard(state: MatchState, team: TeamId, step: LineupStep): void {
   const teamLogo = document.getElementById('card-team-logo') as HTMLImageElement;
   if (teamState.logoDataUrl) teamLogo.src = teamState.logoDataUrl;
   teamLogo.hidden = !teamState.logoDataUrl;
-  applyLogoPlate(teamLogo, teamState.logoVariant);
   document.getElementById('card-team-name')!.textContent = teamState.name;
 
   photo.hidden = true;
@@ -158,7 +176,6 @@ function fillCard(state: MatchState, team: TeamId, step: LineupStep): void {
     if (teamState.logoDataUrl) {
       crest.src = teamState.logoDataUrl;
       crest.hidden = false;
-      applyLogoPlate(crest, teamState.logoVariant);
       // Sonst stünde das Wappen zweimal da, groß und klein.
       teamLogo.hidden = true;
     }
@@ -217,6 +234,8 @@ function showStep(state: MatchState, team: TeamId, step: LineupStep): void {
   }
   fillCard(state, team, step);
   showPage('player-card');
+  const teamName = document.getElementById('card-team-name')!;
+  fitTitle(teamName, document.querySelector<HTMLElement>('.card-page')!);
   fitLines(document.getElementById('card-name')!, cardVariants);
 }
 

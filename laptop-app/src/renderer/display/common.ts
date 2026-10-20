@@ -163,22 +163,8 @@ export function renderCrest(
     img.hidden = true;
     fallback.hidden = false;
   }
-  applyLogoPlate(img, teamState.logoVariant);
 }
 
-/**
- * Weiße Kontrastfläche hinter einem farbigen Vereinslogo.
- *
- * Farbige Varianten sind für helle Untergründe gezeichnet und
- * verschwinden mit ihren dunklen Linien auf dem blauen Grund der Anzeige.
- * Die Fläche gilt ausdrücklich NUR für Logos: Das Kürzel als
- * Rückfallebene steht in Weiß, es verschwände auf einer weißen Fläche
- * ganz. Und bei unbekannter Variante bleibt es beim Stand von vorher --
- * ohne Fläche.
- */
-export function applyLogoPlate(img: HTMLImageElement, variant?: LogoVariant): void {
-  img.classList.toggle('has-plate', variant === 'color');
-}
 
 /**
  * Beschriftung am Fuß in Halbzeit und Endstand. Nach einem beendeten
@@ -188,11 +174,13 @@ export function applyLogoPlate(img: HTMLImageElement, variant?: LogoVariant): vo
 export function phaseLabelText(state: MatchState): string {
   let label = displayPhaseLabel(state.phase, state.half);
   if (state.phase !== 'full-time') return label;
-  // Halbzeitstand wie im Spielbericht: "Endstand (1:1)" (Review N12).
+  // Halbzeitstand (Review N12), ausdrücklich als "HZ" bezeichnet. Die
+  // Klammer des Spielberichts "(1:1)" wurde im Probelauf als Endstand
+  // gelesen -- auf der Tafel fehlt der Zusammenhang, den der Bericht hat.
   // Nicht beim Abbruch in der 1. Halbzeit -- da gab es keine Pause.
   if (state.half === 2) {
     const hz = halfTimeScore(state.events, state.halfDurationMin);
-    label += ` (${hz.home}:${hz.away})`;
+    label += ` · HZ ${hz.home}:${hz.away}`;
   }
   if (state.shootout?.finished) {
     const score = shootoutScore(state.shootout);

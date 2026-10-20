@@ -90,6 +90,16 @@ export function renderLibrary(payload: LibraryPayload): void {
         option.value = entry.id;
         option.textContent = entry.name;
         group.appendChild(option);
+        // Liegen beide Fassungen vor, stehen beide zur Wahl (Nutzerwunsch
+        // 20.10.2026). Die erste Zeile nimmt wie bisher die weiße.
+        if (entry.variants?.includes('white') && entry.variants.includes('color')) {
+          option.textContent = `${entry.name} – weißes Logo`;
+          const color = document.createElement('option');
+          color.value = entry.id;
+          color.dataset.variant = 'color';
+          color.textContent = `${entry.name} – farbiges Logo`;
+          group.appendChild(color);
+        }
       }
       select.appendChild(group);
     }
@@ -512,7 +522,9 @@ export function wireTeamSettings(team: TeamId): void {
   const librarySelect = document.getElementById(`${team}-library-select`) as HTMLSelectElement;
   librarySelect.addEventListener('change', () => {
     if (!librarySelect.value) return;
-    window.api.libraryPick(team, librarySelect.value);
+    const chosen = librarySelect.selectedOptions[0];
+    const variant = chosen?.dataset.variant === 'color' ? 'color' : undefined;
+    window.api.libraryPick(team, librarySelect.value, variant);
     // Auswahl zurücksetzen: der übernommene Verein steht danach im
     // Namensfeld, das Dropdown dient nur als Auswahlhilfe.
     librarySelect.value = '';

@@ -69,3 +69,47 @@ test('fehlender Ordner ergibt eine leere Liste statt eines Fehlers', () => {
   assert.deepEqual(lib.list(), []);
   assert.equal(lib.getName('x/y'), undefined);
 });
+
+// --------------------------------------------------------------------
+// Weißes oder farbiges Logo wählen (Nutzerwunsch nach dem Probelauf)
+// --------------------------------------------------------------------
+
+const { openRenderer } = require('./dom');
+
+test('die Bibliothek meldet, welche Logofassungen vorliegen', (t) => {
+  const lib = bibliothek(t, {
+    'Liga/Weiß': ['Beide_weiß.png', 'Bertlich_weiß.png'],
+    'Liga/Farbe': ['Beide.png', 'Herten.png'],
+  });
+  assert.deepEqual(
+    lib.list().map((e) => [e.name, e.variants]),
+    [
+      ['Beide', ['white', 'color']],
+      ['Bertlich', ['white']],
+      ['Herten', ['color']],
+    ]
+  );
+});
+
+test('Steuerung: bei zwei Fassungen stehen beide zur Wahl, die farbige wird mitgeschickt', (t) => {
+  const r = openRenderer('control', t);
+  r.emit('onLibraryUpdated', {
+    rootPath: 'D:\Logos',
+    squadNames: [],
+    teams: [
+      { id: 'Liga/Beide', name: 'Beide', league: 'Liga', variants: ['white', 'color'] },
+      { id: 'Liga/NurFarbe', name: 'NurFarbe', league: 'Liga', variants: ['color'] },
+    ],
+  });
+  const select = r.document.getElementById('away-library-select');
+  const optionen = [...select.querySelectorAll('option')].filter((o) => o.value).map((o) => o.textContent);
+  assert.deepEqual(optionen, ['Beide – weißes Logo', 'Beide – farbiges Logo', 'NurFarbe']);
+
+  r.calls.length = 0;
+  select.selectedIndex = [...select.options].findIndex((o) => o.textContent === 'Beide – farbiges Logo');
+  select.dispatchEvent(new r.window.Event('change'));
+  assert.deepEqual(JSON.parse(JSON.stringify(r.calls)), [
+    { name: 'libraryPick', args: ['away', 'Liga/Beide', 'color'] },
+  ]);
+  assert.deepEqual(r.drainErrors(), []);
+});

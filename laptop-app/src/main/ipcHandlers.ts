@@ -125,12 +125,20 @@ export function registerIpcHandlers(): void {
   onIpc(IPC.libraryChooseFolder, () => {
     void chooseLibraryFolder();
   });
-  onIpc(IPC.libraryPick, (_event, team: unknown, id: unknown) => {
+  onIpc(IPC.libraryPick, (_event, team: unknown, id: unknown, variant: unknown) => {
     if (!isTeamId(team) || typeof id !== 'string') return;
     const name = library.getName(id);
     if (!name) return;
+    const logo = library.getLogo(id, variant === 'color' ? 'color' : variant === 'white' ? 'white' : undefined);
+    // Derselbe Verein noch einmal, nur mit der anderen Logofassung: nur das
+    // Logo tauschen. Sonst lüde die Wahl den Kader neu und leerte einen von
+    // Hand gesetzten Retro-Kurznamen -- mitten im Spiel schon gar nicht gewollt.
+    if (store.getState()[team].name === name) {
+      store.setTeamLogo(team, logo?.dataUrl, logo?.variant);
+      persistTeams();
+      return;
+    }
     const stored = squads.get(name);
-    const logo = library.getLogo(id);
     store.applyLibraryTeam(
       team,
       name,

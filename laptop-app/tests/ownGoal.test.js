@@ -153,7 +153,7 @@ test('Tafel: Endstand mit Halbzeitstand, Abbruch in der 1. Halbzeit als Spielabb
 
   const r = openRenderer('display', t);
   r.emit('onStateUpdated', store.getState());
-  assert.equal(r.document.getElementById('phase-label').textContent, 'ENDSTAND (1:0)');
+  assert.equal(r.document.getElementById('phase-label').textContent, 'ENDSTAND · HZ 1:0');
 
   const abbruch = new MatchStateStore();
   abbruch.kickoff();

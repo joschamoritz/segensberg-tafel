@@ -1,5 +1,4 @@
 import { GoalEvent, GoalStage, goalStagesFor, MatchState, showsLeadChangeFrame, TeamId } from '../../shared/types';
-import { applyLogoPlate } from './common';
 
 // Torjubel: Vollbild, danach die einlaufende Ziffer in der Spielansicht.
 // Der Ablauf selbst steht im Stylesheet, hier wird nur weitergeschaltet.
@@ -121,7 +120,6 @@ function startCelebration(state: MatchState, goal: GoalEvent): void {
   const logo = teamState.logoDataUrl;
   if (logo) crest.src = logo;
   crest.hidden = logo === undefined;
-  applyLogoPlate(crest, teamState.logoVariant);
   team.textContent = teamState.name;
   team.hidden = logo !== undefined;
 

@@ -119,15 +119,11 @@ damit sie beim Hochzählen nicht springen.
 - **Wappen (crest)**: zeigt **immer das Logo**, wenn vorhanden. Nur wenn kein
   Logo hinterlegt ist, erscheint das Kürzel als Rückfallebene. Niemals beides
   gleichzeitig.
-  Hinter einer **farbigen** Logovariante liegt eine weiße Kontrastfläche
-  (`.has-plate`, kleine Ecken): Farbige Logos sind für helle Untergründe
-  gezeichnet und verschwänden mit ihren dunklen Linien auf dem blauen
-  Grund. Hinter weißen Varianten – die es für alle Vereine der Bibliothek
-  gibt – steht **keine** Fläche, und hinter dem Kürzel-Rückfall nie: Es
-  ist selbst weiß und wäre darauf weg. Bei unbekannter Variante bleibt es
-  ohne Fläche. Die Fläche sitzt am Bild, nicht am umgebenden `.crest` –
-  der ist im laufenden Spiel spaltenbreit, eine Fläche darauf wäre ein
-  weißer Balken quer über die Tafel.
+  **Keine Fläche hinter dem Wappen** (seit 1.9.1). Bis dahin lag hinter
+  farbigen Logovarianten eine weiße Kontrastfläche; im Probelauf störte
+  sie (Nutzerentscheidung 20.10.2026). Geht das farbige Logo eines
+  Vereins auf dem Blau unter, wählt man in der Vereinsauswahl die weiße
+  Fassung – liegen beide vor, stehen beide zur Wahl.
 - **Uhr-Panel** (Display): abgesetzte Vollfläche in `--svh-dk` unter dem
   Spielstand, Zeit in `--svh-gold`
 - **Torschützenliste** (`.scorer-list`, Display): unter dem Wappen, Minute
@@ -168,25 +164,25 @@ damit sie beim Hochzählen nicht springen.
   höchstens fünf Zeilen in Weiß.
 - **Sponsoren-Fenster** (`.sponsor-window`, Display, alle Designs):
   Titelleiste „UNSERE PARTNER" in `--svh-gold` auf `--svh-dk`, darunter
-  **2×2 gleich große weiße Kacheln**, Logo eingepasst (`contain`). Ab
+  **2×2 gleich große Felder**, Logo eingepasst (`contain`). Ab
   zwei Seiten zeigen kleine gefüllte Quadrate rechts in der Titelleiste
   die Seite an (aktive weiß, übrige `--sponsor-page-off`). Fehlen auf
   einer Seite Logos, bleiben Kacheln **leer** (Nutzerentscheidung
   16.10.2026, kein Vereinswappen als Füllung) statt zu verschwinden –
   sonst würden die übrigen größer, und gleich große Partner sind der
-  Zweck. Weiße Kacheln, weil Sponsorenlogos fast immer für hellen Grund
-  gezeichnet sind; die frühere Regel „Motive im Vereinsblau anlegen"
-  gilt damit nur noch für Highlights.
+  Zweck. **Ohne weiße Kachel** (seit 1.9.1, Nutzerentscheidung nach dem
+  Probelauf): Die weißen Flächen, besonders die leeren, störten auf der
+  Tafel. Jedes Logo steht direkt auf dem Grund, ein leeres Feld ist
+  unsichtbar. Für farbige Logos mit dunkler Schrift gibt es die weiße
+  Fassung (`…_weiß.png`).
   **Großer Partner** (`.sponsor-window.is-main`, Logos aus
   `Werbung/Hauptsponsor/`): dasselbe Fenster unter „UNSERE PARTNER", nur
   mit EINER Kachel über die ganze Fläche. Kein eigener Titel
   „Hauptsponsor" (Nutzer 20.10.2026) – die Größe macht den Unterschied.
   Die Seitenmarken zählen große und kleine Partnerfolien als eine Reihe.
-  **Weiße Logofassung** (`…_weiß.png`, `.is-white`): steht ohne Kachel
-  direkt auf dem Grund, in Fenster und „präsentiert von"-Platz gleich.
-  Die farbige Fassung bleibt in der weißen Kachel; eine leere Kachel
-  bleibt weiß, damit das Raster aus vier gleichen Flächen erhalten
-  bleibt.
+  **Weiße Logofassung** (`…_weiß.png`, `.is-white`): wird bevorzugt.
+  Beim „präsentiert von"-Platz steht sie ohne Kachel, die farbige dort
+  weiter in der kleinen weißen Kachel.
 - **„Präsentiert von"-Kachel** (`.sponsor-chip`, Display): Logo in
   einer kleinen weißen Kachel, eingepasst; Höhe und Höchstbreite je
   Platz über `--chip-h`/`--chip-w` (Begegnung und Aufstellung 13cqh,
@@ -249,7 +245,7 @@ damit sie beim Hochzählen nicht springen.
   Haken und Kreuz, aus demselben Grund wie beim Doppelpunkt: Feine
   Zeichen verschwinden auf der Matrix. Ab dem sechsten Schuss eine zweite
   Reihe. Nach dem Beenden steht das Ergebnis im Fuß des Endstands
-  („ENDSTAND (1:1) · 3:2 i. E.“, gemessen: endet bei 319 von 384 px).
+  („ENDSTAND · HZ 1:1 · 3:2 i. E.“, gemessen: endet bei 335 von 384 px).
   Im Retro-Design eine Textszene „ELFMETER“ mit Namen, Stand und den
   Schüssen als „T“ und „-“ – der volle Titel passt in der großen
   Punktschrift nicht in die Breite.
@@ -280,9 +276,20 @@ damit sie beim Hochzählen nicht springen.
   auch wenn derselbe Spieler schon getroffen hat: „(FE)“ gilt nur für
   dieses eine Tor. Im Steuerungsfenster sind „ET“ und „FE“ kleine
   Schalter in der Chronikzeile, gedrückt in `--svh-warn`.
-- **Fuß im Endstand:** „ENDSTAND (1:1)“ mit Halbzeitstand wie im
-  Spielbericht; ein Abpfiff schon in der 1. Halbzeit heißt
-  „SPIELABBRUCH“ (ohne Halbzeitstand, eine Pause gab es nicht).
+- **Fuß im Endstand:** „ENDSTAND · HZ 1:1“ mit Halbzeitstand. Bis 1.9.0
+  stand er wie im Spielbericht in Klammern („ENDSTAND (1:1)“) und wurde
+  im Probelauf als Endstand gelesen – auf der Tafel fehlt der
+  Zusammenhang, den der Bericht hat. Deshalb ausdrücklich „HZ“. Ein
+  Abpfiff schon in der 1. Halbzeit heißt „SPIELABBRUCH“ (ohne
+  Halbzeitstand, eine Pause gab es nicht).
+- **Einzel-Aufstellung:** Bild (Portrait, Trikot, beim Trainer das
+  Wappen) in einer festen Spalte links (34cqw), der Text daneben in der
+  restlichen Breite. Vorher war beides gemeinsam zentriert, und das Bild
+  sprang mit jeder Namenslänge hin und her. Der Aufstellungssponsor
+  steht in einer eigenen Zeile unter dem Namen, nicht neben dem
+  Vereinsnamen – dort verkürzte er ihn. Vereinsnamen werden nie mit „…“
+  abgeschnitten, sondern verkleinert (`fitLines()`), auch in der
+  Kopfzeile der Übersicht.
 
 ## Designs der Anzeige
 
@@ -400,7 +407,8 @@ der 70er/80er (Fotos des Nutzers vom 16.10.2026).
 - **Sponsoren-Fenster:** Die Titelzeile „UNSERE PARTNER" zeichnet die
   Matrix als Punktschrift, ohne Indigofläche und ohne Gold (Nutzerwunsch
   16.10.2026); die Seitenmarken als Punkte daneben. Die Logos liegen
-  weiter als Bilder in ihren weißen Kacheln über dem erloschenen Raster.
+  weiter als Bilder über dem erloschenen Raster (seit 1.9.1 ohne weiße
+  Kachel).
   Highlight-Bilder und historische Fotos ebenso; deren Beschriftung
   steht dabei in normaler Schrift, nicht als Punktschrift.
 - **Technik:** gezeichnet auf einem Canvas (`.retro-matrix`), die
@@ -501,9 +509,19 @@ für Kartentrennung, aber kein Muss.
   Torschützen-Einblendung. Da ein *deklarierter* Wert einen *vererbten*
   schlägt – unabhängig von der Spezifität – erbte die Liste die 16vh der
   Einblendung. Die Einblendung heißt deshalb jetzt `.spotlight-*`.
-- **Unterlängen brauchen Platz.** Oswald schneidet g, j und y bei
-  `line-height: 1` unten ab. Für Fließtext mindestens `1.25`, für
-  Listeneinträge `1.3`–`1.35`.
+- **Unterlängen brauchen Platz – gemessen `1.35`.** g, j und y reichen
+  bei Oswald 0,20 em unter die Grundlinie. Bei `line-height: 1.05` sind
+  darunter nur 0,08 em frei, bei `1.25` 0,18 em, erst bei `1.35`
+  0,23 em. Zusammen mit `overflow: hidden` (Namen, die eingepasst
+  werden) schnitt das die Unterlänge sichtbar ab (Probelauf 20.10.2026).
+  Wo ein Element `overflow: hidden` hat und Namen trägt: mindestens
+  `1.35`.
+- **Kein `visibility: visible` an Kindelementen.** Das Retro-Design
+  blendet alles außer der Punktmatrix per `visibility: hidden` aus; ein
+  Kind mit `visibility: visible` setzt sich darüber hinweg. So stand das
+  Vereinstrikot über dem Raster. Umschalten deshalb über `opacity` oder
+  `display`. Einzige Ausnahme: die Diashow-Bilder in Retro
+  (`tests/windowGuards.test.js` prüft das).
 - **`display` im CSS macht das `hidden`-Attribut wirkungslos.** Eine
   Autoren-Regel schlägt die Browser-Regel `[hidden] { display: none }` –
   unabhängig von der Spezifität. Wer einem Element im CSS ein `display`

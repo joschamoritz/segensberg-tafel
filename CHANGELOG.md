@@ -10,6 +10,34 @@ dem Baudatum. Welche Stelle wann steigt, steht in
 
 ---
 
+## 1.9.1 – 21.10.2026 (Testfassung)
+
+Korrekturen aus dem Probelauf.
+
+**Behoben**
+
+- **Endstand:** Der Halbzeitstand steht jetzt als „ENDSTAND · HZ 2:1“
+  da. Die Klammer „ENDSTAND (2:1)“ wurde als Endstand gelesen.
+- **Einzel-Aufstellung:** Das Bild (Portrait, Trikot, Wappen) steht fest
+  links und springt nicht mehr mit der Länge des Namens. Der
+  Aufstellungssponsor steht unter dem Namen und verkürzt den
+  Vereinsnamen nicht mehr. Lange Vereinsnamen werden kleiner statt
+  abgeschnitten – auch in der Kopfzeile der Aufstellungsübersicht.
+- **Unterlängen:** Buchstaben wie g, j und y werden in Namen nicht mehr
+  unten abgeschnitten (Einzel-Aufstellung, Torschützen-Einblendung).
+- **Retro-Design:** In der Einzel-Aufstellung stand das Vereinstrikot
+  über der Punktmatrix. Dort gibt es jetzt nur noch die Punktschrift.
+
+**Geändert**
+
+- **Sponsoren-Fenster ohne weiße Kacheln:** Die Logos stehen direkt auf
+  dem Grund, leere Felder sind unsichtbar. Für farbige Logos mit dunkler
+  Schrift gibt es die weiße Fassung (`…_weiß.png`).
+- **Keine weiße Fläche mehr hinter farbigen Vereinslogos.**
+- **Weißes oder farbiges Vereinslogo wählen:** Liegen beide Fassungen in
+  der Logo-Bibliothek, stehen beide in der Vereinsauswahl. Den Verein
+  noch einmal mit der anderen Fassung wählen tauscht nur das Logo.
+
 ## 1.9.0 – 20.10.2026 (Testfassung)
 
 Aufstellung mit Portraits und Trikot, dazu zwei Korrekturen an der

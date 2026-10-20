@@ -153,49 +153,21 @@ test('die Bibliothek kennt die Variante aus ihrer Ordnerstruktur', () => {
 // Anzeige
 // --------------------------------------------------------------------
 
-test('display: die Kontrastfläche kommt nur hinter farbigen Logos', (t) => {
+test('display: kein Wappen bekommt mehr eine Kontrastfläche (Nutzerentscheidung 20.10.2026)', (t) => {
+  // Bis 1.9.0 lag hinter farbigen Logos eine weiße Fläche. Sie störte im
+  // Probelauf; für schwierige Vereine wählt man die weiße Fassung.
   const r = openRenderer('display', t);
   const store = new MatchStateStore();
   store.setTeamLogo('home', 'data:image/png;base64,AAAA', 'color');
   store.setTeamLogo('away', 'data:image/png;base64,BBBB', 'white');
   r.emit('onStateUpdated', store.getState());
 
-  const plakette = (id) => r.document.getElementById(id).classList.contains('has-plate');
-
-  assert.equal(plakette('home-logo'), true, 'farbig: Fläche');
-  assert.equal(plakette('away-logo'), false, 'weiß: keine Fläche');
-  // Vor dem Anpfiff stehen dieselben Wappen größer -- dort gilt dasselbe.
-  assert.equal(plakette('pre-home-logo'), true);
-  assert.equal(plakette('pre-away-logo'), false);
-
-  assert.deepEqual(r.drainErrors(), []);
-});
-
-test('display: eine unbekannte Variante bekommt keine Fläche', (t) => {
-  // Das ist der Stand von vor dieser Unterscheidung -- ältere
-  // `teams.json` ohne das Feld dürfen sich nicht plötzlich anders
-  // verhalten.
-  const r = openRenderer('display', t);
-  const store = new MatchStateStore();
-  store.setTeamLogo('home', 'data:image/png;base64,AAAA');
-  r.emit('onStateUpdated', store.getState());
-
-  assert.equal(r.document.getElementById('home-logo').classList.contains('has-plate'), false);
-
-  assert.deepEqual(r.drainErrors(), []);
-});
-
-test('display: das Kürzel als Rückfallebene bekommt nie eine Fläche', (t) => {
-  // Es steht in Weiß. Auf einer weißen Fläche wäre es weg -- und ein
-  // Wappen ohne Logo ist ohnehin schon die Notlösung.
-  const r = openRenderer('display', t);
-  const store = new MatchStateStore();
-  store.setTeamLogo('home', undefined, 'color');
-  r.emit('onStateUpdated', store.getState());
-
-  const fallback = r.document.getElementById('home-fallback');
-  assert.equal(fallback.hidden, false, 'ohne Logo steht das Kürzel da');
-  assert.equal(fallback.classList.contains('has-plate'), false);
-
+  const mitFlaeche = [...r.document.querySelectorAll('img')].filter((img) => img.classList.contains('has-plate'));
+  assert.deepEqual(mitFlaeche.map((img) => img.id), []);
+  assert.doesNotMatch(
+    require('fs').readFileSync(require('path').join(__dirname, '..', 'dist', 'renderer', 'display', 'display.css'), 'utf-8').replace(/\/\*[\s\S]*?\*\//g, ''),
+    /has-plate/,
+    'keine Regel für eine Fläche mehr im Stylesheet'
+  );
   assert.deepEqual(r.drainErrors(), []);
 });

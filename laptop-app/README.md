@@ -121,12 +121,12 @@ Herstellersoftware. Siehe `../CLAUDE.md` und `../DESIGN.md` für Hintergrund.
   „Torschütze einblenden": Im Moment des Tores ist er noch nicht
   eingetragen. Sobald der Name feststeht, blendet der Knopf ihn mit
   Portrait ein.
-- **Kontrastfläche hinter farbigen Wappen.** Fehlt für einen Verein die
-  weiße Logovariante, legt die Anzeige hinter das farbige Logo eine
-  weiße Fläche – sonst verschwänden dessen dunkle Linien auf dem blauen
-  Grund. Erkannt wird die Variante aus der Ordnerstruktur der
-  Logo-Bibliothek, bei einer von Hand gewählten Datei aus Dateiname und
-  Bildhelligkeit.
+- **Weißes oder farbiges Logo.** Liegen in der Logo-Bibliothek beide
+  Fassungen eines Vereins, stehen in der Vereinsauswahl beide
+  („Erler SV – weißes Logo“ / „– farbiges Logo“). Wählt man denselben
+  Verein noch einmal mit der anderen Fassung, wechselt nur das Logo;
+  Kader und Retro-Kurzname bleiben. Eine weiße Fläche hinter farbigen
+  Logos gibt es seit 1.9.1 nicht mehr.
 - **Spielphasen** (Vor Anpfiff / laufend / Halbzeitpause / Abpfiff) mit
   jeweils eigener Display-Darstellung, gesteuert über die Buttons
   Anpfiff → Halbzeit → 2. Halbzeit anpfeifen → Abpfiff. Es ist immer nur
@@ -259,7 +259,7 @@ Electron-Main-Prozess (normaler Node-Kontext) und brauchen das nicht.
   Abpfiff rückt das Wappen nach oben und der Fuß schrumpft auf das
   Phasen-Label – die Torschützenliste unter jedem Wappen hat dort neun
   Zeilen, im laufenden Spiel sechs. Im Endstand steht der Halbzeitstand
-  dabei („ENDSTAND (1:1)“); ein Abpfiff schon in der 1. Halbzeit heißt
+  dabei („ENDSTAND · HZ 1:1“); ein Abpfiff schon in der 1. Halbzeit heißt
   „SPIELABBRUCH“. Dort bleibt das Wappen mittig auf
   einer Höhe mit dem Spielstand. Gezeigt werden Tore
   (Mehrfachtorschützen in einer Zeile zusammengefasst) und Platzverweise;
@@ -388,8 +388,7 @@ Im Electron-userData-Ordner (`%APPDATA%/anzeigetafel-laptop-app/`):
   des Logos und Retro-Kurzname), Pfad zur Logo-Bibliothek, Halbzeitdauer,
   Tafelauflösung und Design samt Effektschaltern und Leuchtfarbe. Die letzten drei gehören zum Verein
   bzw. zum Gerät und überstehen deshalb „Neues Spiel". Ältere Dateien ohne
-  Farbvariante werden weiterhin gelesen – ohne Kontrastfläche, also wie
-  bisher.
+  Farbvariante werden weiterhin gelesen.
 - `remote.json` – Fernsteuerung an/aus und ihre PIN. Bewusst nicht in
   `teams.json`: Die PIN gehört zu diesem Laptop.
 - `board-link.json` – Verbindung zur Tafel an/aus, Benutzer, Passwort und
@@ -469,8 +468,8 @@ Abgedeckt sind:
   `window.setTimeout` des jsdom-Fensters aus und spult von Hand vor
   (`zeitRaffen()`)
 - **Farbvariante der Logos** (`tests/logoVariant.test.js`) – dass die
-  weiße Kontrastfläche ausschließlich hinter farbigen Logos erscheint
-  und die Helligkeitsprüfung durchsichtige Bildpunkte auslässt
+  Helligkeitsprüfung durchsichtige Bildpunkte auslässt und kein Wappen
+  mehr eine Fläche bekommt
 - **Aufstellungs-Parser** (`tests/lineupParser.test.js`) – der
   Einfüge-Weg von fussball.de, inklusive der Regel, dass Betreuerstab
   und Schiedsrichter nicht im Kader landen
