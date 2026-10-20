@@ -10,6 +10,69 @@ dem Baudatum. Welche Stelle wann steigt, steht in
 
 ---
 
+## 1.6.1 – 20.10.2026 (Testfassung)
+
+Fehlerbehebungen und Ergänzungen aus dem Review vom Oktober 2026
+(`Review-2026-10.md`).
+
+**Behoben**
+
+- **„Neues Spiel“ holte den Gegner vom Programmstart zurück.** Wer
+  seitdem einen anderen Verein gewählt hatte, sah danach wieder den
+  alten, die Trainer fehlten auf den Aufstellungsseiten, und die nächste
+  Kaderänderung konnte den gespeicherten Kader des alten Gegners
+  überschreiben. Jetzt bleiben Mannschaften, Logos und Trainer stehen;
+  nur Spielstand, Uhr und Spielverlauf beginnen von vorn.
+- **Die Tafel bleibt an.** Solange die Anzeige auf der Tafel läuft, lässt
+  Windows weder die Bildschirme abschalten noch den Laptop schlafen
+  gehen – auch auf Akku nicht.
+- **Die Uhr geht nicht mehr nach**, wenn die Rückfrage „Es läuft noch
+  ein Spiel“ eine Weile offen stand. Geht der Laptop doch in den
+  Ruhezustand, zählt diese Zeit wie bisher nicht mit.
+- Der **Mauszeiger** erscheint nicht mehr auf der Tafel, wenn die Maus
+  über den Bildschirmrand wandert.
+- Ein **Bild, das aufs Steuerungsfenster gezogen wird**, ersetzt nicht
+  mehr die ganze Bedienung.
+- Ist eine Einstellungsdatei (Kader, Mannschaften, Texte) beschädigt,
+  wird sie **beiseitegelegt statt überschrieben**, und oben im Fenster
+  steht ein Hinweis. Vorher konnten dabei alle Kader verloren gehen.
+- Wird das **HDMI-Kabel erst nach dem Programmstart** eingesteckt, geht
+  die Anzeige jetzt von selbst auf die Tafel.
+- Nach „Phase zurück“ bis vor den Anpfiff bietet der nächste Start kein
+  Spiel mehr zum Fortsetzen an.
+
+**Weniger Fehlbedienung**
+
+- **„Neues Spiel“** ist im laufenden Spiel und in der Halbzeitpause
+  gesperrt. Für einen Abbruch zuerst „Abpfiff“.
+- **„−“ am Spielstand** fragt nach, wenn das Tor schon einen Torschützen
+  hat – Schütze und Minute gingen sonst verloren.
+- **„Anpfiff“** sagt, wenn schon Tore, Einträge oder Ecken dastehen
+  (etwa vom Ausprobieren beim Aufbau).
+- **Spieler aus dem Kader entfernen** fragt nach.
+- Das Steuerungsfenster fragt auch **in der Halbzeitpause** nach, bevor
+  es sich schließt.
+
+**Neu**
+
+- **Elfmeterschießen** nach dem Abpfiff, unter „Mehr für den Spieltag“:
+  je Mannschaft „Treffer“, „Verschossen“ und Zurücknehmen. Die Tafel
+  zeigt die Schüsse als Felder, nach „Beenden“ steht im Endstand
+  „3:2 i. E.“.
+- **Eigentor** und **Strafstoß**: Schalter „ET“ und „FE“ im Spielverlauf.
+  Beim Eigentor steht ein Spieler des Gegners zur Wahl; auf der Tafel
+  steht „Kowalski (ET)“ bzw. „Lange (FE)“.
+- Im **Endstand** steht der Halbzeitstand dabei: „ENDSTAND (1:1)“. Ein
+  Abpfiff schon in der 1. Halbzeit heißt auf der Tafel „SPIELABBRUCH“.
+- **Fernsteuerung:** Knopf **„Neue PIN“**. Ein iPad mit der alten PIN
+  fragt dann von selbst nach der neuen.
+- **Fernsteuerung:** Ein zweiter Tipp auf denselben Knopf, während der
+  erste noch unterwegs ist, zählt nicht doppelt. Eine goldene Leiste
+  oben zeigt, dass gerade etwas gesendet wird. Bilder gehen nur noch
+  einmal übers WLAN statt bei jedem Tor.
+- Unter den Adressen der Fernsteuerung stehen keine virtuellen
+  Netzwerkadapter mehr.
+
 ## 1.6.0 – 16.10.2026 (Testfassung)
 
 **Wettbewerbslogo**

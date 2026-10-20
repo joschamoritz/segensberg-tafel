@@ -19,9 +19,16 @@ Herstellersoftware. Siehe `../CLAUDE.md` und `../DESIGN.md` für Hintergrund.
   Automatik daneben liegt. Ändert sich die Auflösung des bespielten
   Bildschirms im Betrieb, passt sich das Anzeigefenster an; wird der
   Bildschirm ganz abgezogen, fällt die App auf das Vorschau-Fenster
-  zurück. Ein geschlossenes Anzeigefenster holt der Knopf
+  zurück. Wird ein Bildschirm erst **nach** dem Start angeschlossen
+  (das HDMI-Kabel kommt beim Aufbau oft zuletzt), geht die Anzeige von
+  selbst dorthin, sofern sie gerade in der Vorschau lief. Ein
+  geschlossenes Anzeigefenster holt der Knopf
   **„Anzeigefenster neu öffnen"** zurück – das Steuerungsfenster weist
   auch darauf hin, wenn es fehlt.
+- **Die Tafel bleibt an:** Solange die Anzeige auf einem echten
+  Bildschirm läuft, hält die App Bildschirme und Laptop wach
+  (`powerSaveBlocker`). Auf dem Anzeigebildschirm gibt es keinen
+  Mauszeiger.
 - **Die Anzeige rechnet ihr Layout in der Auflösung der LED-Wand**
   (Standard 384×192, im Steuerungsfenster unter „Tafelauflösung"
   einstellbar) und wird formatfüllend hochskaliert, zentriert und
@@ -43,6 +50,12 @@ Herstellersoftware. Siehe `../CLAUDE.md` und `../DESIGN.md` für Hintergrund.
   (Logo, Portrait, Logo-Ordner, Kader-Datei) – das ginge am Laptop auf.
   Mehrere Geräte gleichzeitig sind möglich. Fällt die Verbindung weg,
   zeigt das iPad einen roten Hinweis und verbindet sich selbst neu.
+  Logos und Portraits gehen nicht im Zustand mit, sondern einmal über
+  eine eigene Adresse; ein zweiter Tipp auf denselben Knopf, während der
+  erste noch unterwegs ist, wird verworfen. **„Neue PIN“** vergibt eine
+  neue; verbundene Geräte fragen dann von selbst danach. Die PIN geht
+  unverschlüsselt durchs WLAN – in einem offenen Vereins-WLAN lässt sie
+  sich mitlesen.
   **Beim ersten Einschalten fragt die Windows-Firewall** – dort
   „Private Netzwerke" erlauben, sonst erreicht das iPad den Laptop nicht.
 - **Ein- und Auswechslungen** für beide Mannschaften: Knopf
@@ -113,7 +126,8 @@ Herstellersoftware. Siehe `../CLAUDE.md` und `../DESIGN.md` für Hintergrund.
 - Team-Stammdaten (Name, Kürzel, Logo) im Control-Fenster unter "Team-
   Stammdaten & Logos" editierbar; werden in `teams.json` im Electron-
   userData-Ordner gespeichert und überstehen einen Neustart der App
-  (Spielstand/Uhr dagegen bewusst nicht – die starten immer bei null).
+  (Spielstand, Uhr und Chronik sichert dagegen `live-match.json`, siehe
+  „Absturzsicherung“).
   Heim ist fest auf SV Hochlar 28 / SVH mit Vereinslogo vorbelegt
   (`assets/heim-logo.png`), bleibt aber editierbar.
 - **Fassung und Baudatum in der Kopfzeile** des Steuerungsfensters
@@ -141,6 +155,15 @@ Electron-Main-Prozess (normaler Node-Kontext) und brauchen das nicht.
   gewählt neben „Anstoß“. Bleibt bei „Neues Spiel“ stehen; im
   Retro-Design steht der Name im Wechsel mit dem Countdown.
 - **Torjubel** bei jedem Tor im laufenden Spiel
+- **Eigentor und Strafstoß** über die Schalter „ET“ und „FE“ im
+  Spielverlauf. Beim Eigentor bietet die Auswahl die Spieler des Gegners
+  an; auf der Tafel steht „Kowalski (ET)“ bzw. „Lange (FE)“.
+- **Elfmeterschießen** nach dem Abpfiff, unter „Mehr für den Spieltag“.
+  Die Tafel zeigt dabei eine eigene Ansicht mit einem Feld je Schuss
+  (Gold Treffer, Rot verschossen). „Beenden“ übernimmt das Ergebnis als
+  „3:2 i. E.“ in den Endstand. Die Schüsse zählen nicht zum Spielstand
+  und stehen nicht im Spielverlauf. Eine Verlängerung gibt es nicht als
+  eigene Phase – die Uhr läuft nach 90:00 einfach weiter.
 - **Tormusik** aus `Vereinsdaten/Sounds/` (bevorzugt `tor.mp3`, sonst die
   erste Audiodatei im Ordner). Sie läuft über das Windows-Standardgerät –
   also über das, woran der Laptop hängt – und **ausschließlich auf
@@ -153,8 +176,10 @@ Electron-Main-Prozess (normaler Node-Kontext) und brauchen das nicht.
   Jubel. Lautstärke und Stummschaltung überstehen „Neues Spiel".
 - **Endstand mit Torschützenliste**: In Halbzeitpause und nach dem
   Abpfiff rückt das Wappen nach oben und der Fuß schrumpft auf das
-  Phasen-Label – die Torschützenliste unter jedem Wappen hat dort sieben
-  Zeilen, im laufenden Spiel sechs. Dort bleibt das Wappen mittig auf
+  Phasen-Label – die Torschützenliste unter jedem Wappen hat dort neun
+  Zeilen, im laufenden Spiel sechs. Im Endstand steht der Halbzeitstand
+  dabei („ENDSTAND (1:1)“); ein Abpfiff schon in der 1. Halbzeit heißt
+  „SPIELABBRUCH“. Dort bleibt das Wappen mittig auf
   einer Höhe mit dem Spielstand. Gezeigt werden Tore
   (Mehrfachtorschützen in einer Zeile zusammengefasst) und Platzverweise;
   gelbe Karten bleiben draußen, sonst wäre die Liste im Nu voll. Passt
@@ -205,7 +230,8 @@ Electron-Main-Prozess (normaler Node-Kontext) und brauchen das nicht.
   Spiel bereits angepfiffen war. Die Uhr wird dabei immer **angehalten**
   übernommen (nach einem Absturz weiß niemand, wie viel Zeit vergangen
   ist) und per „Start" fortgesetzt. Wer das Steuerungsfenster während des
-  laufenden Spiels schließt, wird vorher gefragt.
+  laufenden Spiels oder in der Halbzeitpause schließt, wird vorher
+  gefragt. „Neues Spiel“ ist in diesen beiden Phasen gesperrt.
 
 ## Datenablage
 
@@ -284,7 +310,10 @@ freigestellte Portraits als PNG.
 
 Alle Dateien werden über eine temporäre Datei geschrieben und danach
 umbenannt, damit ein Absturz mitten im Schreiben keine abgeschnittene
-Datei hinterlässt.
+Datei hinterlässt. Ist `teams.json`, `squads.json` oder `content.json`
+beim Start trotzdem unlesbar, wird sie als `…defekt-<Zeitstempel>.json`
+beiseitegelegt (nicht überschrieben), und das Steuerungsfenster meldet
+das oben im roten Banner.
 
 ## Noch nicht enthalten (siehe `../Backlog.md`)
 
@@ -296,8 +325,10 @@ Undo über die Chronik hinaus, Speichern von Spieltagen, Trainingsmodus.
 npm test
 ```
 
-Baut und prüft anschließend mit `node:test`: 222 Fälle in rund vier
-Sekunden.
+Baut und prüft anschließend mit `node:test`: 422 Fälle in rund zehn
+Sekunden (warm; ein kalter erster Lauf dauert gern doppelt so lange).
+Den Großteil der Zeit kostet das Laden von jsdom, rund zwei Sekunden je
+Testdatei, die parallel laufen.
 `npm run check` ist derselbe Lauf unter dem Namen, der die
 Vorab-Prüfung meint – das, was vor einer Auslieferung durchlaufen soll.
 Getestet wird gegen den kompilierten Stand in `dist/`, also gegen genau
@@ -447,6 +478,16 @@ nach neben der Anwendung, unter `Dokumente/Anzeigetafel/` und zuletzt am
 Entwicklungspfad. Fehlt der Ordner, bleibt das Vereins-Dropdown leer und
 die Diashow findet nichts – das Steuerungsfenster sagt dann, wo es
 gesucht hat.
+
+**Energieoptionen und Anzeige-Anordnung.** Bildschirm-Abschaltung und
+Ruhezustand verhindert die App selbst, solange sie die Tafel bespielt.
+Das **Zuklappen des Deckels** dagegen nicht: Unter „Energieoptionen →
+Auswählen, was beim Zuklappen geschehen soll“ für Akku- und Netzbetrieb
+„Nichts unternehmen“ einstellen, falls der Laptop am Platz zugeklappt
+wird. In den Anzeigeeinstellungen die Tafel **über** oder **unter** den
+Laptopbildschirm legen statt daneben – dann verirrt sich die Maus beim
+Griff zum rechten Rand nicht auf die Tafel (einen Zeiger zeigt die
+Anzeige ohnehin nicht).
 
 **Windows-Warnung beim ersten Start.** Die Dateien sind nicht signiert;
 ein Code-Signing-Zertifikat kostet 200–400 € im Jahr und verlangt seit

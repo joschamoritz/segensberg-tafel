@@ -156,8 +156,9 @@ function configPath(): string {
 
 /**
  * Team-Stammdaten (Name, Kürzel, Logo) überleben einen Neustart der App.
- * Spielstand/Uhr werden bewusst NICHT persistiert -- die starten bei jedem
- * Programmstart wieder bei null, wie bei einer klassischen Anzeigetafel.
+ * Spielstand, Uhr und Chronik stehen NICHT hier, sondern in
+ * `live-match.json` (siehe liveMatch.ts) -- die gehören zum einzelnen
+ * Spiel, nicht zum Verein.
  */
 export function loadTeamsConfig(): TeamsConfig {
   const fallback = defaults();

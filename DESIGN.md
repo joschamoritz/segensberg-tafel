@@ -205,6 +205,32 @@ damit sie beim Hochzählen nicht springen.
   kein Blinken, kein Farbwechsel wie beim Torjubel. Eine Vollbildfläche
   statt einer Leiste, weil sie pro Spiel nur einmal erscheint und eher
   eine Geste ans Publikum ist als eine Zusatzinformation nebenher.
+- **Elfmeterschießen** (`.board-shootout`, Display, seit 1.6.1):
+  Vollbild in `--svh-dk`, solange es läuft (`body.showing-shootout`).
+  Titel „ELFMETERSCHIESSEN“ in `--svh-gold`, Wappen links und rechts,
+  der Stand des Schießens groß dazwischen mit demselben Doppelpunkt aus
+  zwei Quadraten wie der Spielstand. Unter jedem Wappen ein **Feld je
+  Schuss** (7cqh): Treffer `--svh-gold`, verschossen `--card-red`,
+  noch offene der ersten fünf in `--sponsor-page-off` – derselbe
+  gedämpfte Ton wie die übrigen Seitenmarken der Sponsoren. Felder statt
+  Haken und Kreuz, aus demselben Grund wie beim Doppelpunkt: Feine
+  Zeichen verschwinden auf der Matrix. Ab dem sechsten Schuss eine zweite
+  Reihe. Nach dem Beenden steht das Ergebnis im Fuß des Endstands
+  („ENDSTAND (1:1) · 3:2 i. E.“, gemessen: endet bei 319 von 384 px).
+  Im Retro-Design eine Textszene „ELFMETER“ mit Namen, Stand und den
+  Schüssen als „T“ und „-“ – der volle Titel passt in der großen
+  Punktschrift nicht in die Breite.
+- **Eigentor und Strafstoß** (Display): als Zusatz hinter dem Namen wie
+  im Spielbericht, „Kowalski (ET)“ und „Lange (FE)“, in Liste,
+  Torschützen-Einblendung („EIGENTOR“ bzw. „TOR (FE)“) und Retro. Ein
+  Eigentor ohne Schützen heißt „Eigentor“ – sonst sähe es aus wie ein
+  eigenes Tor ohne Namen. Strafstoßtore stehen in einer eigenen Zeile,
+  auch wenn derselbe Spieler schon getroffen hat: „(FE)“ gilt nur für
+  dieses eine Tor. Im Steuerungsfenster sind „ET“ und „FE“ kleine
+  Schalter in der Chronikzeile, gedrückt in `--svh-warn`.
+- **Fuß im Endstand:** „ENDSTAND (1:1)“ mit Halbzeitstand wie im
+  Spielbericht; ein Abpfiff schon in der 1. Halbzeit heißt
+  „SPIELABBRUCH“ (ohne Halbzeitstand, eine Pause gab es nicht).
 
 ## Designs der Anzeige
 
@@ -467,6 +493,10 @@ für Kartentrennung, aber kein Muss.
   `display.css`. Alle Teile liegen dafür nebeneinander im HTML statt in
   getrennten Blöcken je Stufe – so bleibt jede Element-Id einmalig und
   der Renderer braucht keinen zweiten Satz davon.
+- **Kein Mauszeiger auf der Tafel.** `cursor: none` an `html, body` der
+  Anzeige. Die Tafel ist ein erweiterter Bildschirm; ein Windows-Zeiger
+  wäre dort ein Sechstel der Höhe groß. Abgesichert in
+  `tests/windowGuards.test.js`.
 - **Sichtbarkeitsregeln je Stufe als `:not([hidden])` schreiben.**
   Wappen und Torschütze fehlen regelmäßig und werden im Renderer über
   `element.hidden` abgeschaltet. Eine Stufenregel mit blankem `display`
