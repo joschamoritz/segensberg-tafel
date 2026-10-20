@@ -253,6 +253,25 @@ damit sie beim Hochzählen nicht springen.
   Im Retro-Design eine Textszene „ELFMETER“ mit Namen, Stand und den
   Schüssen als „T“ und „-“ – der volle Titel passt in der großen
   Punktschrift nicht in die Breite.
+- **Torschütze** (`.board-scorer`, Display): Der Name steht in einer
+  oder zwei **festen** Zeilen – oben Nummer und Vorname, darunter der
+  Nachname –, die `fitLines()` auswählt und notfalls verkleinert. Nie
+  abgeschnitten (bis 1.8.0 lief er neben dem Portrait aus der Fläche),
+  nie frei umbrochen („Schöneberg-" am Zeilenende).
+- **Torjubel liegt immer obenauf.** Torschütze, Danksagung und Diashow
+  werden nur ohne `.celebrating` eingeschaltet (`:not(.celebrating)` an
+  der Regel selbst, nicht über die Reihenfolge im Stylesheet). Ein
+  Torschütze, der während des Jubels angefordert wird, erscheint danach
+  mit voller Standzeit.
+- **Einzel-Aufstellung** (`.card-page`, Display): Aufbau wie der
+  Torschütze – Bild links (76cqh), rechts Wappen und Vereinsname klein,
+  darunter die Rolle in `--svh-gold` („TORWART", „STARTELF · KAPITÄN",
+  „TRAINER") und der Name groß. Ohne Portrait ein **Trikot mit der
+  Rückennummer**: Heim das Vereinstrikot (`trikot-heim.png`, Nummer in
+  Weiß), Gäste ein neutrales weißes Trikot als harte Fläche (Nummer in
+  `--svh-dk`) – ein Gastspieler im SVH-Trikot wäre falsch. Beim Trainer
+  das Wappen statt eines Bildes. Im Retro-Design dieselbe Szene wie beim
+  Torschützen, ohne Bild.
 - **Eigentor und Strafstoß** (Display): als Zusatz hinter dem Namen wie
   im Spielbericht, „Kowalski (ET)“ und „Lange (FE)“, in Liste,
   Torschützen-Einblendung („EIGENTOR“ bzw. „TOR (FE)“) und Retro. Ein

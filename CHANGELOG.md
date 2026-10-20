@@ -10,6 +10,30 @@ dem Baudatum. Welche Stelle wann steigt, steht in
 
 ---
 
+## Noch nicht ausgeliefert
+
+**Neu**
+
+- **Aufstellung einzeln mit Portraits:** Neben „Aufstellung einblenden"
+  steht eine Auswahl „Übersicht / Einzeln mit Portraits". Einzeln
+  erscheint jeder Spieler der Startelf 4 Sekunden lang mit Portrait,
+  zuerst der Torwart, danach der Trainer und zum Schluss die Bank auf
+  einer Seite. Wer kein Portrait hat, steht mit seinem Trikot und der
+  Rückennummer da. Die Auswahl bleibt gespeichert.
+
+**Behoben**
+
+- Der Name in der Torschützen-Einblendung wurde neben dem Portrait
+  abgeschnitten. Er steht jetzt bei Bedarf in zwei Zeilen und wird
+  notfalls kleiner, aber nie gekürzt.
+- Torschützen-Einblendung und Torjubel lagen übereinander, wenn kurz
+  nach einem Tor der Schütze eingeblendet oder während der Einblendung
+  ein neues Tor eingetragen wurde. Jetzt läuft erst der Jubel, danach
+  der Torschütze in voller Länge; ein neues Tor beendet die Einblendung
+  des vorigen. Dasselbe galt für Danksagung und Diashow.
+
+---
+
 ## 1.8.0 – 20.10.2026 (Testfassung)
 
 Vorbereitung auf den TB50: Die App kann sich mit der Tafel im WLAN

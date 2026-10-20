@@ -79,6 +79,15 @@ Herstellersoftware. Siehe `../CLAUDE.md` und `../DESIGN.md` für Hintergrund.
   Namen blendet **„Einblenden"** ihn mit der Mannschaft ein. Danach
   führen Aufstellungsseiten und Torschützenauswahl den Eingewechselten.
   Der gespeicherte Kader ändert sich dadurch nicht.
+- **Aufstellung einzeln mit Portraits** (Auswahl neben „Aufstellung
+  einblenden", wird gemerkt): Die Startelf erscheint Spieler für Spieler,
+  je 4 Sekunden, erst der Torwart, dann nach Rückennummer. Danach der
+  Trainer mit dem Vereinswappen, danach die Bank als eine Seite. Ohne
+  Portrait steht ein Trikot mit der Rückennummer da – bei der
+  Heimmannschaft das Vereinstrikot aus
+  `src/renderer/display/trikot-heim.png` (freigestelltes PNG, Rücken mit
+  Schriftzug, ohne Nummer), bei den Gästen und solange die Datei fehlt
+  ein neutrales weißes. „Übersicht" ist der bisherige Ablauf.
 - **Retro-Design** als drittes: Punktmatrix wie alte Stadiontafeln,
   Leuchtfarbe Bernstein oder Weiß. Statt Wappen stehen Kurznamen da
   („ERKENSCHWICK"), vorgeschlagen aus dem Vereinsnamen und unter
