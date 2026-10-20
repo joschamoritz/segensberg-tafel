@@ -72,6 +72,10 @@ Fehlerbehebungen und Ergänzungen aus dem Review vom Oktober 2026
   einmal übers WLAN statt bei jedem Tor.
 - Unter den Adressen der Fernsteuerung stehen keine virtuellen
   Netzwerkadapter mehr.
+- **Spielverlauf:** Heim steht immer links, Gast immer rechts, jedes
+  Ereignis in einer eigenen Zeile – die Zeit läuft von oben nach unten,
+  das Neueste steht unten. Die Vereinsnamen stehen einmal oben über den
+  Spalten.
 
 ## 1.6.0 – 16.10.2026 (Testfassung)
 

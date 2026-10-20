@@ -396,7 +396,17 @@
   </main>
 
   <section class="goal-log-block">
-    <h3>Spielverlauf</h3>
+    <!-- Heim links, Gast rechts -- wie die Mannschaftsspalten darüber und
+         die Wappen auf der Tafel. Jedes Ereignis steht in einer eigenen
+         Zeile, die Zeit läuft also von oben nach unten (Nutzerentscheidung
+         20.10.2026, Review N15). Die Kopfzeile ist zugleich die Überschrift
+         des Abschnitts: Eine eigene Zeile "Spielverlauf" darüber kostete bei
+         1366x700 die halbe sichtbare Liste. Außerhalb der Liste, damit die
+         Liste nur Ereignisse enthält. -->
+    <div class="goal-log-head" id="goal-log-head">
+      <span id="goal-log-home"></span>
+      <span id="goal-log-away"></span>
+    </div>
     <ol class="goal-log" id="goal-log"></ol>
     <p class="goal-log-empty" id="goal-log-empty">Noch keine Tore oder Karten.</p>
   </section>

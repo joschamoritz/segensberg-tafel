@@ -74,9 +74,6 @@ function renderSubstitutionRow(event: SubstitutionEvent, state: MatchState): HTM
   minute.className = 'goal-minute';
   minute.textContent = formatEventMinute(event);
 
-  const teamName = document.createElement('span');
-  teamName.textContent = state[event.team].name;
-
   const kind = document.createElement('span');
   kind.className = 'goal-standing';
   kind.textContent = 'Wechsel';
@@ -127,14 +124,33 @@ function renderSubstitutionRow(event: SubstitutionEvent, state: MatchState): HTM
     if (confirm('Diesen Eintrag löschen?')) window.api.eventRemove(eventId);
   });
 
-  item.append(minute, teamName, kind, outSelect, inSelect, show, remove);
+  item.append(minute, kind, outSelect, inSelect, show, remove);
   return item;
 }
 
 /** Chronik der Tore: Minute, Mannschaft, Zwischenstand und Torschütze. */
+/**
+ * Setzt eine Zeile auf die Seite ihrer Mannschaft und in eine eigene Zeile
+ * des Rasters. Die Zeile muss ausdrücklich gesetzt werden: Ohne sie legte
+ * das Raster ein Gasttor neben das vorangehende Heimtor, und die Zeit
+ * liefe wieder im Zickzack. `element.style` statt eines style-Attributs --
+ * die CSP setzt `style-src 'self'`, CSSOM-Zugriffe fallen nicht darunter.
+ */
+function placeRow(item: HTMLLIElement, team: TeamId, row: number): HTMLLIElement {
+  item.classList.add(team === 'home' ? 'side-home' : 'side-away');
+  item.style.gridRow = String(row);
+  return item;
+}
+
 export function renderGoalLog(state: MatchState): void {
   const empty = document.getElementById('goal-log-empty')!;
   empty.hidden = state.events.length > 0;
+  // Ohne Ereignisse gibt es keine Spalten zu beschriften.
+  const leer = state.events.length === 0;
+  document.getElementById('goal-log-home')!.textContent = leer
+    ? 'Spielverlauf'
+    : `Spielverlauf · ${state.home.name}`;
+  document.getElementById('goal-log-away')!.textContent = leer ? '' : state.away.name;
 
   // Kader und Vereinsnamen gehören mit in die Signatur -- sonst tauchten
   // neu angelegte Spieler nicht in den Torschützen-Auswahlfeldern auf und
@@ -145,10 +161,11 @@ export function renderGoalLog(state: MatchState): void {
   const list = document.getElementById('goal-log')!;
   list.innerHTML = '';
 
-  for (const event of state.events) {
+  state.events.forEach((event, index) => {
+    const row = index + 1;
     if (event.type === 'sub') {
-      list.appendChild(renderSubstitutionRow(event, state));
-      continue;
+      list.appendChild(placeRow(renderSubstitutionRow(event, state), event.team, row));
+      return;
     }
 
     const item = document.createElement('li');
@@ -158,9 +175,7 @@ export function renderGoalLog(state: MatchState): void {
     minute.className = 'goal-minute';
     minute.textContent = formatEventMinute(event);
 
-    const teamName = document.createElement('span');
-    teamName.textContent = state[event.team].name;
-
+    // Kein Vereinsname mehr: Die Spalte sagt, welche Mannschaft es ist.
     const kind = document.createElement('span');
     kind.className = 'goal-standing';
     kind.textContent =
@@ -187,7 +202,7 @@ export function renderGoalLog(state: MatchState): void {
       else window.api.cardSetPlayer(eventId, value);
     });
 
-    item.append(minute, teamName, kind);
+    item.append(minute, kind);
 
     // Eigentor-Schalter. Er sitzt vor der Auswahl, weil er bestimmt, aus
     // welchem Kader sie kommt; ein Umschalten leert den gewählten Schützen.
@@ -251,8 +266,8 @@ export function renderGoalLog(state: MatchState): void {
     });
     item.appendChild(remove);
 
-    list.appendChild(item);
-  }
+    list.appendChild(placeRow(item, event.team, row));
+  });
 
   // Ans Ende springen. Die Chronik sortiert chronologisch, das JÜNGSTE
   // Ereignis steht also unten -- und genau das ist das, dem gleich ein

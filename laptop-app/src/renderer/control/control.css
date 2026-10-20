@@ -1515,8 +1515,22 @@ body.is-remote .goal-remove {
   padding: 0 24px 16px;
 }
 
-.goal-log-block h3 {
-  margin: 0 0 8px 0;
+/* Heim links, Gast rechts, jedes Ereignis in einer eigenen Zeile
+   (Nutzerentscheidung 20.10.2026, Review N15). Vorher brach die Liste
+   einfach um: Wer links oder rechts stand, hing an der Zeilenbreite,
+   nicht an der Mannschaft, und die Zeit lief im Zickzack. Die Zeile
+   setzt chronicle.ts je Ereignis ausdrücklich. */
+.goal-log,
+.goal-log-head {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 12px;
+}
+
+/* Zugleich die Überschrift des Abschnitts -- daher im Stil der übrigen
+   Abschnittsüberschriften. */
+.goal-log-head {
+  margin-bottom: 6px;
   font-family: 'Oswald', sans-serif;
   font-size: 13px;
   font-weight: 600;
@@ -1525,14 +1539,20 @@ body.is-remote .goal-remove {
   color: var(--svh-mut);
 }
 
+.goal-log li.side-home {
+  grid-column: 1;
+}
+
+.goal-log li.side-away {
+  grid-column: 2;
+}
+
 .goal-log {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  align-content: flex-start;
-  gap: 8px;
+  align-content: start;
+  row-gap: 4px;
   /* Eigener Scrollbalken statt Wachsen ins Endlose: Bei zwanzig
      Ereignissen schöbe die Liste sonst alles darunter aus dem Bild.
      min-height: 0 ist Pflicht -- ein Flex-Kind schrumpft sonst nicht
@@ -1547,6 +1567,7 @@ body.is-remote .goal-remove {
    Torschütze zugeordnet wird. Von 49px auf rund 34px. */
 .goal-log li {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
   background: var(--svh-wh);

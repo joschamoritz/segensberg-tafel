@@ -179,3 +179,35 @@ test('Spieler entfernen fragt nach, ein Nein hält es auf', (t) => {
   assert.deepEqual(r.calls.map((c) => c.name), []);
   assert.match(fragen[0], /Lange/);
 });
+
+// --------------------------------------------------------------------
+// Spielverlauf: Heim links, Gast rechts, eine Zeile je Ereignis (N15)
+// --------------------------------------------------------------------
+
+test('Spielverlauf: jedes Ereignis in eigener Zeile auf der Seite seiner Mannschaft', (t) => {
+  const store = new MatchStateStore();
+  store.kickoff();
+  store.stopClock();
+  store.incrementScore('home', 1);
+  store.addCard('away', 'yellow');
+  store.incrementScore('away', 1);
+  store.addSubstitution('home');
+  store.hideInfo();
+
+  const r = openRenderer('control', t);
+  r.emit('onStateUpdated', store.getState());
+  const zeilen = [...r.document.querySelectorAll('#goal-log li')].map((li) => [
+    li.classList.contains('side-home') ? 'heim' : li.classList.contains('side-away') ? 'gast' : '?',
+    li.style.gridRow,
+  ]);
+  // Ohne ausdrückliche Zeile legte das Raster ein Gasttor neben das
+  // vorangehende Heimtor -- die Zeit liefe wieder im Zickzack.
+  assert.deepEqual(zeilen, [
+    ['heim', '1'],
+    ['gast', '2'],
+    ['gast', '3'],
+    ['heim', '4'],
+  ]);
+  assert.match(r.document.getElementById("goal-log-home").textContent, /Spielverlauf · Heim/);
+  assert.deepEqual(r.drainErrors(), []);
+});

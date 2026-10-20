@@ -139,6 +139,11 @@ damit sie beim Hochzählen nicht springen.
   ein Zeichen aus drei kleinen Quadraten in `--svh-gold`.
 - **Score-Stepper** (Control): großer +/- Button-Block pro Team,
   Fat-Finger-taugliche Zielgröße (gilt später besonders fürs iPad)
+- **Spielverlauf** (`.goal-log`, Control): zwei Spalten, **Heim links,
+  Gast rechts** wie die Mannschaftsspalten darüber, **eine Zeile je
+  Ereignis** – die Zeit läuft von oben nach unten, das Jüngste steht
+  unten. Die Vereinsnamen stehen einmal in der Kopfzeile
+  (`.goal-log-head`), die zugleich die Abschnittsüberschrift ist.
 - **Phasen-Buttons** (Control): der im Spielverlauf fällige Schritt ist als
   `.btn-next` in Vereins-Indigo hervorgehoben, unpassende sind deaktiviert
 - **Wechsel** (Display): in der Info-Leiste, Text „Lange für Demir"
