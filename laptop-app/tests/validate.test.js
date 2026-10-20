@@ -101,11 +101,11 @@ test('Spielerfelder werden einzeln geprüft', () => {
   assert.equal(spieler.isCaptain, true);
 });
 
-test('Portraits werden unverändert durchgereicht', () => {
-  // Bilddaten stammen aus images.ts, nicht aus der Eingabemaske.
-  const url = 'data:image/jpeg;base64,AAAA';
-  assert.equal(v.sanitizePlayer({ id: 'a', photoDataUrl: url }).photoDataUrl, url);
-  assert.equal(v.sanitizePlayer({ id: 'a', photoDataUrl: 42 }).photoDataUrl, undefined);
+test('Portraits kommen nie aus der Nachricht', () => {
+  // Bilddaten stammen aus images.ts und bleiben im Store. Ein iPad schickt
+  // hier seine Bildadresse, ein älterer Stand der Zeile ein überholtes Bild.
+  assert.equal('photoDataUrl' in v.sanitizePlayer({ id: 'a', photoDataUrl: 'data:image/jpeg;base64,AA' }), false);
+  assert.equal('photoDataUrl' in v.sanitizePlayer({ id: 'a', photoDataUrl: '/api/image/x?pin=1' }), false);
 });
 
 test('eingefügte Kader werden begrenzt', () => {

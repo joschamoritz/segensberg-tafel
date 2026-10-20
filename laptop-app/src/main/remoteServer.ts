@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import * as fs from 'fs';
 import * as http from 'http';
 import * as os from 'os';
@@ -100,8 +101,28 @@ const HEAD_ADDITIONS = [
   '<meta name="apple-mobile-web-app-title" content="Anzeigetafel" />',
 ].join('\n  ');
 
+/**
+ * Höchstzahl gemerkter Bilder. Kader beider Mannschaften samt Logos liegen
+ * weit darunter; die Grenze fängt nur ab, dass über einen langen Spieltag
+ * mit vielen Vereinswechseln der Speicher unbegrenzt wächst.
+ */
+const MAX_IMAGES = 300;
+
 export class RemoteServer {
   private server: http.Server | null = null;
+  /**
+   * Bilder, die statt als Base64 im Zustand über eine eigene Adresse gehen.
+   *
+   * Der Zustand trägt alle Logos und Portraits als data:-URL. Gemessen
+   * waren das schon ohne Portraits rund 330 KB, mit einem Kader voller
+   * Portraits weit über 1 MB -- bei JEDER Änderung, an jedes Gerät. Bei
+   * schwachem WLAN stand die neue Zahl am iPad erst spürbar später da, und
+   * wer dann ein zweites Mal tippte, zählte zwei Tore (Review 2026-10, W9).
+   * Jetzt steht im Zustand nur `/api/image/<hash>`, und das Gerät lädt
+   * jedes Bild einmal.
+   */
+  private readonly images = new Map<string, { type: string; data: Buffer }>();
+  private readonly imageIds = new Map<string, string>();
   private readonly clients = new Set<http.ServerResponse>();
   private readonly failures = new Map<string, { count: number; until: number }>();
   private keepAlive: ReturnType<typeof setInterval> | null = null;
@@ -153,8 +174,44 @@ export class RemoteServer {
 
   /** Schickt eine Nachricht an alle verbundenen Geräte. */
   broadcast(channel: string, ...args: unknown[]): void {
-    const data = `data: ${JSON.stringify({ channel, args })}\n\n`;
+    if (this.clients.size === 0) return;
+    const data = `data: ${JSON.stringify({ channel, args: this.withImageUrls(args) })}\n\n`;
     for (const client of this.clients) client.write(data);
+  }
+
+  /**
+   * Ersetzt jede data:-URL eines Bildes durch eine Adresse auf diesem
+   * Server. Die PIN steht in der Adresse, weil ein `<img>` keine
+   * Kopfzeile mitschicken kann -- die Nachricht geht ohnehin nur an Geräte,
+   * die sich mit genau dieser PIN angemeldet haben.
+   */
+  withImageUrls(value: unknown): unknown {
+    if (typeof value === 'string') {
+      return value.startsWith('data:image/') ? this.imageUrl(value) : value;
+    }
+    if (Array.isArray(value)) return value.map((entry) => this.withImageUrls(entry));
+    if (value && typeof value === 'object') {
+      const out: Record<string, unknown> = {};
+      for (const [key, entry] of Object.entries(value)) out[key] = this.withImageUrls(entry);
+      return out;
+    }
+    return value;
+  }
+
+  private imageUrl(dataUrl: string): string {
+    let id = this.imageIds.get(dataUrl);
+    if (!id) {
+      const match = /^data:(image\/[\w.+-]+);base64,(.*)$/s.exec(dataUrl);
+      if (!match) return '';
+      id = createHash('sha1').update(dataUrl).digest('hex');
+      if (this.images.size >= MAX_IMAGES) {
+        this.images.clear();
+        this.imageIds.clear();
+      }
+      this.images.set(id, { type: match[1], data: Buffer.from(match[2], 'base64') });
+      this.imageIds.set(dataUrl, id);
+    }
+    return `/api/image/${id}?pin=${encodeURIComponent(this.options.pin)}`;
   }
 
   // ------------------------------------------------------------------
@@ -200,6 +257,22 @@ export class RemoteServer {
     if (req.method === 'GET' && route === '/api/check') {
       res.writeHead(204);
       res.end();
+      return;
+    }
+    if (req.method === 'GET' && route.startsWith('/api/image/')) {
+      const image = this.images.get(route.slice('/api/image/'.length));
+      if (!image) {
+        res.writeHead(404);
+        res.end();
+        return;
+      }
+      // Die Adresse enthält den Hash des Inhalts und ändert sich mit dem
+      // Bild -- das Gerät darf es also behalten.
+      res.writeHead(200, {
+        'Content-Type': image.type,
+        'Cache-Control': 'private, max-age=86400, immutable',
+      });
+      res.end(image.data);
       return;
     }
     if (req.method === 'GET' && route === '/api/events') {

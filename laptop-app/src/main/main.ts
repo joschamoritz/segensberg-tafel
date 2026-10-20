@@ -958,9 +958,12 @@ app.whenReady().then(() => {
     if (!isTeamId(team)) return;
     const player = sanitizePlayer(raw);
     if (!player) return;
+    // Das Portrait bleibt, wie es im Store steht -- siehe sanitizePlayer().
     updateSquad(
       team,
-      store.getState().squads[team].map((p) => (p.id === player.id ? player : p))
+      store
+        .getState()
+        .squads[team].map((p) => (p.id === player.id ? { ...player, photoDataUrl: p.photoDataUrl } : p))
     );
   });
   onIpc(

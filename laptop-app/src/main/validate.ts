@@ -136,9 +136,12 @@ function sanitizeFields(raw: Record<string, unknown>): Omit<Player, 'id'> {
     role: sanitizeRole(raw.role),
     isGoalkeeper: raw.isGoalkeeper === true,
     isCaptain: raw.isCaptain === true,
-    // Bilddaten stammen aus `images.ts`, nicht aus der Eingabemaske --
-    // hier unverändert durchreichen.
-    photoDataUrl: typeof raw.photoDataUrl === 'string' ? raw.photoDataUrl : undefined,
+    // Kein Portrait: Bilddaten entstehen ausschließlich in `images.ts`
+    // (Dateiauswahl am Laptop) und bleiben im Store. Aus der Nachricht
+    // übernommen, überschrieb eine Zeile, die vor der Rückmeldung eines
+    // neuen Portraits bearbeitet wurde, dieses mit dem alten -- und ein
+    // iPad schickte seine Bildadresse (`/api/image/…`) als Portrait
+    // zurück (Review 2026-10, N2/W9).
   };
 }
 

@@ -501,6 +501,21 @@ body[data-setup='kader'] #setup-kader {
   text-align: center;
 }
 
+/* Ein Befehl ist unterwegs: eine schmale goldene Leiste am oberen Rand.
+   Ohne Rückmeldung tippte man bei schwachem WLAN ein zweites Mal, weil
+   die Zahl noch nicht umgesprungen war (Review 2026-10, W9). Einen
+   gleichen Befehl verwirft remote.ts in dieser Zeit ohnehin. */
+body.is-remote.is-sending::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  z-index: 999;
+  background: var(--svh-gold);
+}
+
 /* Safari rechnet 100vh einschließlich der Adressleiste -- die untere
    Werkzeugzeile läge dann dahinter. */
 body.is-remote {

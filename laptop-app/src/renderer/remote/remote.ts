@@ -52,19 +52,52 @@ async function ensurePin(): Promise<boolean> {
   }
 }
 
+let source: EventSource | null = null;
+
 async function post(path: string, channel: string, args: unknown[]): Promise<Response | null> {
   const response = await fetch(path, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-pin': pin },
     body: JSON.stringify({ channel, args }),
   }).catch(() => null);
-  if (!response) setOffline(true);
+
+  if (!response) {
+    setOffline(true);
+  } else if (response.status === 401 || response.status === 429) {
+    // Bisher blieb eine Ablehnung stumm -- man tippte auf Knöpfe, die
+    // nichts taten, und suchte den Fehler an der Tafel.
+    setOffline(true, 'Der Laptop nimmt keine Befehle mehr an (PIN) – Seite neu laden.');
+  } else if (source?.readyState === EventSource.OPEN) {
+    // Der Hinweis wurde bisher nur beim Wiederaufbau der Ereignis-
+    // verbindung entfernt. Blieb die bestehen, stand er nach einem einzigen
+    // verlorenen Befehl dauerhaft da (Review 2026-10, N6).
+    setOffline(false);
+  }
   return response;
 }
 
+/**
+ * Befehle, die gerade unterwegs sind. Ein zweiter, gleicher Befehl in
+ * dieser Zeit wird verworfen: Bei schwachem WLAN tippte man sonst ein
+ * zweites Mal, weil die Zahl noch nicht umgesprungen war -- und zählte
+ * zwei Tore (Review 2026-10, W9). Gehalten wird mindestens
+ * `DOUBLE_TAP_MS`, auch wenn die Antwort schneller da ist: Ein Doppeltipp
+ * mit dem Finger liegt in dieser Größenordnung.
+ */
+const inFlight = new Set<string>();
+const DOUBLE_TAP_MS = 400;
+
 const transport: Transport = {
   send: (channel, ...args) => {
-    void post('/api/send', channel, args);
+    const key = channel + JSON.stringify(args);
+    if (inFlight.has(key)) return;
+    inFlight.add(key);
+    document.body.classList.add('is-sending');
+    const held = new Promise((resolve) => setTimeout(resolve, DOUBLE_TAP_MS));
+    void Promise.all([post('/api/send', channel, args), held]).then(() => {
+      inFlight.delete(key);
+      if (inFlight.size === 0) document.body.classList.remove('is-sending');
+    });
   },
   invoke: async <T>(channel: string, ...args: unknown[]): Promise<T> => {
     const response = await post('/api/invoke', channel, args);
@@ -89,23 +122,27 @@ window.api = createApi(transport);
  * Hinweis, wenn die Verbindung zum Laptop weg ist -- sonst drückt man am
  * Spielfeldrand Knöpfe, die nichts tun, und merkt es erst an der Tafel.
  */
-function setOffline(offline: boolean): void {
+function setOffline(
+  offline: boolean,
+  text = 'Keine Verbindung zum Laptop – wird wieder aufgebaut …'
+): void {
   let banner = document.getElementById('remote-offline');
   if (!banner) {
     banner = document.createElement('div');
     banner.id = 'remote-offline';
     banner.className = 'remote-offline';
-    banner.textContent = 'Keine Verbindung zum Laptop – wird wieder aufgebaut …';
     document.body.appendChild(banner);
   }
+  if (offline) banner.textContent = text;
   banner.hidden = !offline;
 }
 
 function connect(): void {
-  const source = new EventSource(`/api/events?pin=${encodeURIComponent(pin)}`);
+  const events = new EventSource(`/api/events?pin=${encodeURIComponent(pin)}`);
+  source = events;
   let wasOffline = false;
 
-  source.onopen = () => {
+  events.onopen = () => {
     setOffline(false);
     // Nach einem Abriss den aktuellen Stand holen -- in der Zwischenzeit
     // kann am Laptop oder an einem anderen Gerät etwas passiert sein.
@@ -115,11 +152,11 @@ function connect(): void {
     }
     wasOffline = false;
   };
-  source.onerror = () => {
+  events.onerror = () => {
     wasOffline = true;
     setOffline(true);
   };
-  source.onmessage = (message) => {
+  events.onmessage = (message) => {
     const { channel, args } = JSON.parse(message.data) as { channel: string; args: unknown[] };
     for (const listener of listeners.get(channel) ?? []) listener(...args);
   };
@@ -132,9 +169,7 @@ document.body.classList.add('is-remote');
 // diese ersten Anfragen ins Leere -- deshalb danach noch einmal.
 void ensurePin().then((ok) => {
   if (!ok) {
-    setOffline(true);
-    document.getElementById('remote-offline')!.textContent =
-      'Ohne PIN keine Verbindung – Seite neu laden, um sie einzugeben.';
+    setOffline(true, 'Ohne PIN keine Verbindung – Seite neu laden, um sie einzugeben.');
     return;
   }
   connect();

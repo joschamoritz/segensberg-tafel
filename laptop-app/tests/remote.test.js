@@ -311,3 +311,87 @@ test('control: Adresse, PIN und Geräte stehen in der Einrichtung', (t) => {
   assert.deepEqual(JSON.parse(JSON.stringify(aus.filter((c) => c.name === 'remoteSetEnabled').map((c) => c.args))), [[false]]);
   assert.deepEqual(r.drainErrors(), []);
 });
+
+// --------------------------------------------------------------------
+// Bilder gehen nicht mehr im Zustand mit (Review 2026-10, W9)
+// --------------------------------------------------------------------
+
+const BILD = `data:image/png;base64,${Buffer.from('PNG-Inhalt').toString('base64')}`;
+
+test('Bilder gehen als Adresse statt als Base64 an die Geräte', async (t) => {
+  const { s, port } = await server(t);
+  const strom = await events(port, PIN);
+  t.after(() => strom.close());
+  await warten(20);
+
+  s.broadcast(IPC.stateUpdated, { home: { logoDataUrl: BILD }, squads: { home: [{ photoDataUrl: BILD }] } });
+  await warten(50);
+
+  const zustand = strom.received[0].args[0];
+  const adresse = zustand.home.logoDataUrl;
+  assert.match(adresse, /^\/api\/image\/[0-9a-f]{40}\?pin=123456$/);
+  assert.equal(zustand.squads.home[0].photoDataUrl, adresse, 'gleiches Bild, gleiche Adresse');
+  assert.ok(!JSON.stringify(strom.received).includes('base64'), 'kein Base64 im Strom');
+
+  const bild = await request(port, 'GET', adresse);
+  assert.equal(bild.status, 200);
+  assert.equal(bild.headers['content-type'], 'image/png');
+  assert.equal(bild.body, 'PNG-Inhalt');
+
+  // Portraits sind personenbezogen: ohne PIN kein Bild.
+  assert.equal((await request(port, 'GET', adresse.replace(/\?pin=.*/, ''))).status, 401);
+});
+
+// --------------------------------------------------------------------
+// Doppeltipp am iPad (Review 2026-10, W9)
+// --------------------------------------------------------------------
+
+/**
+ * Führt die gebündelte WLAN-Brücke in jsdom aus. `fetch` antwortet erst,
+ * wenn der Test es sagt -- so lässt sich ein langsames WLAN nachstellen.
+ */
+function wlanBrücke(t) {
+  const { JSDOM } = require('jsdom');
+  const dom = new JSDOM('<!doctype html><body></body>', { runScripts: 'outside-only', url: 'http://laptop.test/control/' });
+  const win = dom.window;
+  const posts = [];
+  const offen = [];
+  win.localStorage.setItem('anzeigetafel-pin', PIN);
+  win.fetch = (url, init) => {
+    if (init?.method === 'POST') posts.push(JSON.parse(init.body));
+    if (url === '/api/check') return Promise.resolve({ status: 204, ok: true });
+    return new Promise((resolve) => offen.push(() => resolve({ status: 204, ok: true })));
+  };
+  win.EventSource = class {
+    static OPEN = 1;
+    readyState = 1;
+  };
+  win.eval(fs.readFileSync(path.join(RENDERER, 'remote', 'remote.js'), 'utf8'));
+  t.after(() => win.close());
+  return { win, posts, antworten: () => offen.splice(0).forEach((f) => f()) };
+}
+
+test('ein zweiter Tipp auf "Tor" während der erste unterwegs ist, zählt nicht doppelt', async (t) => {
+  const b = wlanBrücke(t);
+  const tore = () => b.posts.filter((p) => p.channel === IPC.scoreIncrement).length;
+  // Die Brücke fragt beim Start Zustand, Status und Bibliothek ab --
+  // die sollen hier nicht als "unterwegs" mitzählen.
+  await warten(20);
+  b.antworten();
+  await warten(450);
+
+  b.win.api.incrementScore('home', 1);
+  b.win.api.incrementScore('home', 1);
+  assert.equal(tore(), 1);
+  assert.ok(b.win.document.body.classList.contains('is-sending'), 'man sieht, dass etwas unterwegs ist');
+
+  // Etwas anderes geht trotzdem sofort raus.
+  b.win.api.incrementScore('away', 1);
+  assert.equal(tore(), 2);
+
+  b.antworten();
+  await warten(450);
+  assert.ok(!b.win.document.body.classList.contains('is-sending'));
+  b.win.api.incrementScore('home', 1);
+  assert.equal(tore(), 3, 'danach zählt ein neues Tor wieder');
+});
