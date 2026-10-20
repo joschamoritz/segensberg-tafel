@@ -239,6 +239,12 @@ body.celebrating .board-slides {
   display: none;
 }
 
+/* Achtung Reihenfolge: Die Einschalt-Regeln von Torschütze, Danksagung
+   und Diashow stehen weiter unten und hätten bei gleicher Spezifität
+   gewonnen -- bis 1.8.0 lag der Torschütze dann quer über dem „TOR!".
+   Sie tragen deshalb selbst ein `:not(.celebrating)`: Der Torjubel liegt
+   immer obenauf, gleich wo eine Regel im Stylesheet steht. */
+
 /* In Pause und nach Abpfiff ersetzt ein großes Label das Uhr-Panel. */
 body[data-phase='half-time'] .clock-pill,
 body[data-phase='full-time'] .clock-pill {
@@ -853,7 +859,7 @@ body.showing-thanks .info-bar {
   background: var(--svh-blue);
 }
 
-body.showing-slide .board-slides {
+body.showing-slide:not(.celebrating) .board-slides {
   display: flex;
 }
 
@@ -1021,7 +1027,7 @@ body.showing-slide .board-shootout {
   text-align: center;
 }
 
-body.showing-thanks .board-thanks {
+body.showing-thanks:not(.celebrating) .board-thanks {
   display: flex;
 }
 
@@ -1064,7 +1070,7 @@ body.showing-thanks .board-match {
   background: var(--svh-dk);
 }
 
-body.showing-scorer .board-scorer {
+body.showing-scorer:not(.celebrating) .board-scorer {
   display: flex;
 }
 
@@ -1097,13 +1103,16 @@ body.showing-scorer .board-match {
   line-height: 1;
 }
 
+/* Eine oder zwei feste Zeilen (`white-space: pre`, Umbruch als
+   Zeilenvorschub im Text), die `fitLines()` wählt und notfalls verkleinert. Abschneiden darf hier
+   nichts: Bis 1.8.0 stand der Name einzeilig und lief neben dem Portrait
+   einfach aus der Fläche. */
 .spotlight-name {
   font-weight: 700;
   font-size: 16cqh;
-  line-height: 1;
-  white-space: nowrap;
+  line-height: 1.05;
+  white-space: pre;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .spotlight-meta {
@@ -1944,6 +1953,9 @@ body[data-theme='flutlicht'] .board-scorer {
 body[data-theme='flutlicht'] .spotlight-name {
   font-size: 19cqh;
   line-height: 1.15;
+  /* Die Neigung schiebt die Oberkante nach rechts -- ohne Rand schnitte
+     `overflow: hidden` das letzte Zeichen an. */
+  padding-right: 0.25em;
   transform: skewX(-12deg);
   transform-origin: left center;
 }

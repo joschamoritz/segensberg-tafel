@@ -35,6 +35,7 @@ import {
   SponsorSlotId,
   SponsorSlots,
   SCORER_DISPLAY_MS,
+  goalCelebrationMs,
   ShootoutKick,
   slideshowAvailable,
   StateRevisions,
@@ -153,6 +154,12 @@ export class MatchStateStore {
   private nextEventId = 1;
   private nextLineupId = 1;
   private nextScorerId = 1;
+  /**
+   * Wann der Torjubel des jüngsten Tores auf der Tafel endet (Zeitquelle
+   * `now`). Eine Torschützen-Einblendung, die mitten hinein angefordert
+   * wird, beginnt erst danach -- ihr Abräumen muss sich danach richten.
+   */
+  private celebrationEndsAt = 0;
   private nextInfoId = 1;
   private nextSlideshowId = 1;
 
@@ -307,6 +314,7 @@ export class MatchStateStore {
         celebrate: withScore.phase === 'live',
       };
       events = [...events, goal];
+      if (goal.celebrate) this.celebrationEndsAt = this.now() + goalCelebrationMs(team);
     } else {
       // Korrektur: jüngstes Tor dieser Mannschaft aus der Chronik nehmen
       // (Karten dabei überspringen)
@@ -327,6 +335,12 @@ export class MatchStateStore {
     }
 
     this.state = { ...withScore, events };
+    // Ein neues Tor beendet die Einblendung des vorigen Torschützen. Der
+    // Jubel läge zwar obenauf, danach stünde aber wieder der alte Name da.
+    if (delta > 0 && this.state.scorerRequest !== null) {
+      this.cancelAutoHide('scorer');
+      this.state = { ...this.state, scorerRequest: null };
+    }
     this.bump('events');
     this.emit();
   }
@@ -505,7 +519,10 @@ export class MatchStateStore {
     // In der Halbzeitpause kann beides gleichzeitig angefordert werden.
     this.clearSlideshow();
     this.state = { ...this.state, scorerRequest: { id: this.nextScorerId++, eventId } };
-    this.scheduleAutoHide('scorer', SCORER_DISPLAY_MS, () => this.hideScorer());
+    // Läuft noch ein Torjubel, zeigt die Anzeige den Torschützen erst danach
+    // (siehe `afterCelebration()`); die Standzeit zählt ab dort.
+    const waitMs = Math.max(0, this.celebrationEndsAt - this.now());
+    this.scheduleAutoHide('scorer', waitMs + SCORER_DISPLAY_MS, () => this.hideScorer());
     this.emit();
   }
 

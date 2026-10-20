@@ -10,7 +10,8 @@ import {
   splitAttendanceMessage,
   sponsorSlotLogo,
 } from '../../shared/types';
-import { fillSponsorChip, goalTitle, ui } from './common';
+import { afterCelebration, cancelAfterCelebration } from './celebration';
+import { fillSponsorChip, fitLines, goalTitle, nameVariants, ui } from './common';
 
 // Einblendungen im laufenden Spiel: Info-Leiste (Karte, Wechsel, Ecken),
 // Danksagung für die Zuschauerzahl und Torschütze mit Portrait.
@@ -145,6 +146,7 @@ export function handleScorerRequest(state: MatchState): void {
   if (request === null) {
     if (lastScorerRequestId !== 0) {
       lastScorerRequestId = 0;
+      cancelAfterCelebration();
       if (scorerTimer) clearTimeout(scorerTimer);
       scorerTimer = null;
       document.body.classList.remove('showing-scorer');
@@ -159,27 +161,43 @@ export function handleScorerRequest(state: MatchState): void {
   if (!goal || goal.type !== 'goal') return;
 
   const player = goalScorer(goal, state.squads);
+  // Ohne Spieler (nur Mannschaft bekannt) oder ohne Namen gibt es nichts
+  // aufzuteilen.
+  const variants =
+    player && (player.firstName || player.lastName)
+      ? nameVariants(player.number === null ? '' : String(player.number), player.firstName, player.lastName)
+      : [[player ? playerLabel(player) : state[goal.team].name]];
 
   const photo = document.getElementById('spotlight-photo') as HTMLImageElement;
+  const name = document.getElementById('spotlight-name')!;
   if (player?.photoDataUrl) {
+    // Das Portrait bestimmt, wie viel Breite dem Namen bleibt -- und es
+    // ist erst nach dem Laden so breit, wie es wird.
+    photo.onload = () => fitLines(name, variants);
     photo.src = player.photoDataUrl;
     photo.hidden = false;
   } else {
+    photo.onload = null;
     photo.hidden = true;
   }
 
   document.getElementById('spotlight-label')!.textContent = `${goalTitle(goal)} · ${formatEventMinute(goal)}`;
-  document.getElementById('spotlight-name')!.textContent = player
-    ? playerLabel(player)
-    : state[goal.team].name;
+  fitLines(name, variants);
+
   document.getElementById('spotlight-meta')!.textContent =
     `${state[goal.team].name} · ${goal.scoreHome}:${goal.scoreAway}`;
 
   ui.activeScorerEventId = request.eventId;
-  document.body.classList.add('showing-scorer');
   if (scorerTimer) clearTimeout(scorerTimer);
-  scorerTimer = setTimeout(() => {
-    document.body.classList.remove('showing-scorer');
-    scorerTimer = null;
-  }, SCORER_DISPLAY_MS);
+  scorerTimer = null;
+  // Nie über einem laufenden Torjubel: erst danach, dann aber volle Zeit.
+  afterCelebration(() => {
+    document.body.classList.add('showing-scorer');
+    // Erst jetzt hat die Fläche ein Layout, an dem sich messen lässt.
+    fitLines(name, variants);
+    scorerTimer = setTimeout(() => {
+      document.body.classList.remove('showing-scorer');
+      scorerTimer = null;
+    }, SCORER_DISPLAY_MS);
+  });
 }

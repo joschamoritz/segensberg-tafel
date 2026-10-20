@@ -13,6 +13,30 @@ let lastSeenEventId = 0;
     Ablauf zurücksetzen muss und nicht nur den letzten Schritt. */
 const goalTimers: ReturnType<typeof setTimeout>[] = [];
 
+/** Wartet auf das Ende des laufenden Jubels, siehe afterCelebration(). */
+let afterwards: (() => void) | null = null;
+
+/**
+ * Führt `callback` aus, sobald kein Torjubel mehr läuft -- sofort, wenn
+ * gerade keiner läuft. Gedacht für die Torschützen-Einblendung: Wer nach
+ * dem Tor schnell den Schützen wählt und einblendet, soll den Jubel nicht
+ * überdecken, und die Einblendung soll trotzdem ihre volle Zeit stehen.
+ * Es wartet immer nur einer; ein neuer Auftrag ersetzt den alten.
+ */
+export function afterCelebration(callback: () => void): void {
+  if (goalTimers.length === 0) {
+    afterwards = null;
+    callback();
+  } else {
+    afterwards = callback;
+  }
+}
+
+/** Verwirft einen wartenden Auftrag (die Einblendung wurde abgeräumt). */
+export function cancelAfterCelebration(): void {
+  afterwards = null;
+}
+
 /**
  * Lässt die Ziffern einer Mannschaft im Spielstand der normalen Ansicht
  * von oben einlaufen.
@@ -118,7 +142,14 @@ function startCelebration(state: MatchState, goal: GoalEvent): void {
     }
     versatz += ms;
   });
-  goalTimers.push(setTimeout(endCelebration, versatz));
+  goalTimers.push(
+    setTimeout(() => {
+      endCelebration();
+      const next = afterwards;
+      afterwards = null;
+      next?.();
+    }, versatz)
+  );
 }
 
 /**

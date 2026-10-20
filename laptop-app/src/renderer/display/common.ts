@@ -70,6 +70,59 @@ export function step(name: string, run: () => void): void {
 }
 
 /**
+ * Passt einen Namen in sein Element ein. `variants` sind mögliche
+ * Zeilenaufteilungen, etwa `[["24 David Meyer"], ["24 David", "Meyer"]]`.
+ * Jede wird so lange verkleinert, bis jede Zeile in die Breite passt (bis
+ * zur Hälfte der Größe aus dem Stylesheet); es gewinnt die mit der
+ * größten Schrift, bei Gleichstand die mit weniger Zeilen.
+ *
+ * Feste Umbruchstellen statt freiem Umbruch: Frei umbrochen landete
+ * „Schöneberg-" am Zeilenende und „Krüger" darunter, und ein dreiteiliger
+ * Name schrumpfte auf eine kleine Zeile. Bis 1.8.0 stand der Name in der
+ * Torschützen-Einblendung einzeilig mit fester Größe und wurde neben dem
+ * Portrait einfach abgeschnitten.
+ *
+ * Misst am Layout, also nur bei sichtbarem Element -- in jsdom und bei
+ * ausgeblendeter Fläche ist `clientWidth` 0, dann bleibt die erste
+ * Aufteilung in der Größe aus dem Stylesheet stehen. Gesetzt wird
+ * `element.style`; das fällt nicht unter die CSP (`style-src 'self'`
+ * betrifft nur Attribute und Style-Blöcke).
+ */
+const LINE_BREAK = '\n';
+
+export function fitLines(element: HTMLElement, variants: string[][]): void {
+  const usable = variants.filter((lines) => lines.length > 0);
+  if (usable.length === 0) return;
+  element.style.fontSize = '';
+  element.textContent = usable[0].join(LINE_BREAK);
+  if (element.clientWidth === 0) return;
+  const base = parseFloat(getComputedStyle(element).fontSize);
+  if (!base) return;
+
+  let best = { size: 0, text: element.textContent };
+  for (const lines of usable) {
+    element.textContent = lines.join(LINE_BREAK);
+    let size = base;
+    element.style.fontSize = '';
+    while (element.scrollWidth > element.clientWidth + 1 && size > base * 0.5) {
+      size *= 0.94;
+      element.style.fontSize = `${size}px`;
+    }
+    if (size > best.size + 0.5) best = { size, text: element.textContent };
+  }
+  element.textContent = best.text;
+  element.style.fontSize = best.size < base ? `${best.size}px` : '';
+}
+
+/** Übliche Aufteilungen eines Spielernamens: eine Zeile, oder Nummer und
+    Vorname über dem Nachnamen. */
+export function nameVariants(number: string, firstName: string, lastName: string): string[][] {
+  const head = [number, firstName].filter(Boolean).join(' ');
+  const one = [head, lastName].filter(Boolean).join(' ');
+  return head && lastName ? [[one], [head, lastName]] : [[one]];
+}
+
+/**
  * Schreibt Text so, dass jede Ziffer eine eigene Zelle fester Breite
  * bekommt. Oswald hat keine dicktengleichen Ziffern -- ohne das würden
  * Uhr-Panel, Wappen und Spielstand bei jedem Ziffernwechsel springen.
