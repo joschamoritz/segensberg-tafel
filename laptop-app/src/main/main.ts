@@ -992,6 +992,10 @@ app.whenReady().then(() => {
     if (!isEventId(eventId)) return;
     store.setGoalScorer(eventId, sanitizeOptionalId(scorerId));
   });
+  onIpc(IPC.goalSetOwnGoal, (_event, eventId: unknown, ownGoal: unknown) => {
+    if (!isEventId(eventId) || typeof ownGoal !== 'boolean') return;
+    store.setGoalOwnGoal(eventId, ownGoal);
+  });
   onIpc(IPC.cardAdd, (_event, team: unknown, card: unknown) => {
     if (!isTeamId(team) || !isCardColor(card)) return;
     store.addCard(team, card);

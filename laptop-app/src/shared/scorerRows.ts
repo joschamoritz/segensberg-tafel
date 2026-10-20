@@ -25,7 +25,9 @@ export interface ScorerRow {
 export function buildScorerRows(
   team: TeamId,
   events: MatchEvent[],
-  squad: Player[]
+  squad: Player[],
+  /** Kader des Gegners -- daraus stammt der Schütze eines Eigentors. */
+  opponentSquad: Player[] = []
 ): ScorerRow[] {
   const rows: ScorerRow[] = [];
   /** Mehrfachtorschützen zusammenfassen: "Müller 23', 67'" statt zwei Zeilen. */
@@ -38,12 +40,19 @@ export function buildScorerRows(
       event.type === 'card' && (event.card === 'red' || event.card === 'yellow-red');
     if (event.type !== 'goal' && !isSendOff) continue;
 
+    const ownGoal = event.type === 'goal' && event.ownGoal === true;
     const playerId = event.type === 'goal' ? event.scorerId : event.playerId;
-    const player = playerId ? squad.find((p) => p.id === playerId) : undefined;
-    const name = player ? player.lastName || player.firstName : '';
+    const player = playerId ? (ownGoal ? opponentSquad : squad).find((p) => p.id === playerId) : undefined;
+    const plainName = player ? player.lastName || player.firstName : '';
+    // Wie im Spielbericht: "Kowalski (ET)". Ohne Namen bleibt das Wort
+    // stehen -- sonst sähe ein Eigentor aus wie ein eigenes Tor ohne Schützen.
+    const name = ownGoal ? (plainName ? `${plainName} (ET)` : 'Eigentor') : plainName;
 
     if (event.type === 'goal' && playerId) {
-      const existing = byScorer.get(playerId);
+      // Eigentore eines Spielers nicht mit Toren zusammenfassen -- die Ids
+      // stammen aus zwei Kadern.
+      const key = ownGoal ? `et:${playerId}` : playerId;
+      const existing = byScorer.get(key);
       if (existing) {
         existing.minutes.push(formatEventMinute(event));
         // Die Zeile ist jetzt so jung wie ihr letztes Tor und muss ans
@@ -55,7 +64,7 @@ export function buildScorerRows(
         continue;
       }
       const row: ScorerRow = { minutes: [formatEventMinute(event)], name };
-      byScorer.set(playerId, row);
+      byScorer.set(key, row);
       rows.push(row);
       continue;
     }

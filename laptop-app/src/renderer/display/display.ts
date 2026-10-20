@@ -22,8 +22,10 @@ import {
   FLUTLICHT_EFFECT_KEYS,
   formatClock,
   formatEventMinute,
+  goalScorer,
   goalStagesFor,
   GoalEvent,
+  otherTeam,
   GoalStage,
   infoOverlayDurationMs,
   InfoOverlay,
@@ -217,9 +219,15 @@ function retroScorerLines(state: MatchState): { side: TeamId; text: string }[] {
     const isGoal = event.type === 'goal';
     if (!isGoal && event.card === 'yellow') continue;
 
-    const playerId = isGoal ? event.scorerId : event.playerId;
-    const player = playerId ? state.squads[event.team].find((p) => p.id === playerId) : undefined;
-    const name = player ? player.lastName || player.firstName : '';
+    const player = isGoal
+      ? goalScorer(event, state.squads)
+      : event.playerId
+        ? state.squads[event.team].find((p) => p.id === event.playerId)
+        : undefined;
+    const plain = player ? player.lastName || player.firstName : '';
+    // Eigentor wie im Spielbericht mit "(ET)" -- sonst stünde der Name
+    // eines Gegenspielers kommentarlos auf der eigenen Seite.
+    const name = isGoal && event.ownGoal ? (plain ? `${plain} (ET)` : 'EIGENTOR') : plain;
 
     const what = isGoal ? (name ? '' : 'TOR') : event.card === 'red' ? 'ROT' : 'GELB-ROT';
     const text = [formatEventMinute(event), what, name].filter(Boolean).join(' ');
@@ -269,12 +277,10 @@ function currentRetroScene(state: MatchState): RetroScene {
   if (body.classList.contains('showing-scorer') && activeScorerEventId !== null) {
     const goal = state.events.find((e) => e.id === activeScorerEventId);
     if (goal && goal.type === 'goal') {
-      const player = goal.scorerId
-        ? state.squads[goal.team].find((p) => p.id === goal.scorerId)
-        : undefined;
+      const player = goalScorer(goal, state.squads);
       return {
         kind: 'scorer',
-        title: `TOR ${formatEventMinute(goal)}`,
+        title: `${goal.ownGoal ? 'EIGENTOR' : 'TOR'} ${formatEventMinute(goal)}`,
         name: player ? `${player.firstName} ${player.lastName}`.trim() : retroTeamName(state[goal.team]),
         detail: `${retroTeamName(state[goal.team])} ${goal.scoreHome}:${goal.scoreAway}`,
       };
@@ -601,7 +607,7 @@ function renderScorerList(team: TeamId, state: MatchState): void {
   const list = document.getElementById(`${team}-scorers`)!;
   list.innerHTML = '';
 
-  const rows = buildScorerRows(team, state.events, state.squads[team]);
+  const rows = buildScorerRows(team, state.events, state.squads[team], state.squads[otherTeam(team)]);
   // Harte Obergrenze: bei 192px Höhe ist der Platz unter dem Wappen
   // begrenzt, eine wachsende Liste würde sonst ins Uhr-Panel laufen.
   const visible = visibleScorerRows(rows, MAX_SCORER_ROWS[state.phase]);
@@ -1404,9 +1410,7 @@ function handleScorerRequest(state: MatchState): void {
   const goal = state.events.find((e) => e.id === request.eventId);
   if (!goal || goal.type !== 'goal') return;
 
-  const player = goal.scorerId
-    ? state.squads[goal.team].find((p) => p.id === goal.scorerId)
-    : undefined;
+  const player = goalScorer(goal, state.squads);
 
   const photo = document.getElementById('spotlight-photo') as HTMLImageElement;
   if (player?.photoDataUrl) {
@@ -1416,7 +1420,8 @@ function handleScorerRequest(state: MatchState): void {
     photo.hidden = true;
   }
 
-  document.getElementById('spotlight-label')!.textContent = `TOR · ${formatEventMinute(goal)}`;
+  document.getElementById('spotlight-label')!.textContent =
+    `${goal.ownGoal ? 'EIGENTOR' : 'TOR'} · ${formatEventMinute(goal)}`;
   document.getElementById('spotlight-name')!.textContent = player
     ? playerLabel(player)
     : state[goal.team].name;

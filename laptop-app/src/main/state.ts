@@ -591,6 +591,24 @@ export class MatchStateStore {
   }
 
   /**
+   * Markiert ein Tor als Eigentor oder nimmt die Markierung zurück. Der
+   * Torschütze stammt dann aus dem anderen Kader -- ein bereits gewählter
+   * gehört zum falschen und wird deshalb entfernt.
+   */
+  setGoalOwnGoal(eventId: number, ownGoal: boolean): void {
+    const goal = this.state.events.find((e) => e.id === eventId);
+    if (!goal || goal.type !== 'goal' || (goal.ownGoal ?? false) === ownGoal) return;
+    this.state = {
+      ...this.state,
+      events: this.state.events.map((event) =>
+        event.id === eventId ? { ...goal, ownGoal, scorerId: undefined } : event
+      ),
+    };
+    this.bump('events');
+    this.emit();
+  }
+
+  /**
    * Trägt eine Karte ein. Der Spieler ist optional -- von der Tafel aus
    * sieht man oft nur, welche Mannschaft betroffen ist.
    */

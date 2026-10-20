@@ -114,6 +114,31 @@ export interface GoalEvent {
   celebrate: boolean;
   /** Torschütze; wird meist erst nach dem Tor nachgetragen */
   scorerId?: string;
+  /**
+   * Eigentor. `team` bleibt die Mannschaft, der das Tor gutgeschrieben
+   * wird; `scorerId` zeigt dann in den Kader des GEGNERS. Ältere
+   * Sicherungen ohne das Feld sind gewöhnliche Tore.
+   */
+  ownGoal?: boolean;
+}
+
+/** Die jeweils andere Mannschaft. */
+export function otherTeam(team: TeamId): TeamId {
+  return team === 'home' ? 'away' : 'home';
+}
+
+/**
+ * Aus welchem Kader der Torschütze stammt: bei einem Eigentor aus dem des
+ * Gegners (Review 2026-10, W10). An einer Stelle, damit Chronik,
+ * Torschützenliste, Einblendung und Retro nicht auseinanderlaufen.
+ */
+export function scorerTeam(goal: GoalEvent): TeamId {
+  return goal.ownGoal ? otherTeam(goal.team) : goal.team;
+}
+
+export function goalScorer(goal: GoalEvent, squads: Record<TeamId, Player[]>): Player | undefined {
+  if (!goal.scorerId) return undefined;
+  return squads[scorerTeam(goal)].find((p) => p.id === goal.scorerId);
 }
 
 export type CardColor = 'yellow' | 'yellow-red' | 'red';
@@ -1024,6 +1049,7 @@ export const IPC = {
   setAppearance: 'display:set-appearance',
   setCompetition: 'match:set-competition',
   goalSetScorer: 'goal:set-scorer',
+  goalSetOwnGoal: 'goal:set-own-goal',
   /** einmalig abgefragt, liefert `AppInfo` -- siehe dort */
   appInfo: 'app:info',
   /** Tormusik von der Fernsteuerung am Laptop abspielen, siehe `SoundCommand` */

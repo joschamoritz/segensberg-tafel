@@ -1546,6 +1546,15 @@ body.is-remote .goal-remove {
   font-size: 11px;
 }
 
+/* Eigentor-Schalter: gedrückt in der Warnfarbe, damit ein markiertes
+   Eigentor in der Chronik auf einen Blick von einem Tor zu unterscheiden
+   ist (Review 2026-10, W10). */
+.goal-log li .own-goal-toggle.is-active {
+  background: var(--svh-warn);
+  border-color: var(--svh-warn);
+  color: var(--svh-wh);
+}
+
 /* Ereignisart an der linken Kante erkennbar */
 .goal-log li.is-card-yellow {
   border-left-color: var(--svh-gold);

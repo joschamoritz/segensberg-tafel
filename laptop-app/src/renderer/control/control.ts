@@ -16,8 +16,10 @@ import {
   FlutlichtEffects,
   formatClock,
   formatEventMinute,
+  goalScorer,
   GoalEvent,
   MatchState,
+  otherTeam,
   parseClockInput,
   Player,
   playerLabel,
@@ -648,7 +650,9 @@ function renderGoalLog(state: MatchState): void {
     none.value = '';
     none.textContent = event.type === 'goal' ? '– Torschütze –' : '– Spieler (optional) –';
     playerSelect.appendChild(none);
-    appendPlayersByStatus(playerSelect, state, event.team);
+    // Bei einem Eigentor steht ein Gegenspieler zur Wahl (Review W10).
+    const ownGoal = event.type === 'goal' && event.ownGoal === true;
+    appendPlayersByStatus(playerSelect, state, ownGoal ? otherTeam(event.team) : event.team);
     playerSelect.value = currentPlayerId ?? '';
 
     const eventId = event.id;
@@ -659,7 +663,22 @@ function renderGoalLog(state: MatchState): void {
       else window.api.cardSetPlayer(eventId, value);
     });
 
-    item.append(minute, teamName, kind, playerSelect);
+    item.append(minute, teamName, kind);
+
+    // Eigentor-Schalter. Er sitzt vor der Auswahl, weil er bestimmt, aus
+    // welchem Kader sie kommt; ein Umschalten leert den gewählten Schützen.
+    if (event.type === 'goal') {
+      const og = document.createElement('button');
+      og.className = 'btn btn-small own-goal-toggle';
+      og.textContent = 'ET';
+      og.title = ownGoal ? 'Eigentor -- zurück zum normalen Tor' : 'Als Eigentor markieren (Schütze aus dem Gegnerkader)';
+      og.setAttribute('aria-pressed', String(ownGoal));
+      og.classList.toggle('is-active', ownGoal);
+      og.addEventListener('click', () => window.api.goalSetOwnGoal(eventId, !ownGoal));
+      item.appendChild(og);
+    }
+
+    item.appendChild(playerSelect);
 
     // Einblendung gibt es nur für Tore und erst mit zugeordnetem Schützen
     if (event.type === 'goal') {
@@ -1482,7 +1501,7 @@ function confirmGoalRemoval(team: TeamId): boolean {
     .reverse()
     .find((e): e is GoalEvent => e.type === 'goal' && e.team === team);
   if (!goal || !goal.scorerId) return true;
-  const scorer = state.squads[team].find((p) => p.id === goal.scorerId);
+  const scorer = goalScorer(goal, state.squads);
   const name = scorer ? playerLabel(scorer) : 'eingetragenem Torschützen';
   return confirm(
     `Tor von ${name} (${formatEventMinute(goal)}) zurücknehmen? Torschütze und Minute gehen dabei verloren.`
