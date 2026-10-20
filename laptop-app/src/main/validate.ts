@@ -9,6 +9,8 @@ import {
   FLUTLICHT_EFFECT_KEYS,
   FlutlichtEffects,
   InfoOverlay,
+  LINEUP_STYLES,
+  LineupStyle,
   MAX_ANNOUNCEMENT_LENGTH,
   MAX_ANNOUNCEMENTS,
   MAX_ATTENDANCE,
@@ -326,4 +328,9 @@ export function sanitizeBoardCredential(value: unknown): string {
 export function sanitizeBoardBrightness(value: unknown): number | null {
   if (typeof value !== 'number' || !Number.isFinite(value)) return null;
   return Math.round(Math.min(MAX_BOARD_BRIGHTNESS, Math.max(MIN_BOARD_BRIGHTNESS, value)));
+}
+
+/** Ablauf der Aufstellung; Unbekanntes fällt auf die Übersicht zurück. */
+export function sanitizeLineupStyle(value: unknown): LineupStyle {
+  return LINEUP_STYLES.includes(value as LineupStyle) ? (value as LineupStyle) : 'overview';
 }

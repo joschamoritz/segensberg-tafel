@@ -1054,6 +1054,142 @@ body.showing-thanks .board-match {
   color: var(--svh-gold);
 }
 
+/* --- Einzel-Aufstellung (ein Spieler je Schritt) ----------------------- */
+/* Aufbau wie die Torschützen-Einblendung: Bild links, Schrift rechts.
+   Gleiche Bildhöhe (76cqh), damit Portraits in beiden gleich groß
+   wirken. Ohne Portrait steht dort das Trikot mit der Rückennummer, beim
+   Trainer das Wappen. */
+
+.pre-page.card-page {
+  flex-direction: row;
+  justify-content: center;
+  gap: 4cqw;
+  padding: 0 6cqw;
+}
+
+.card-visual {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 76cqh;
+  max-width: 34cqw;
+}
+
+.card-photo {
+  max-height: 76cqh;
+  max-width: 30cqw;
+  object-fit: contain;
+  border-radius: 1cqh;
+}
+
+.card-crest {
+  max-height: 60cqh;
+  max-width: 30cqw;
+  object-fit: contain;
+}
+
+.card-jersey {
+  position: relative;
+  height: 72cqh;
+  aspect-ratio: 1 / 1;
+}
+
+.card-jersey[hidden] {
+  display: none;
+}
+
+.card-jersey-home,
+.card-jersey-blank {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Neutrales Trikot für die Gäste (und solange `trikot-heim.png` fehlt):
+   harte weiße Fläche, keine Linien -- die verschwänden auf der Matrix. */
+.card-jersey-blank path {
+  fill: var(--svh-wh);
+}
+
+/* Welche Fassung steht, schaltet lineup.ts über `is-home-kit`. */
+.card-jersey-home {
+  visibility: hidden;
+}
+
+.card-jersey.is-home-kit .card-jersey-home {
+  visibility: visible;
+}
+
+.card-jersey.is-home-kit .card-jersey-blank {
+  visibility: hidden;
+}
+
+/* Rückennummer mittig auf dem Rücken, unterhalb des Schriftzugs. Auf dem
+   blauen Vereinstrikot weiß, auf dem neutralen weißen in Indigo. */
+.card-jersey-number {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 40%;
+  text-align: center;
+  font-weight: 700;
+  font-size: 30cqh;
+  line-height: 1;
+  color: var(--svh-dk);
+}
+
+.card-jersey.is-home-kit .card-jersey-number {
+  color: var(--svh-wh);
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2cqh;
+  min-width: 0;
+}
+
+.card-team {
+  display: flex;
+  align-items: center;
+  gap: 1.5cqw;
+  height: 13cqh;
+}
+
+.card-team-name {
+  font-weight: 700;
+  font-size: 7cqh;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.card-label {
+  font-weight: 700;
+  font-size: 9cqh;
+  letter-spacing: 0.1em;
+  color: var(--svh-gold);
+  line-height: 1;
+}
+
+/* Wie `.spotlight-name`: eine oder zwei feste Zeilen, eingepasst von
+   `fitLines()`. */
+.card-name {
+  font-weight: 700;
+  font-size: 16cqh;
+  line-height: 1.05;
+  white-space: pre;
+  overflow: hidden;
+}
+
 /* --- Torschützen-Einblendung ------------------------------------------- */
 /* Ruhige Darstellung mit Portrait -- im Gegensatz zum Torjubel soll man
    hier den Namen in Ruhe lesen können. */
@@ -1958,6 +2094,25 @@ body[data-theme='flutlicht'] .spotlight-name {
   padding-right: 0.25em;
   transform: skewX(-12deg);
   transform-origin: left center;
+}
+
+/* Einzel-Aufstellung: dieselbe geneigte Schrift wie beim Torschützen. */
+body[data-theme='flutlicht'] .card-name {
+  font-size: 19cqh;
+  line-height: 1.15;
+  transform: skewX(-12deg);
+  transform-origin: left center;
+  padding-right: 0.25em;
+}
+
+body[data-theme='flutlicht'] .card-label {
+  font-size: 10cqh;
+  letter-spacing: 0.14em;
+}
+
+body[data-theme='flutlicht'][data-fx~='leuchten'] .card-photo,
+body[data-theme='flutlicht'][data-fx~='leuchten'] .card-jersey {
+  filter: drop-shadow(0 0 1.8cqh var(--flut-glow));
 }
 
 body[data-theme='flutlicht'] .spotlight-label {

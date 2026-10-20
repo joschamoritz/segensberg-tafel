@@ -33,6 +33,7 @@ import {
   sanitizeBoardSize,
   sanitizeImportedPlayers,
   sanitizeKickoffTime,
+  sanitizeLineupStyle,
   sanitizeOptionalId,
   sanitizePlayer,
   sanitizeText,
@@ -185,6 +186,10 @@ export function registerIpcHandlers(): void {
     persistContent();
   });
 
+  onIpc(IPC.setLineupStyle, (_event, value: unknown) => {
+    store.setLineupStyle(sanitizeLineupStyle(value));
+    persistContent();
+  });
   onIpc(IPC.setSlideBlocks, (_event, value: unknown) => {
     store.setSlideBlocks(sanitizeSlideBlocks(value));
     persistContent();

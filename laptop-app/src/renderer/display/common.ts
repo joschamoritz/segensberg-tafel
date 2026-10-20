@@ -32,6 +32,8 @@ export const ui: {
   activeScorerEventId: number | null;
   activeSlide: Slide | null;
   activePageSince: number;
+  /** Was die Einzel-Aufstellung gerade zeigt; gelesen vom Retro-Design. */
+  activeCard: { title: string; name: string; detail: string } | null;
 } = {
   /** Zuletzt empfangener Zustand; `null` bis zum ersten. */
   currentState: null,
@@ -50,6 +52,7 @@ export const ui: {
   activeSlide: null,
   /** Seit wann die aktuelle Seite vor dem Anpfiff steht, siehe `showPage()`. */
   activePageSince: 0,
+  activeCard: null,
 };
 
 /**

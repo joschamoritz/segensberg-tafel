@@ -93,12 +93,14 @@ test('Texte: Hin- und Rückweg, fremde Werte werden nicht übernommen', () => {
     announcements: ['So 25.08.'],
     sound: { volume: 40, muted: true },
     slideBlocks: haken,
+    lineupStyle: 'single',
   });
   assert.deepEqual(loadContentConfig(), {
     attendanceMessage: 'Danke {n}!',
     announcements: ['So 25.08.'],
     sound: { volume: 40, muted: true },
     slideBlocks: haken,
+    lineupStyle: 'single',
   });
 
   fs.writeFileSync(datei('content.json'), JSON.stringify({ announcements: ['ok', 7, { a: 1 }], sound: { volume: 900 } }));

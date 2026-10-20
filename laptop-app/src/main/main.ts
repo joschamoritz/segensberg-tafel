@@ -17,6 +17,7 @@ import {
   sanitizeAnnouncements,
   sanitizeAppearance,
   sanitizeBoardSize,
+  sanitizeLineupStyle,
   sanitizeCompetition,
   sanitizeSlideBlocks,
   sanitizeSponsorSlots,
@@ -114,6 +115,7 @@ app.whenReady().then(() => {
   store.setAnnouncements(sanitizeAnnouncements(content.announcements));
   store.setSound(content.sound);
   store.setSlideBlocks(sanitizeSlideBlocks(content.slideBlocks));
+  store.setLineupStyle(sanitizeLineupStyle(content.lineupStyle));
 
   ctx.media = new MediaLibrary();
   store.setMedia(ctx.media.getLists());

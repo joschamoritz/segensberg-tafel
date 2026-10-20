@@ -242,6 +242,11 @@ function currentRetroScene(state: MatchState): RetroScene {
 
   if (state.phase === 'pre-match') {
     const page = document.querySelector<HTMLElement>('.pre-page.is-active')?.dataset.page ?? 'matchup';
+    // Einzel-Aufstellung: Portraits gibt es in der Punktmatrix nicht --
+    // dieselbe Szene wie beim Torschützen, mit Rolle, Name und Verein.
+    if (page === 'player-card') {
+      return ui.activeCard ? { kind: 'scorer', ...ui.activeCard } : { kind: 'blank' };
+    }
     if (page !== 'matchup') return retroLineup(state, page);
     // Derselbe Countdown wie in den anderen Designs, nur ohne "UHR ·":
     // So passt "ANSTOSS 15:00 NOCH 12:34" genau in eine Zeile.

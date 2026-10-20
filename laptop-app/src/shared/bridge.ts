@@ -8,6 +8,7 @@ import {
   InfoOverlay,
   IPC,
   LibraryTeam,
+  LineupStyle,
   MatchState,
   Player,
   ShootoutKick,
@@ -138,6 +139,7 @@ export function createApi(t: Transport) {
     setAnnouncements: (announcements: string[]) =>
       t.send(IPC.setAnnouncements, announcements),
     setSlideBlocks: (blocks: SlideBlocks) => t.send(IPC.setSlideBlocks, blocks),
+    setLineupStyle: (style: LineupStyle) => t.send(IPC.setLineupStyle, style),
     slideshowStart: () => t.send(IPC.slideshowStart),
     shootoutStart: () => t.send(IPC.shootoutStart),
     shootoutKick: (team: TeamId, kick: ShootoutKick) => t.send(IPC.shootoutKick, team, kick),

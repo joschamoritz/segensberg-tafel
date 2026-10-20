@@ -370,8 +370,15 @@ export function splitAttendanceMessage(message: string): { before: string; after
 }
 /** Standzeit einer Aufstellungsseite (Startelf, danach Bank). */
 export const LINEUP_PAGE_MS = 9000;
-/** Mehr Seiten hat eine Aufstellungs-Einblendung nicht. */
-export const LINEUP_MAX_PAGES = 2;
+
+/**
+ * Wie die Aufstellung abläuft (Ablauf in `shared/lineupSteps.ts`).
+ * `overview`: Startelf und Bank als je eine Seite.
+ * `single`: jeder Spieler der Startelf einzeln mit Portrait, danach der
+ * Trainer, danach die Bank als eine Seite (Nutzerwunsch 20.10.2026).
+ */
+export type LineupStyle = 'overview' | 'single';
+export const LINEUP_STYLES: readonly LineupStyle[] = ['overview', 'single'];
 
 /** Mehr Ecken als das gibt es in einem Spiel nicht. */
 export const MAX_CORNERS = 99;
@@ -415,7 +422,11 @@ export interface MatchState {
    * nicht von selbst durch die Aufstellungen. Die fortlaufende `id` sorgt
    * dafür, dass auch ein erneuter Druck auf denselben Knopf wirkt.
    */
-  lineupRequest: { id: number; team: TeamId } | null;
+  lineupRequest: { id: number; team: TeamId; style: LineupStyle } | null;
+  /** Gewählter Ablauf der Aufstellung, gemerkt in `content.json`. Die
+      Anfrage nimmt ihn beim Auslösen mit -- ein Umschalten mittendrin
+      ändert die laufende Einblendung nicht. */
+  lineupStyle: LineupStyle;
   /**
    * Aufforderung, einen Torschützen groß einzublenden (Name, Portrait,
    * Spielstand). Wird nach dem Eintragen des Schützen per Knopf ausgelöst.
@@ -1424,6 +1435,7 @@ export const IPC = {
   setCompetition: 'match:set-competition',
   setSponsorSlot: 'match:set-sponsor-slot',
   setSlideBlocks: 'slideshow:set-blocks',
+  setLineupStyle: 'lineup:set-style',
   goalSetScorer: 'goal:set-scorer',
   goalSetOwnGoal: 'goal:set-own-goal',
   goalSetPenalty: 'goal:set-penalty',

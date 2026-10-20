@@ -533,6 +533,11 @@
     </div>
     <div class="lineup-controls">
       <span class="lineup-controls-label">Aufstellung einblenden:</span>
+      <!-- Wahl wird gemerkt (content.json); die Knöpfe daneben lösen aus. -->
+      <select id="lineup-style" aria-label="Ablauf der Aufstellung">
+        <option value="overview">Übersicht</option>
+        <option value="single">Einzeln mit Portraits</option>
+      </select>
       <button id="lineup-show-home" class="btn btn-small">Heim</button>
       <button id="lineup-show-away" class="btn btn-small">Gast</button>
       <button id="lineup-hide" class="btn btn-small">Zurück zur Begegnung</button>

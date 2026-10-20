@@ -27,6 +27,8 @@ export interface ContentConfig {
   sound: SoundSettings;
   /** Abgehakte Blöcke der Diashow -- geprüft wird in `sanitizeSlideBlocks` */
   slideBlocks?: SlideBlocks;
+  /** Ablauf der Aufstellung -- geprüft wird in `sanitizeLineupStyle` */
+  lineupStyle?: unknown;
 }
 
 function defaults(): ContentConfig {
@@ -69,6 +71,7 @@ export function loadContentConfig(): ContentConfig {
       muted: parsed.sound?.muted === true,
     },
     slideBlocks: parsed.slideBlocks,
+    lineupStyle: parsed.lineupStyle,
   };
 }
 

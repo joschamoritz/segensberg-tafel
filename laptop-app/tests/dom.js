@@ -121,6 +121,16 @@ function openRenderer(name, t, overrides) {
 
   window.eval(bundle);
   window.document.dispatchEvent(new window.Event('DOMContentLoaded'));
+  // jsdom feuert `DOMContentLoaded` kurz darauf noch einmal selbst. Ohne
+  // diese Sperre lief `main()` der Anzeige ein zweites Mal -- mit neuem
+  // `showPage('matchup')`, das eine eben gestartete Aufstellung zurück auf
+  // die Begegnung warf (aufgefallen an der Einzel-Aufstellung im Retro-
+  // Design), und mit doppelt eingetragenen Rückrufen. Die Sperre greift
+  // in der Zielphase vor den Listenern des Renderers, weil Capture-
+  // Listener am Ziel zuerst laufen.
+  window.document.addEventListener('DOMContentLoaded', (event) => event.stopImmediatePropagation(), {
+    capture: true,
+  });
 
   /** Text des Fehlerbanners im Steuerungsfenster, '' wenn keiner steht. */
   function bannerText() {

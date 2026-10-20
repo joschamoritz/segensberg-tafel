@@ -16,7 +16,7 @@ import {
   GoalEvent,
   infoOverlayDurationMs,
   InfoOverlay,
-  LINEUP_MAX_PAGES,
+  LineupStyle,
   LINEUP_PAGE_MS,
   LogoVariant,
   LiveMatchSnapshot,
@@ -42,6 +42,7 @@ import {
   TeamId,
   toMatchMinute,
 } from '../shared/types';
+import { lineupDurationMs, lineupSteps } from '../shared/lineupSteps';
 import { isCompleteSubstitution } from '../shared/substitutions';
 import { TeamsConfig } from './persistence';
 
@@ -94,6 +95,7 @@ function initialState(): MatchState {
     events: [],
     squads: { home: [], away: [] },
     lineupRequest: null,
+    lineupStyle: 'overview',
     scorerRequest: null,
     infoRequest: null,
     halfDurationMin: DEFAULT_HALF_DURATION_MIN,
@@ -499,10 +501,19 @@ export class MatchStateStore {
   showLineup(team: TeamId): void {
     // Eine laufende Diashow würde sich sonst über die Aufstellung legen.
     this.clearSlideshow();
-    this.state = { ...this.state, lineupRequest: { id: this.nextLineupId++, team } };
-    // Die Anzeige kehrt nach Startelf und Bank von selbst zur Begegnung
-    // zurück; hier wird nur noch die Anfrage im Zustand abgeräumt.
-    this.scheduleAutoHide('lineup', LINEUP_PAGE_MS * LINEUP_MAX_PAGES, () => this.hideLineup());
+    const style = this.state.lineupStyle;
+    this.state = { ...this.state, lineupRequest: { id: this.nextLineupId++, team, style } };
+    // Die Anzeige kehrt nach dem Ablauf von selbst zur Begegnung zurück;
+    // hier wird nur noch die Anfrage im Zustand abgeräumt -- nach genau
+    // der Dauer, die auch die Anzeige abspielt (`lineupSteps`).
+    const duration = lineupDurationMs(lineupSteps(this.state, team, style));
+    this.scheduleAutoHide('lineup', duration, () => this.hideLineup());
+    this.emit();
+  }
+
+  /** Übersicht oder einzeln mit Portraits, siehe `LineupStyle`. */
+  setLineupStyle(style: LineupStyle): void {
+    this.state = { ...this.state, lineupStyle: style };
     this.emit();
   }
 
@@ -1102,6 +1113,7 @@ export class MatchStateStore {
       competition,
       sponsorSlots,
       slideBlocks,
+      lineupStyle,
       attendanceMessage,
       announcements,
       media,
@@ -1121,6 +1133,7 @@ export class MatchStateStore {
       // Saisonverträge bleiben, der Spieltagssponsor wechselt je Spiel.
       sponsorSlots: { ...sponsorSlots, matchday: null },
       slideBlocks,
+      lineupStyle,
       attendanceMessage,
       announcements,
       media,

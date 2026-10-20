@@ -16,6 +16,7 @@ export function persistContent(): void {
     announcements: state.announcements,
     sound: state.sound,
     slideBlocks: state.slideBlocks,
+    lineupStyle: state.lineupStyle,
   });
 }
 

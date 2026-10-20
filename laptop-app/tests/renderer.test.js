@@ -334,3 +334,14 @@ test('display: die Torschützenliste hält die Obergrenze ein', (t) => {
   assert.deepEqual(r.drainErrors(), []);
   r.close();
 });
+
+// Der Harness löst DOMContentLoaded selbst aus; jsdom tut es danach noch
+// einmal. Lief `main()` doppelt, stand jeder Rückruf zweimal da, und die
+// Anzeige warf eine eben gestartete Aufstellung auf die Begegnung zurück.
+for (const name of ['display', 'control']) {
+  test(`${name}: main() läuft im Test genau einmal`, async (t) => {
+    const r = openRenderer(name, t);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    assert.equal(r.calls.filter((c) => c.name === 'requestState').length, 1);
+  });
+}

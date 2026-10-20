@@ -323,6 +323,10 @@ function main(): void {
     .getElementById('lineup-show-away')!
     .addEventListener('click', () => window.api.showLineup('away'));
   document.getElementById('lineup-hide')!.addEventListener('click', () => window.api.hideLineup());
+  const lineupStyle = document.getElementById('lineup-style') as HTMLSelectElement;
+  lineupStyle.addEventListener('change', () =>
+    window.api.setLineupStyle(lineupStyle.value === 'single' ? 'single' : 'overview')
+  );
 
   document.getElementById('match-reset')!.addEventListener('click', () => {
     if (confirm('Neues Spiel starten? Spielstand und Uhr werden zurückgesetzt.')) {

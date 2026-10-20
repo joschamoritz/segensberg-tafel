@@ -104,6 +104,35 @@
         <div class="lineup-grid" id="lineup-away-grid"></div>
       </div>
 
+      <!-- Einzel-Aufstellung: ein Spieler (oder der Trainer) je Schritt,
+           gefüllt von lineup.ts. Eine einzige Seite für alle Schritte --
+           elf Seiten im HTML wären elfmal dieselben Ids. Ohne Portrait
+           steht das Trikot mit der Rückennummer da; das Vereinstrikot
+           (trikot-heim.png) nur bei der Heimmannschaft, sonst ein
+           neutrales. -->
+      <div class="pre-page card-page" data-page="player-card">
+        <div class="card-visual">
+          <img class="card-photo" id="card-photo" alt="" hidden />
+          <div class="card-jersey" id="card-jersey" hidden>
+            <img class="card-jersey-home" id="card-jersey-home" src="trikot-heim.png" alt="" />
+            <svg class="card-jersey-blank" viewBox="0 0 100 100" aria-hidden="true">
+              <path d="M31 6 L41 3 Q50 11 59 3 L69 6 L95 23 L85 42 L74 35 L74 97 L26 97 L26 35 L15 42 L5 23 Z" />
+            </svg>
+            <span class="card-jersey-number" id="card-jersey-number"></span>
+          </div>
+          <img class="card-crest" id="card-crest" alt="" hidden />
+        </div>
+        <div class="card-body">
+          <div class="card-team">
+            <img class="lineup-logo" id="card-team-logo" alt="" hidden />
+            <span class="card-team-name" id="card-team-name"></span>
+            <span class="sponsor-chip lineup-sponsor" hidden><img class="sponsor-chip-img" alt="" /></span>
+          </div>
+          <div class="card-label" id="card-label"></div>
+          <div class="card-name" id="card-name"></div>
+        </div>
+      </div>
+
       <div class="pre-page lineup-page" data-page="bench-away">
         <div class="lineup-header">
           <img class="lineup-logo" id="bench-away-logo" alt="" hidden />

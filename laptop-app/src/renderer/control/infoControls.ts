@@ -19,6 +19,9 @@ import { wireSound } from './sound';
  * deshalb sind die Knöpfe danach deaktiviert statt wirkungslos.
  */
 export function renderLineupControls(state: MatchState): void {
+  const style = document.getElementById('lineup-style') as HTMLSelectElement;
+  if (document.activeElement !== style) style.value = state.lineupStyle;
+
   const enabled = state.phase === 'pre-match';
   for (const id of ['lineup-show-home', 'lineup-show-away', 'lineup-hide']) {
     (document.getElementById(id) as HTMLButtonElement).disabled = !enabled;

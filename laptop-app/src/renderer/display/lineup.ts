@@ -1,6 +1,7 @@
+import { lineupSteps, LineupStep } from '../../shared/lineupSteps';
 import { lineupNow } from '../../shared/substitutions';
-import { LINEUP_PAGE_MS, MatchState, sortPlayersByNumber, TeamId } from '../../shared/types';
-import { applyLogoPlate, ui } from './common';
+import { LINEUP_PAGE_MS, LineupStyle, MatchState, sortPlayersByNumber, TeamId } from '../../shared/types';
+import { applyLogoPlate, fitLines, nameVariants, ui } from './common';
 import { requestRetroPaint } from './retro';
 
 // Aufstellungsseiten vor dem Anpfiff und ihre Einblendung per Knopf.
@@ -122,40 +123,130 @@ export function showPage(pageName: string): void {
   retroPageTimer = setTimeout(requestRetroPaint, LINEUP_PAGE_MS / 2 + 10);
 }
 
-function hasContent(pageName: string): boolean {
-  const grid = document.getElementById(`${pageName}-grid`);
-  return (grid?.childElementCount ?? 0) > 0;
-}
-
 function clearLineupTimers(): void {
   for (const timer of lineupTimers) clearTimeout(timer);
   lineupTimers = [];
 }
 
 /**
- * Spielt die Aufstellung einer Mannschaft ab: Startelf, dann Bank (falls
- * vorhanden), dann zurück zur Begegnung. Ausgelöst wird das ausschließlich
- * per Knopf im Steuerungsfenster -- die Anzeige rotiert nicht von selbst.
+ * Füllt die Seite der Einzel-Aufstellung für einen Spieler oder den
+ * Trainer. Was gerade dort steht, merkt sich `ui.activeCard` für das
+ * Retro-Design, das keine Bilder zeigen kann.
  */
-function playLineupSequence(team: TeamId): void {
+function fillCard(state: MatchState, team: TeamId, step: LineupStep): void {
+  const teamState = state[team];
+  const photo = document.getElementById('card-photo') as HTMLImageElement;
+  const jersey = document.getElementById('card-jersey')!;
+  const crest = document.getElementById('card-crest') as HTMLImageElement;
+  const name = document.getElementById('card-name')!;
+  const label = document.getElementById('card-label')!;
+
+  const teamLogo = document.getElementById('card-team-logo') as HTMLImageElement;
+  if (teamState.logoDataUrl) teamLogo.src = teamState.logoDataUrl;
+  teamLogo.hidden = !teamState.logoDataUrl;
+  applyLogoPlate(teamLogo, teamState.logoVariant);
+  document.getElementById('card-team-name')!.textContent = teamState.name;
+
+  photo.hidden = true;
+  jersey.hidden = true;
+  crest.hidden = true;
+
+  let variants: string[][];
+  if (step.kind === 'coach') {
+    // Der Trainer hat kein Portrait im Kader -- an der Stelle steht das
+    // Wappen seiner Mannschaft.
+    if (teamState.logoDataUrl) {
+      crest.src = teamState.logoDataUrl;
+      crest.hidden = false;
+      applyLogoPlate(crest, teamState.logoVariant);
+      // Sonst stünde das Wappen zweimal da, groß und klein.
+      teamLogo.hidden = true;
+    }
+    label.textContent = 'TRAINER';
+    const parts = teamState.coach.trim().split(/\s+/);
+    const last = parts.pop() ?? '';
+    variants = nameVariants('', parts.join(' '), last);
+    ui.activeCard = { title: 'TRAINER', name: teamState.coach.trim(), detail: teamState.name };
+  } else if (step.kind === 'player') {
+    const player = state.squads[team].find((p) => p.id === step.playerId);
+    if (!player) return;
+    const number = player.number === null ? '' : String(player.number);
+    if (player.photoDataUrl) {
+      photo.src = player.photoDataUrl;
+      photo.hidden = false;
+      photo.onload = () => fitLines(name, variants);
+      // Mit Portrait steht die Nummer vor dem Namen ...
+      variants = nameVariants(number, player.firstName, player.lastName);
+    } else {
+      // ... ohne steht sie auf dem Trikot (Nutzerwunsch 20.10.2026). Das
+      // Vereinstrikot nur für die eigene Mannschaft -- ein Gastspieler im
+      // SVH-Trikot wäre schlicht falsch.
+      photo.onload = null;
+      const homeKit = document.getElementById('card-jersey-home') as HTMLImageElement;
+      const kitReady = homeKit.complete && homeKit.naturalWidth > 0;
+      jersey.classList.toggle('is-home-kit', team === 'home' && kitReady);
+      document.getElementById('card-jersey-number')!.textContent = number;
+      jersey.hidden = false;
+      variants = nameVariants('', player.firstName, player.lastName);
+    }
+    const roles = [player.isGoalkeeper ? 'TORWART' : 'STARTELF', player.isCaptain ? 'KAPITÄN' : ''];
+    label.textContent = roles.filter(Boolean).join(' · ');
+    ui.activeCard = {
+      title: roles.filter(Boolean).join(' '),
+      name: [number, player.firstName, player.lastName].filter(Boolean).join(' '),
+      detail: teamState.name,
+    };
+  } else {
+    return;
+  }
+  // Erst nach `showPage()` hat die Seite ein Layout zum Messen -- deshalb
+  // ruft der Ablauf `fitLines` danach noch einmal auf.
+  name.textContent = variants[0]?.join(' ') ?? '';
+  cardVariants = variants;
+}
+
+/** Aufteilungen des Namens auf der aktuellen Karte, für das Einpassen. */
+let cardVariants: string[][] = [];
+
+/** Zeigt einen Schritt des Ablaufs. */
+function showStep(state: MatchState, team: TeamId, step: LineupStep): void {
+  if (step.kind === 'page') {
+    ui.activeCard = null;
+    showPage(`${step.page === 'start' ? 'lineup' : 'bench'}-${team}`);
+    return;
+  }
+  fillCard(state, team, step);
+  showPage('player-card');
+  fitLines(document.getElementById('card-name')!, cardVariants);
+}
+
+/**
+ * Spielt die Aufstellung einer Mannschaft ab und kehrt danach zur
+ * Begegnung zurück. Der Ablauf kommt aus `lineupSteps()` -- denselben
+ * rechnet der Store für das Abräumen. Ausgelöst wird das ausschließlich
+ * per Knopf im Steuerungsfenster; die Anzeige rotiert nicht von selbst.
+ */
+function playLineupSequence(state: MatchState, team: TeamId, style: LineupStyle): void {
   clearLineupTimers();
-
-  const startPage = `lineup-${team}`;
-  const benchPage = `bench-${team}`;
-
-  if (!hasContent(startPage) && !hasContent(benchPage)) {
+  const steps = lineupSteps(state, team, style);
+  if (steps.length === 0) {
     showPage('matchup');
     return;
   }
 
-  const sequence = [startPage, benchPage].filter(hasContent);
-  showPage(sequence[0]);
-
-  sequence.slice(1).forEach((page, index) => {
-    lineupTimers.push(setTimeout(() => showPage(page), LINEUP_PAGE_MS * (index + 1)));
+  let offset = 0;
+  steps.forEach((step, index) => {
+    if (index === 0) showStep(state, team, step);
+    // Spätere Schritte mit dem dann gültigen Zustand: Ein Portrait, das
+    // während des Ablaufs nachgetragen wird, soll schon erscheinen.
+    else lineupTimers.push(setTimeout(() => showStep(ui.currentState ?? state, team, step), offset));
+    offset += step.ms;
   });
   lineupTimers.push(
-    setTimeout(() => showPage('matchup'), LINEUP_PAGE_MS * sequence.length)
+    setTimeout(() => {
+      ui.activeCard = null;
+      showPage('matchup');
+    }, offset)
   );
 }
 
@@ -170,6 +261,7 @@ export function handleLineupRequest(state: MatchState): void {
     if (lastLineupRequestId !== 0) {
       lastLineupRequestId = 0;
       clearLineupTimers();
+      ui.activeCard = null;
       showPage('matchup');
     }
     return;
@@ -177,5 +269,6 @@ export function handleLineupRequest(state: MatchState): void {
 
   if (request.id === lastLineupRequestId) return;
   lastLineupRequestId = request.id;
-  playLineupSequence(request.team);
+  // Ältere Sicherungen kennen den Ablauf nicht -- dann wie bisher.
+  playLineupSequence(state, request.team, request.style ?? 'overview');
 }
