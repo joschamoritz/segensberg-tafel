@@ -136,13 +136,63 @@ Herstellersoftware. Siehe `../CLAUDE.md` und `../DESIGN.md` für Hintergrund.
   läuft – ohne das ist eine Rückmeldung („das ging nicht") keiner
   Fassung zuzuordnen. Auf der Tafel steht die Angabe bewusst nicht.
 
+## Aufbau des Codes
+
+Die drei großen Dateien sind seit Oktober 2026 nach Bereichen aufgeteilt
+(Review N8). Jeder Einstieg (`main.ts`, `control.ts`, `display.ts`) nennt
+seine Module zusätzlich in einem Kopfkommentar.
+
+**Hauptprozess** (`src/main/`):
+
+| Datei | Inhalt |
+|---|---|
+| `main.ts` | Start, Einzelinstanz, Schließen-Rückfrage, Uhr-Tick |
+| `context.ts` | gemeinsamer Zustand (`ctx`: Stores, Fenster) und Versand an die Fenster |
+| `ipc.ts` | `onIpc()`/`handleIpc()` – die **einzige** Datei, die `ipcMain` anfasst |
+| `ipcHandlers.ts` | alle Handler für Steuerungsfenster und Fernsteuerung |
+| `displayWindow.ts` | Anzeigefenster, Zielbildschirm, `AppStatus`, Wachhalten, Kabel ein/aus |
+| `remoteControl.ts` | Fernsteuerung im WLAN (PIN, Start/Stopp) |
+| `liveSave.ts` | Spielsicherung und „Letztes Spiel fortsetzen?“ |
+| `persist.ts`, `dialogs.ts` | Speichern von Teams/Texten/Kadern, Dateifenster |
+| `mediaProtocol.ts` | Protokoll `svh-media:` (Registrierung beim Laden des Moduls) |
+| `appInfo.ts` | Fassung, Baudatum, `fehler.log` |
+
+**Steuerungsfenster** (`src/renderer/control/`): `control.ts` (Spielstand,
+Uhr, Phasen, `renderState()`, `main()`), `common.ts` (Fehlerbanner,
+Fokus-Merker, Render-Signaturen), `chronicle.ts`, `squadEditor.ts`,
+`setup.ts` (Einrichtungsflächen, Status, Fernsteuerung), `infoControls.ts`
+(Aufstellung, Ecken, Zuschauer, Diashow), `sound.ts`, `shootout.ts`.
+
+**Anzeigefenster** (`src/renderer/display/`): `display.ts` (Bühne,
+Spielansicht, Uhr, `renderState()`, `main()`), `common.ts` (gemeinsamer
+Anzeigezustand `ui`, `step()`, Wappen und Ziffern), `celebration.ts`,
+`lineup.ts`, `overlays.ts` (Info-Leiste, Danksagung, Torschütze),
+`slideshow.ts`, `retro.ts`.
+
+Regeln, die der Aufbau einhält:
+
+- **Die Verdrahtung läuft weiter genau einmal in `main()`** des
+  jeweiligen Fensters. Die Module liefern `render…`- und `wire…`-Funktionen;
+  `main()` ruft die `wire…`-Funktionen in derselben Reihenfolge wie vorher.
+- **Module importieren einander nicht im Kreis.** Was mehrere brauchen,
+  liegt in `common.ts` bzw. `context.ts` (etwa welche Einblendung gerade
+  läuft – das liest das Retro-Design). Die Fernsteuerung meldet
+  Statusänderungen über einen eingetragenen Rückruf
+  (`setRemoteStatusListener`), statt `displayWindow.ts` zu importieren.
+- **Ein neuer IPC-Handler gehört nach `ipcHandlers.ts` und über
+  `onIpc()`/`handleIpc()`.** `tests/remote.test.js` und
+  `tests/ipcArguments.test.js` lesen dafür alle Dateien unter
+  `src/main/` – ein Handler an anderer Stelle wird also ebenso geprüft,
+  und `ipcMain.on/handle` außerhalb von `ipc.ts` schlägt an.
+
 ## Build-Besonderheit: esbuild statt reinem tsc
 
-`preload.ts` sowie `control.ts`/`display.ts` werden zusätzlich zu `tsc` noch
+`preload.ts` sowie `control.ts`/`display.ts` (samt ihrer Module) werden
+zusätzlich zu `tsc` noch
 mit esbuild gebündelt (`scripts/bundle-renderer.js`), weil sie sonst
 `require()`/`exports`-Aufrufe enthalten, die weder im sandboxed Electron-
 Preload-Kontext noch in einem normalen `<script>`-Tag im Browser
-funktionieren. `main.ts`/`state.ts`/`windows.ts`/`persistence.ts` laufen im
+funktionieren. Der Hauptprozess (alles unter `src/main/` außer `preload.ts`) läuft im
 Electron-Main-Prozess (normaler Node-Kontext) und brauchen das nicht.
 
 - **Logo-Bibliothek**: liest einen Ordner mit Vereinslogos ein (Struktur
