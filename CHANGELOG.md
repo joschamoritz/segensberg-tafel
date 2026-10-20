@@ -10,7 +10,10 @@ dem Baudatum. Welche Stelle wann steigt, steht in
 
 ---
 
-## Noch nicht ausgeliefert
+## 1.9.0 – 20.10.2026 (Testfassung)
+
+Aufstellung mit Portraits und Trikot, dazu zwei Korrekturen an der
+Torschützen-Einblendung.
 
 **Neu**
 
