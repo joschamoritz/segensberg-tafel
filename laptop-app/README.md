@@ -86,8 +86,13 @@ Herstellersoftware. Siehe `../CLAUDE.md` und `../DESIGN.md` für Hintergrund.
   Portrait steht ein Trikot mit der Rückennummer da – bei der
   Heimmannschaft das Vereinstrikot aus
   `src/renderer/display/trikot-heim.png` (freigestelltes PNG, Rücken mit
-  Schriftzug, ohne Nummer), bei den Gästen und solange die Datei fehlt
-  ein neutrales weißes. „Übersicht" ist der bisherige Ablauf.
+  Schriftzug „SV HOCHLAR 28", ohne Nummer), bei den Gästen und solange
+  die Datei fehlt ein neutrales weißes. Entstanden aus
+  `Vereinsdaten/Trikot.jpg`: weißer Grund von den Rändern her
+  durchsichtig gemacht (die weißen Seiteneinsätze bleiben, weil sie nicht
+  mit dem Rand verbunden sind), Schriftzug in Oswald 700 auf 33 % der
+  Höhe, auf die sichtbaren Pixel zugeschnitten. Bei einem neuen Trikot
+  dieselben Schritte; die Nummer setzt die App selbst darauf. „Übersicht" ist der bisherige Ablauf.
 - **Retro-Design** als drittes: Punktmatrix wie alte Stadiontafeln,
   Leuchtfarbe Bernstein oder Weiß. Statt Wappen stehen Kurznamen da
   („ERKENSCHWICK"), vorgeschlagen aus dem Vereinsnamen und unter

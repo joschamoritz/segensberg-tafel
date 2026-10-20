@@ -19,7 +19,9 @@ dem Baudatum. Welche Stelle wann steigt, steht in
   erscheint jeder Spieler der Startelf 4 Sekunden lang mit Portrait,
   zuerst der Torwart, danach der Trainer und zum Schluss die Bank auf
   einer Seite. Wer kein Portrait hat, steht mit seinem Trikot und der
-  Rückennummer da. Die Auswahl bleibt gespeichert.
+  Rückennummer da – bei uns im Vereinstrikot mit „SV HOCHLAR 28" auf dem
+  Rücken, bei den Gästen in einem neutralen weißen. Die Auswahl bleibt
+  gespeichert.
 
 **Behoben**
 
