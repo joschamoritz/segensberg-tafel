@@ -18,7 +18,14 @@ const assert = require('node:assert');
 const fs = require('fs');
 const path = require('path');
 
-const MAIN = fs.readFileSync(path.join(__dirname, '..', 'src', 'main', 'main.ts'), 'utf-8');
+// Alle Dateien des Hauptprozesses: Die Handler stehen in ipcHandlers.ts,
+// ein neuer an anderer Stelle soll aber genauso geprüft werden.
+const MAIN_DIR = path.join(__dirname, '..', 'src', 'main');
+const MAIN = fs
+  .readdirSync(MAIN_DIR)
+  .filter((f) => f.endsWith('.ts'))
+  .map((f) => fs.readFileSync(path.join(MAIN_DIR, f), 'utf-8'))
+  .join('\n');
 
 test('alle Handler nehmen ihre Argumente als unknown entgegen (Review N1)', () => {
   const handler = [...MAIN.matchAll(/(?:onIpc|handleIpc)\(\s*IPC\.(\w+),\s*(?:async\s*)?\(([^)]*)\)/g)];

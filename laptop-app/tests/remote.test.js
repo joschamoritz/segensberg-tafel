@@ -250,13 +250,19 @@ test('für jeden Kanal der Brücke gibt es einen Handler im Hauptprozess', () =>
   // ebenso. Beide gehen über onIpc()/handleIpc().
   const src = (datei) => fs.readFileSync(path.join(__dirname, '..', 'src', datei), 'utf8');
   const bridge = src('shared/bridge.ts');
-  const main = src('main/main.ts');
+  // Alle Dateien des Hauptprozesses -- die Handler stehen in
+  // ipcHandlers.ts, ipcMain selbst darf nur ipc.ts anfassen.
+  const mainDir = path.join(__dirname, '..', 'src', 'main');
+  const dateien = fs.readdirSync(mainDir).filter((f) => f.endsWith('.ts'));
+  assert.ok(dateien.includes('ipc.ts') && dateien.includes('ipcHandlers.ts'), 'Aufbau des Hauptprozesses geändert?');
+  const main = dateien.map((f) => src(`main/${f}`)).join('\n');
+  const ohneIpcModul = dateien.filter((f) => f !== 'ipc.ts').map((f) => src(`main/${f}`)).join('\n');
 
   // \s* -- längere Aufrufe stehen über mehrere Zeilen.
   const gesendet = [...bridge.matchAll(/t\.(?:send|invoke)\(\s*IPC\.(\w+)/g)].map((m) => m[1]);
   const registriert = new Set([...main.matchAll(/(?:onIpc|handleIpc)\(\s*IPC\.(\w+)/g)].map((m) => m[1]));
   assert.ok(gesendet.length > 50, 'die Brücke wurde nicht gelesen');
-  assert.ok(!/ipcMain\.(on|handle)\(/.test(main.replace(/function (onIpc|handleIpc)[\s\S]*?\n}\n/g, '')),
+  assert.ok(!/ipcMain\.(on|handle)\(/.test(ohneIpcModul),
     'ein Handler an onIpc()/handleIpc() vorbei wäre auf dem iPad nicht erreichbar');
   for (const kanal of gesendet) {
     assert.ok(registriert.has(kanal), `IPC.${kanal} hat keinen Handler`);
