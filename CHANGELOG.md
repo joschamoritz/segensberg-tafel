@@ -10,7 +10,45 @@ dem Baudatum. Welche Stelle wann steigt, steht in
 
 ---
 
-## 1.6.1 – 20.10.2026 (Testfassung)
+## 1.7.0 – 20.10.2026 (Testfassung)
+
+Mehr Platz für Sponsoren und eine Diashow, die sich zusammenstellen
+lässt. Enthält auch alles aus 1.6.1 – die wurde nicht als eigene Datei
+ausgeliefert.
+
+**Neu**
+
+- **Diashow zum Abhaken:** Neben „Starten" stehen Haken für Partner,
+  Highlights, Vereinsgeschichte und Termine. Was abgehakt ist, läuft –
+  vor dem Anpfiff, in der Pause und nach dem Abpfiff gleichermaßen. Die
+  Auswahl bleibt gespeichert. Ein geänderter Haken gilt ab dem nächsten
+  Start der Diashow.
+- **Große Partner:** Logos im Ordner `Werbung/Hauptsponsor/` stehen in
+  der Diashow allein über die ganze Fläche, unter „Unsere Partner". Die
+  übrigen Partner (`Werbung/Partner/` oder direkt in `Werbung/`) laufen
+  wie bisher zu viert.
+- **Vereinsgeschichte:** Alte Mannschaftsfotos im neuen Ordner
+  `Vereinsdaten/Historie/` laufen mit Datum und Begegnung darunter. Beides
+  kommt aus dem Dateinamen, zum Beispiel
+  `1998-05-17_SV Hochlar 28 - Westfalia Herten 3-1.jpg`. Statt des
+  Tages geht auch nur Monat (`1998-05_…`) oder Jahr (`1998_…`).
+- **„Präsentiert von":** Unter Einrichtung → „Sponsoren" lässt sich je
+  ein Logo wählen für die Aufstellung, die Halbzeit (eigene Folie zu
+  Beginn der Diashow in der Pause), den Torjubel (unter „TOR!", nur beim
+  eigenen Tor), die Ecken-Leiste und den Spieltagssponsor auf der
+  Begegnung. „Neues Spiel" leert nur den Spieltagssponsor.
+- **Weiße Logos:** Liegt neben einem Logo eine weiße Fassung mit `_weiß`
+  am Ende des Namens (`Ott.png` und `Ott_weiß.png`), wird die weiße
+  gezeigt – ohne weiße Kachel, direkt auf dem Vereinsblau.
+
+**Nach dem Update**
+
+- Die neuen Ordner `Werbung/Hauptsponsor/`, `Werbung/Partner/` und
+  `Historie/` unter `Vereinsdaten/` von Hand anlegen. Bestehende Logos
+  direkt in `Werbung/` laufen ohne Umräumen weiter.
+- Danach „Medien neu einlesen" drücken oder die App neu starten.
+
+## 1.6.1 – 20.10.2026 (nicht ausgeliefert, enthalten in 1.7.0)
 
 Fehlerbehebungen und Ergänzungen aus dem Review vom Oktober 2026
 (`Review-2026-10.md`).

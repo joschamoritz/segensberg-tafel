@@ -1,53 +1,8 @@
 {
   "name": "anzeigetafel-laptop-app",
-  "version": "1.6.1",
+  "version": "1.7.0",
   "description": "Eigene Steuerungssoftware für die Vereins-LED-Anzeigetafel (Laptop-Version, Ersatz für die Herstellersoftware)",
   "private": true,
   "author": "SV Hochlar 28",
-  "main": "dist/main/main.js",
-  "scripts": {
-    "build": "tsc -p . && node scripts/copy-assets.js && node scripts/bundle-renderer.js && node scripts/build-info.js",
-    "start": "npm run build && electron .",
-    "test": "npm run build && node --test \"tests/*.test.js\"",
-    "check": "npm test",
-    "watch": "tsc -p . --watch",
-    "dist": "npm test && electron-builder"
-  },
-  "build": {
-    "appId": "de.hochlar28.anzeigetafel",
-    "productName": "Anzeigetafel",
-    "copyright": "SV Hochlar 28",
-    "directories": {
-      "output": "release",
-      "buildResources": "build"
-    },
-    "files": [
-      "dist/**/*",
-      "assets/**/*",
-      "package.json"
-    ],
-    "win": {
-      "target": [
-        "nsis",
-        "portable"
-      ],
-      "icon": "build/icon.png"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "shortcutName": "Anzeigetafel"
-    },
-    "portable": {
-      "artifactName": "Anzeigetafel-portable-${version}.exe"
-    }
-  },
-  "devDependencies": {
-    "@types/node": "^26.2.0",
-    "electron": "^43.4.0",
-    "electron-builder": "^26.15.3",
-    "esbuild": "^0.28.2",
-    "jsdom": "^30.0.1",
-    "typescript": "^7.0.2"
-  }
+  "main": "dist/main/main.js"
 }
