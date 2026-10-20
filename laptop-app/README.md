@@ -130,8 +130,9 @@ Herstellersoftware. Siehe `../CLAUDE.md` und `../DESIGN.md` für Hintergrund.
   „Absturzsicherung“).
   Heim ist fest auf SV Hochlar 28 / SVH mit Vereinslogo vorbelegt
   (`assets/heim-logo.png`), bleibt aber editierbar.
-- **Fassung und Baudatum in der Kopfzeile** des Steuerungsfensters
-  („Fassung 1.0.0 · 19.8.2026"). Klein und beiläufig, aber der einzige
+- **Fassung und Baudatum in der Kopfzeile** des Steuerungsfensters,
+  direkt hinter dem Titel („Fassung 1.6.1 · 20.10.2026"), daneben
+  „Programmiert von Joscha Fresmann". Klein und beiläufig, aber der einzige
   Ort, an dem am Spieltag ablesbar ist, welcher Stand auf dem Rechner
   läuft – ohne das ist eine Rückmeldung („das ging nicht") keiner
   Fassung zuzuordnen. Auf der Tafel steht die Angabe bewusst nicht.

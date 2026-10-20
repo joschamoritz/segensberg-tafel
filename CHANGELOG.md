@@ -72,6 +72,9 @@ Fehlerbehebungen und Ergänzungen aus dem Review vom Oktober 2026
   einmal übers WLAN statt bei jedem Tor.
 - Unter den Adressen der Fernsteuerung stehen keine virtuellen
   Netzwerkadapter mehr.
+- Fassung und Datum stehen jetzt direkt hinter dem Titel oben links
+  (vorher lagen sie bei schmaleren Bildschirmen über „Kader"), daneben
+  „Programmiert von Joscha Fresmann".
 - **Spielverlauf:** Heim steht immer links, Gast immer rechts, jedes
   Ereignis in einer eigenen Zeile – die Zeit läuft von oben nach unten,
   das Neueste steht unten. Die Vereinsnamen stehen einmal oben über den

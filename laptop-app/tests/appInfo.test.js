@@ -85,3 +85,9 @@ test('control: eine gescheiterte Abfrage reißt das Fenster nicht mit', async (t
   assert.deepEqual(r.drainErrors(), []);
   r.close();
 });
+
+test('der Entwickler steht in der Kopfzeile, auch ohne Fassungsangabe', (t) => {
+  const r = openRenderer('control', t);
+  assert.equal(r.text('app-credit'), 'Programmiert von Joscha Fresmann');
+  assert.equal(r.text('app-version'), '', 'Vorbedingung: ohne Fassungsangabe');
+});
