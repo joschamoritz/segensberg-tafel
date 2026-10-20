@@ -551,6 +551,22 @@ lassen, gehört zu jeder Auslieferung dieselbe Reihenfolge:
    gelegentlich wegräumen, aber immer die zuletzt bewährte behalten.
 6. Datei auf den Stick bzw. den Spieltags-Laptop.
 
+**Das gepackte `package.json` nie im Projektordner entpacken.** Wer
+prüfen will, ob dort ein `productName` steht (siehe `../CLAUDE.md`,
+Block E), entpackt mit `asar extract-file` – und der Befehl legt die
+Datei im **aktuellen Ordner** ab. In `laptop-app/` überschreibt er damit
+das echte `package.json` mit der gekürzten Paketfassung, ohne Skripte und
+Abhängigkeiten. So ist es nach 1.7.0 und 1.8.0 passiert. Stattdessen
+lesen, ohne zu schreiben:
+
+```bash
+npx asar list release/win-unpacked/resources/app.asar
+node -e "const a=require('fs').readFileSync('release/win-unpacked/resources/app.asar');console.log(a.includes('productName'))"
+```
+
+Danach kurz `git status` – ein geändertes `package.json` nach dem Bauen
+ist immer ein Fehler.
+
 **Welche Stelle steigt wann** (`major.minor.patch`):
 
 | Stelle | wann | Beispiel |
