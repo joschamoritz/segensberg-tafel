@@ -79,7 +79,7 @@ export function renderSlideshowControls(state: MatchState): void {
 
   // Dieselbe Zählung wie in der Anzeige: Sponsoren stehen dort zu viert
   // auf einer Folie, eine eigene Rechnung hier kündigte sonst mehr an.
-  const folien = slideCount(state.phase, state.media, state.announcements);
+  const folien = slideCount(state.phase, state.media, state.announcements, state.sponsorSlots);
 
   const start = document.getElementById('slideshow-start') as HTMLButtonElement;
   const stop = document.getElementById('slideshow-stop') as HTMLButtonElement;

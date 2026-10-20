@@ -9,6 +9,7 @@ import {
   DEFAULT_HALF_DURATION_MIN,
   LogoVariant,
   MatchState,
+  SponsorSlots,
   TeamState,
 } from '../shared/types';
 import { readJsonFile } from './configFile';
@@ -37,6 +38,8 @@ export interface TeamsConfig {
   appearance?: DisplayAppearance;
   /** Gewählter Wettbewerb, siehe `MatchState.competition`. */
   competition?: string | null;
+  /** „Präsentiert von"-Plätze, siehe `SponsorSlots`. */
+  sponsorSlots?: SponsorSlots;
 }
 
 /**
@@ -61,6 +64,7 @@ export function teamsConfigFromState(state: MatchState, logoLibraryPath: string)
     board: state.board,
     appearance: state.appearance,
     competition: state.competition,
+    sponsorSlots: state.sponsorSlots,
   };
 }
 
@@ -173,6 +177,7 @@ export function loadTeamsConfig(): TeamsConfig {
     board: parsed.board ?? fallback.board,
     appearance: parsed.appearance ?? fallback.appearance,
     competition: parsed.competition ?? null,
+    sponsorSlots: parsed.sponsorSlots,
   };
 }
 

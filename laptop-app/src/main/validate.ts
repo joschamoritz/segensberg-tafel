@@ -18,6 +18,13 @@ import {
   PlayerRole,
   RETRO_COLORS,
   RetroColor,
+  emptySponsorSlots,
+  SPONSOR_FOLDER_IDS,
+  SPONSOR_SLOT_IDS,
+  SponsorFolderId,
+  SponsorRef,
+  SponsorSlotId,
+  SponsorSlots,
   TeamId,
 } from '../shared/types';
 
@@ -201,6 +208,34 @@ export function sanitizeCompetition(value: unknown): string | null {
   if (name === '' || name.length > 200) return null;
   if (/[\\/]/.test(name) || name === '.' || name === '..') return null;
   return name;
+}
+
+/** Kennung eines „präsentiert von"-Platzes, sonst `null`. */
+export function sanitizeSponsorSlotId(value: unknown): SponsorSlotId | null {
+  return SPONSOR_SLOT_IDS.includes(value as SponsorSlotId) ? (value as SponsorSlotId) : null;
+}
+
+/**
+ * Logo eines Platzes: einer der Sponsorenordner und ein reiner
+ * Dateiname. Alles andere wird zu `null` -- auch hier soll kein Pfad in
+ * Zustand und `teams.json` gelangen (siehe `sanitizeCompetition`).
+ */
+export function sanitizeSponsorRef(value: unknown): SponsorRef | null {
+  if (!value || typeof value !== 'object') return null;
+  const { folder, file } = value as Record<string, unknown>;
+  if (!SPONSOR_FOLDER_IDS.includes(folder as SponsorFolderId)) return null;
+  const name = sanitizeCompetition(file);
+  return name === null ? null : { folder: folder as SponsorFolderId, file: name };
+}
+
+/** Alle Plätze aus `teams.json`; fehlende oder kaputte Einträge werden leer. */
+export function sanitizeSponsorSlots(value: unknown): SponsorSlots {
+  const slots = emptySponsorSlots();
+  if (!value || typeof value !== 'object') return slots;
+  for (const id of SPONSOR_SLOT_IDS) {
+    slots[id] = sanitizeSponsorRef((value as Record<string, unknown>)[id]);
+  }
+  return slots;
 }
 
 /**

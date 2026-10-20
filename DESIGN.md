@@ -182,6 +182,15 @@ damit sie beim Hochzählen nicht springen.
   EINER Kachel über die ganze Fläche. Bewusst kein eigenes Vollbild auf
   Blau – gleiche Leiste und weiße Fläche machen ihn als Sponsor
   erkennbar, die Größe macht den Unterschied zu den Partnern.
+- **„Präsentiert von"-Kachel** (`.sponsor-chip`, Display): Logo in
+  einer kleinen weißen Kachel, eingepasst; Höhe und Höchstbreite je
+  Platz über `--chip-h`/`--chip-w` (Begegnung und Aufstellung 13cqh,
+  Torjubel 15cqh, Ecken-Leiste 16cqh). Daneben „PRÄSENTIERT VON" in
+  `--svh-gold`, 5,5cqh – außer in der Aufstellung, deren Kopfzeile schon
+  Wappen und Titel trägt. Ohne Logo verschwindet der ganze Platz samt
+  Schriftzug. Der Tor-Sponsor steht nur beim eigenen Tor. Die
+  Halbzeit-Folie ist das Hauptsponsor-Fenster mit Titel „HALBZEIT
+  PRÄSENTIERT VON".
 - **Vereinsgeschichte** (`.history-slide`, Display, alle Designs):
   Foto eingepasst (`contain`, kein Zuschnitt – sonst fehlen auf alten
   Mannschaftsfotos die Köpfe der oberen Reihe), darunter eine Leiste auf

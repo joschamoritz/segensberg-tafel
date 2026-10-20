@@ -22,7 +22,10 @@ let slideTimer: ReturnType<typeof setTimeout> | null = null;
  * im Hinweis nennt.
  */
 function buildSlideDeck(state: MatchState): Slide[] {
-  return [{ kind: 'base' }, ...buildSlidePlan(state.phase, state.media, state.announcements)];
+  return [
+    { kind: 'base' },
+    ...buildSlidePlan(state.phase, state.media, state.announcements, state.sponsorSlots),
+  ];
 }
 
 /**

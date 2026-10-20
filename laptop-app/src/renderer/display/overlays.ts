@@ -8,8 +8,9 @@ import {
   playerLabel,
   SCORER_DISPLAY_MS,
   splitAttendanceMessage,
+  sponsorSlotUrl,
 } from '../../shared/types';
-import { goalTitle, ui } from './common';
+import { fillSponsorChip, goalTitle, ui } from './common';
 
 // Einblendungen im laufenden Spiel: Info-Leiste (Karte, Wechsel, Ecken),
 // Danksagung für die Zuschauerzahl und Torschütze mit Portrait.
@@ -58,6 +59,8 @@ function renderInfoOverlay(state: MatchState, overlay: InfoOverlay): string | nu
   // an einer Gelben Karte hängen.
   mark.className = 'info-mark';
   mark.hidden = true;
+  // Der Ecken-Sponsor gehört nur zur Ecken-Leiste, nicht zu Karte oder Wechsel.
+  document.getElementById('info-sponsor')!.hidden = true;
 
   if (overlay.kind === 'card') {
     const event = state.events.find((e) => e.id === overlay.eventId);
@@ -89,6 +92,7 @@ function renderInfoOverlay(state: MatchState, overlay: InfoOverlay): string | nu
 
   label.textContent = 'ECKEN';
   value.textContent = `${state.corners.home} : ${state.corners.away}`;
+  fillSponsorChip(document.getElementById('info-sponsor')!, sponsorSlotUrl(state.sponsorSlots, state.media, 'corners'));
   return 'showing-info';
 }
 

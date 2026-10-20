@@ -260,6 +260,15 @@ Electron-Main-Prozess (normaler Node-Kontext) und brauchen das nicht.
   Anpfiff laufen nur die Sponsoren, in der Pause und nach dem Abpfiff
   zusätzlich Highlights, Vereinsgeschichte und Termine. „Medien neu
   einlesen" liest die Ordner erneut ein, ohne die App neu zu starten.
+- **„Präsentiert von"-Plätze** (Einrichtung → „Sponsoren"): je ein Logo
+  für die Aufstellung (rechts in der Kopfzeile), die Halbzeit (erste
+  Folie der Diashow in der Pause), den Torjubel (unter „TOR!", nur beim
+  eigenen Tor), die Ecken (rechts in der Ecken-Leiste) und den
+  Spieltagssponsor (auf der Begegnung unter dem Anstoß). Zur Wahl stehen
+  alle Logos aus den Sponsorenordnern. Die Zuordnung liegt in
+  `teams.json`; „Neues Spiel" leert nur den Spieltagssponsor. Fehlt eine
+  gewählte Datei, bleibt der Platz auf der Tafel leer und die Auswahl
+  zeigt „(Datei fehlt)".
 - **Termine & Ankündigungen** werden im Steuerungsfenster als Textfeld
   gepflegt (eine Zeile je Ankündigung, höchstens fünf Zeilen je Folie)
   und in `content.json` gespeichert.

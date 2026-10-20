@@ -290,7 +290,8 @@ header h1 {
    man bei drei fast gleich aussehenden Flächen nicht, worin man steckt. */
 body[data-setup='anzeige'] .setup-entry[data-setup='anzeige'],
 body[data-setup='teams'] .setup-entry[data-setup='teams'],
-body[data-setup='kader'] .setup-entry[data-setup='kader'] {
+body[data-setup='kader'] .setup-entry[data-setup='kader'],
+body[data-setup='sponsoren'] .setup-entry[data-setup='sponsoren'] {
   background: var(--svh-wh);
   color: var(--svh);
 }
@@ -326,7 +327,8 @@ body[data-setup] .setup-scrim {
 
 body[data-setup='anzeige'] #setup-anzeige,
 body[data-setup='teams'] #setup-teams,
-body[data-setup='kader'] #setup-kader {
+body[data-setup='kader'] #setup-kader,
+body[data-setup='sponsoren'] #setup-sponsoren {
   display: block;
 }
 
@@ -386,6 +388,33 @@ body[data-setup='kader'] #setup-kader {
 .setup-panel > .team-settings,
 .setup-panel > .squad-settings {
   border-bottom: none;
+}
+
+/* ═══ Sponsoren-Plätze ═══ */
+/* Drei Spalten: Platz, Auswahl, wo das Logo erscheint. Die gemeinsame
+   Beschriftungsspalte hält die Auswahlfelder in einer Flucht. */
+
+.sponsor-slots {
+  display: grid;
+  grid-template-columns: 150px minmax(220px, 320px) 1fr;
+  align-items: center;
+  gap: 10px 12px;
+  padding: 20px 24px;
+}
+
+.sponsor-slot-note,
+.sponsor-slots-hint {
+  color: var(--svh-mut);
+  font-size: 13px;
+}
+
+.sponsor-slots-hint {
+  grid-column: 1 / -1;
+  margin: 4px 0 0;
+}
+
+.sponsor-slots-hint.is-empty {
+  color: var(--svh-warn);
 }
 
 /* ═══ Zielbildschirm ═══ */

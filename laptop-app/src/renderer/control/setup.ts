@@ -4,6 +4,11 @@ import {
   competitionLabel,
   FlutlichtEffects,
   MatchState,
+  SPONSOR_FOLDER_IDS,
+  SPONSOR_SLOT_IDS,
+  SponsorFolderId,
+  SponsorRef,
+  SponsorSlotId,
   TeamId,
 } from '../../shared/types';
 import type { LibraryPayload } from '../window';
@@ -163,6 +168,77 @@ export function renderCompetitionSelect(state: MatchState): void {
   select.value = state.competition ?? '';
   select.title =
     files.length === 0 ? `Keine Logos gefunden in "${state.media.wettbewerbe.rootPath}".` : '';
+}
+
+/**
+ * Auswahl der „präsentiert von"-Plätze. Wie beim Wettbewerb nur bei
+ * geänderten Dateien oder Zuordnungen neu aufgebaut, und eine fehlende
+ * Datei bleibt als „(Datei fehlt)" sichtbar gewählt.
+ *
+ * Der Wert einer Option ist `ordner/datei` -- ein Schrägstrich kommt in
+ * einem Dateinamen nicht vor, die Trennung ist also eindeutig.
+ */
+const SPONSOR_GROUP_LABELS: Record<SponsorFolderId, string> = {
+  hauptsponsor: 'Hauptsponsor',
+  partner: 'Partner',
+  werbung: 'Partner',
+};
+
+let sponsorSlotsSignature = '';
+
+export function renderSponsorSlotSelects(state: MatchState): void {
+  const lists = SPONSOR_FOLDER_IDS.map((folder) => state.media[folder].files);
+  const signature = JSON.stringify([lists, state.sponsorSlots]);
+  if (signature === sponsorSlotsSignature) return;
+  sponsorSlotsSignature = signature;
+
+  for (const slot of SPONSOR_SLOT_IDS) {
+    const select = document.getElementById(`sponsor-slot-${slot}`) as HTMLSelectElement;
+    const children: HTMLElement[] = [new Option('– keiner –', '')];
+    const groups = new Map<string, HTMLOptGroupElement>();
+    for (const folder of SPONSOR_FOLDER_IDS) {
+      const label = SPONSOR_GROUP_LABELS[folder];
+      for (const file of state.media[folder].files) {
+        let group = groups.get(label);
+        if (!group) {
+          group = document.createElement('optgroup');
+          group.label = label;
+          groups.set(label, group);
+          children.push(group);
+        }
+        group.appendChild(new Option(competitionLabel(file), `${folder}/${file}`));
+      }
+    }
+
+    const ref = state.sponsorSlots[slot];
+    if (ref && !state.media[ref.folder].files.includes(ref.file)) {
+      children.push(new Option(`${competitionLabel(ref.file)} (Datei fehlt)`, `${ref.folder}/${ref.file}`));
+    }
+    select.replaceChildren(...children);
+    select.value = ref ? `${ref.folder}/${ref.file}` : '';
+  }
+
+  const hint = document.getElementById('sponsor-slots-hint')!;
+  const leer = lists.every((files) => files.length === 0);
+  hint.textContent = leer
+    ? `Keine Logos gefunden unter "${state.media.werbung.rootPath}".`
+    : 'Logos aus Werbung/Hauptsponsor/, Werbung/Partner/ und direkt aus Werbung/.';
+  hint.classList.toggle('is-empty', leer);
+}
+
+/** Wert einer Option zurück in einen Verweis, siehe oben. */
+export function parseSponsorOption(value: string): SponsorRef | null {
+  const slash = value.indexOf('/');
+  if (slash < 0) return null;
+  return { folder: value.slice(0, slash) as SponsorFolderId, file: value.slice(slash + 1) };
+}
+
+export function wireSponsorSlots(): void {
+  document.querySelectorAll<HTMLSelectElement>('select[data-sponsor-slot]').forEach((select) => {
+    select.addEventListener('change', () =>
+      window.api.setSponsorSlot(select.dataset.sponsorSlot as SponsorSlotId, parseSponsorOption(select.value))
+    );
+  });
 }
 
 /** Schon im Banner gezeigte Hinweise -- der Status kommt bei jedem

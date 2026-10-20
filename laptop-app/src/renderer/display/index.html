@@ -68,6 +68,11 @@
       </div>
 
       <div class="pre-kickoff" id="pre-kickoff"></div>
+      <!-- Spieltagssponsor. Ausgeblendet, solange keiner gewählt ist. -->
+      <div class="presented pre-sponsor" id="pre-sponsor" hidden>
+        <span class="presented-by">PRÄSENTIERT VON</span>
+        <span class="sponsor-chip"><img class="sponsor-chip-img" id="pre-sponsor-logo" alt="" /></span>
+      </div>
       </div>
 
       <!-- Seiten 2-5: Aufstellungen. Werden aus dem Kader erzeugt und in
@@ -76,6 +81,7 @@
         <div class="lineup-header">
           <img class="lineup-logo" id="lineup-home-logo" alt="" hidden />
           <span class="lineup-title" id="lineup-home-title"></span>
+          <span class="sponsor-chip lineup-sponsor" hidden><img class="sponsor-chip-img" alt="" /></span>
         </div>
         <div class="lineup-grid" id="lineup-home-grid"></div>
       </div>
@@ -84,6 +90,7 @@
         <div class="lineup-header">
           <img class="lineup-logo" id="bench-home-logo" alt="" hidden />
           <span class="lineup-title" id="bench-home-title"></span>
+          <span class="sponsor-chip lineup-sponsor" hidden><img class="sponsor-chip-img" alt="" /></span>
         </div>
         <div class="lineup-grid" id="bench-home-grid"></div>
       </div>
@@ -92,6 +99,7 @@
         <div class="lineup-header">
           <img class="lineup-logo" id="lineup-away-logo" alt="" hidden />
           <span class="lineup-title" id="lineup-away-title"></span>
+          <span class="sponsor-chip lineup-sponsor" hidden><img class="sponsor-chip-img" alt="" /></span>
         </div>
         <div class="lineup-grid" id="lineup-away-grid"></div>
       </div>
@@ -100,6 +108,7 @@
         <div class="lineup-header">
           <img class="lineup-logo" id="bench-away-logo" alt="" hidden />
           <span class="lineup-title" id="bench-away-title"></span>
+          <span class="sponsor-chip lineup-sponsor" hidden><img class="sponsor-chip-img" alt="" /></span>
         </div>
         <div class="lineup-grid" id="bench-away-grid"></div>
       </div>
@@ -152,6 +161,8 @@
       <span class="info-mark" id="info-mark" hidden></span>
       <span class="info-label" id="info-label"></span>
       <span class="info-value" id="info-value"></span>
+      <!-- Ecken-Sponsor, nur bei der Ecken-Leiste. -->
+      <span class="sponsor-chip info-sponsor" id="info-sponsor" hidden><img class="sponsor-chip-img" id="info-sponsor-logo" alt="" /></span>
     </div>
 
     <!-- Diashow: Hauptsponsor, Partner, Vereinshighlights, Vereinsgeschichte
@@ -246,6 +257,11 @@
       <img class="goal-crest" id="goal-crest" alt="" hidden />
       <div class="goal-word" id="goal-word">TOR!</div>
       <div class="goal-team" id="goal-team"></div>
+      <!-- Tor-Sponsor, nur beim eigenen Tor (siehe display.css). -->
+      <div class="presented goal-sponsor" id="goal-sponsor" hidden>
+        <span class="presented-by">PRÄSENTIERT VON</span>
+        <span class="sponsor-chip"><img class="sponsor-chip-img" id="goal-sponsor-logo" alt="" /></span>
+      </div>
     </div>
 
     <!-- Torjubel, zweiter Akt: Konfetti über der normalen Spielansicht.

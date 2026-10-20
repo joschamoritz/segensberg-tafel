@@ -12,7 +12,13 @@ import { MediaLibrary } from './media';
 import { registerMediaProtocol } from './mediaProtocol';
 import { loadTeamsConfig, resolveDefaultLibraryPath } from './persistence';
 import { initRemoteControl, setRemoteStatusListener, shutdownRemote } from './remoteControl';
-import { sanitizeAnnouncements, sanitizeAppearance, sanitizeBoardSize, sanitizeCompetition } from './validate';
+import {
+  sanitizeAnnouncements,
+  sanitizeAppearance,
+  sanitizeBoardSize,
+  sanitizeCompetition,
+  sanitizeSponsorSlots,
+} from './validate';
 import { SquadStore } from './squads';
 import { MatchStateStore } from './state';
 import { TeamLibrary } from './teamLibrary';
@@ -95,6 +101,7 @@ app.whenReady().then(() => {
   store.setBoardSize(sanitizeBoardSize(teamsConfig.board));
   store.setAppearance(sanitizeAppearance(teamsConfig.appearance));
   store.setCompetition(sanitizeCompetition(teamsConfig.competition));
+  store.setSponsorSlots(sanitizeSponsorSlots(teamsConfig.sponsorSlots));
 
   const content = loadContentConfig();
   store.setAttendanceMessage(content.attendanceMessage);

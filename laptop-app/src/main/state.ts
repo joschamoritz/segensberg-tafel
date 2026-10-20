@@ -10,6 +10,7 @@ import {
   DEFAULT_BOARD_SIZE,
   DEFAULT_HALF_DURATION_MIN,
   DEFAULT_SOUND_SETTINGS,
+  emptySponsorSlots,
   GoalEvent,
   infoOverlayDurationMs,
   InfoOverlay,
@@ -28,6 +29,9 @@ import {
   MediaLists,
   Player,
   SoundSettings,
+  SponsorRef,
+  SponsorSlotId,
+  SponsorSlots,
   SCORER_DISPLAY_MS,
   ShootoutKick,
   slideshowAvailable,
@@ -102,6 +106,7 @@ function initialState(): MatchState {
       MEDIA_FOLDER_IDS.map((id) => [id, { rootPath: '', files: [] as string[] }])
     ) as MediaLists,
     competition: null,
+    sponsorSlots: emptySponsorSlots(),
     slideshowRequest: null,
     shootout: null,
     sound: { ...DEFAULT_SOUND_SETTINGS },
@@ -877,6 +882,25 @@ export class MatchStateStore {
     this.emit();
   }
 
+  /**
+   * Logo eines „präsentiert von"-Platzes setzen oder mit `null` leeren.
+   * Ob die Datei im Ordner liegt, prüft die Anzeige (`sponsorSlotUrl`),
+   * wie beim Wettbewerb. Kein `bump()`: An den Plätzen hängt keine
+   * gepufferte Liste, die Fenster lesen den Wert direkt.
+   */
+  setSponsorSlot(slot: SponsorSlotId, ref: SponsorRef | null): void {
+    const current = this.state.sponsorSlots[slot];
+    if (current?.folder === ref?.folder && current?.file === ref?.file) return;
+    this.state = { ...this.state, sponsorSlots: { ...this.state.sponsorSlots, [slot]: ref } };
+    this.emit();
+  }
+
+  /** Alle Plätze auf einmal, beim Start aus `teams.json`. */
+  setSponsorSlots(slots: SponsorSlots): void {
+    this.state = { ...this.state, sponsorSlots: { ...slots } };
+    this.emit();
+  }
+
   // --- Elfmeterschießen ---------------------------------------------------
   // Siehe `Shootout` in shared/types.ts. Nur nach dem Abpfiff; ein
   // Zurücknehmen des Abpfiffs verwirft es (`revertPhase`).
@@ -1046,6 +1070,7 @@ export class MatchStateStore {
       board,
       appearance,
       competition,
+      sponsorSlots,
       attendanceMessage,
       announcements,
       media,
@@ -1062,6 +1087,8 @@ export class MatchStateStore {
       board,
       appearance,
       competition,
+      // Saisonverträge bleiben, der Spieltagssponsor wechselt je Spiel.
+      sponsorSlots: { ...sponsorSlots, matchday: null },
       attendanceMessage,
       announcements,
       media,

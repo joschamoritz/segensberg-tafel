@@ -23,6 +23,8 @@ import {
   sanitizeAttendance,
   sanitizeAppearance,
   sanitizeCompetition,
+  sanitizeSponsorRef,
+  sanitizeSponsorSlotId,
   sanitizeBoardSize,
   sanitizeImportedPlayers,
   sanitizeKickoffTime,
@@ -344,6 +346,12 @@ export function registerIpcHandlers(): void {
   });
   onIpc(IPC.setCompetition, (_event, fileName: unknown) => {
     store.setCompetition(sanitizeCompetition(fileName));
+    persistTeams();
+  });
+  onIpc(IPC.setSponsorSlot, (_event, slot: unknown, ref: unknown) => {
+    const id = sanitizeSponsorSlotId(slot);
+    if (id === null) return;
+    store.setSponsorSlot(id, sanitizeSponsorRef(ref));
     persistTeams();
   });
 

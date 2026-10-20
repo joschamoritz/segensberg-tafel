@@ -20,6 +20,7 @@ import { handleLineupRequest, renderLineupPages, showPage } from './lineup';
 import { handleInfoRequest, handleScorerRequest } from './overlays';
 import { requestRetroPaint } from './retro';
 import { handleSlideshowRequest } from './slideshow';
+import { renderSponsorSlots } from './sponsors';
 
 // Aufbau der Anzeige (siehe laptop-app/README.md):
 //   display.ts      Bühne, Spielansicht, Uhr, renderState() und main()
@@ -314,6 +315,8 @@ function renderState(state: MatchState): void {
   });
 
   step('Wettbewerb', () => renderCompetition(state));
+
+  step('Sponsoren', () => renderSponsorSlots(state));
 
   step('Uhr', () => renderClock(state.clock));
 

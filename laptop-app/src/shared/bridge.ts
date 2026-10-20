@@ -12,6 +12,8 @@ import {
   Player,
   ShootoutKick,
   SoundCommand,
+  SponsorRef,
+  SponsorSlotId,
   TeamId,
 } from './types';
 
@@ -111,6 +113,7 @@ export function createApi(t: Transport) {
     setAppearance: (appearance: DisplayAppearance) =>
       t.send(IPC.setAppearance, appearance),
     setCompetition: (fileName: string | null) => t.send(IPC.setCompetition, fileName),
+    setSponsorSlot: (slot: SponsorSlotId, ref: SponsorRef | null) => t.send(IPC.setSponsorSlot, slot, ref),
     phaseKickoff: () => t.send(IPC.phaseKickoff),
     phaseHalfTime: () => t.send(IPC.phaseHalfTime),
     phaseSecondHalf: () => t.send(IPC.phaseSecondHalf),

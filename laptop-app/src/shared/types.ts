@@ -436,6 +436,8 @@ export interface MatchState {
    * den Pokal.
    */
   competition: string | null;
+  /** „Präsentiert von"-Plätze, siehe `SponsorSlots`. */
+  sponsorSlots: SponsorSlots;
   /** Geplanter Anstoß als "HH:MM"; leer = keine Angabe. Nur informativ --
       der Anpfiff wird weiterhin manuell ausgelöst. */
   kickoffTime: string;
@@ -573,6 +575,76 @@ export function competitionLabel(fileName: string): string {
     .replace(/^\d+[_\s-]+/, '')
     .replace(/[_]+/g, ' ')
     .trim();
+}
+
+/**
+ * „Präsentiert von"-Plätze (Nutzerwunsch 20.10.2026): An fünf Stellen
+ * kann ein Logo aus den Sponsorenordnern stehen.
+ *
+ * - `lineup`: in der Kopfzeile der Aufstellungsseiten
+ * - `halfTime`: als erste Folie der Diashow in der Halbzeitpause
+ *   (Nutzerentscheidung: eigene Folie statt Logo in der Halbzeitansicht)
+ * - `goal`: unter „TOR!" im Vollbild-Akt des Torjubels
+ * - `corners`: rechts in der Info-Leiste der Ecken
+ * - `matchday`: auf der Begegnung vor dem Anpfiff
+ *
+ * Tor und Ecken stehen bewusst im bestehenden Akt, nicht in einem eigenen
+ * (Nutzerentscheidung) -- der Jubel wird dadurch nicht länger.
+ *
+ * Gehört in `teams.json` und überdauert „Neues Spiel": Ein Sponsor für
+ * Tore oder Ecken ist ein Saisonvertrag. Nur der Spieltagssponsor
+ * wechselt je Spiel und wird geleert.
+ */
+export type SponsorSlotId = 'lineup' | 'halfTime' | 'goal' | 'corners' | 'matchday';
+
+export const SPONSOR_SLOT_IDS: SponsorSlotId[] = ['lineup', 'halfTime', 'goal', 'corners', 'matchday'];
+
+/** Beschriftung der Auswahl im Steuerungsfenster. */
+export const SPONSOR_SLOT_LABELS: Record<SponsorSlotId, string> = {
+  lineup: 'Aufstellung',
+  halfTime: 'Halbzeit',
+  goal: 'Torjubel',
+  corners: 'Ecken',
+  matchday: 'Spieltagssponsor',
+};
+
+/** Ordner, aus denen ein Platz sein Logo nehmen darf. */
+export type SponsorFolderId = 'hauptsponsor' | 'partner' | 'werbung';
+
+export const SPONSOR_FOLDER_IDS: SponsorFolderId[] = ['hauptsponsor', 'partner', 'werbung'];
+
+/** Ein Logo: Ordner und Dateiname -- nie ein Pfad, siehe `sanitizeSponsorRef`. */
+export interface SponsorRef {
+  folder: SponsorFolderId;
+  file: string;
+}
+
+export type SponsorSlots = Record<SponsorSlotId, SponsorRef | null>;
+
+export function emptySponsorSlots(): SponsorSlots {
+  return { lineup: null, halfTime: null, goal: null, corners: null, matchday: null };
+}
+
+/** Schriftzug neben bzw. über einem Logo an einem Platz. */
+export const PRESENTED_BY = 'PRÄSENTIERT VON';
+
+/** Titel der Halbzeit-Folie. */
+export const HALFTIME_SPONSOR_TITLE = 'HALBZEIT PRÄSENTIERT VON';
+
+/**
+ * Adresse des Logos an einem Platz -- oder `null`, wenn keiner gewählt
+ * ist oder die Datei nicht mehr im Ordner liegt. Dann bleibt der Platz
+ * leer statt ein zerbrochenes Bild zu zeigen; die Wahl bleibt erhalten,
+ * falls die Datei nur kurz umbenannt war (wie beim Wettbewerbslogo).
+ */
+export function sponsorSlotUrl(
+  slots: SponsorSlots,
+  media: MediaLists,
+  slot: SponsorSlotId
+): string | null {
+  const ref = slots[slot];
+  if (!ref || !media[ref.folder].files.includes(ref.file)) return null;
+  return mediaUrl(ref.folder, ref.file);
 }
 
 /** Beschriftung eines historischen Fotos, siehe `historyCaption()`. */
@@ -734,12 +806,20 @@ export type SlidePlanItem =
 export function buildSlidePlan(
   phase: MatchPhase,
   media: MediaLists,
-  announcements: string[]
+  announcements: string[],
+  sponsorSlots: SponsorSlots = emptySponsorSlots()
 ): SlidePlanItem[] {
   const folders = slideFoldersForPhase(phase);
   const urls = (folder: MediaFolderId): string[] =>
     folders.includes(folder) ? media[folder].files.map((f) => mediaUrl(folder, f)) : [];
   const slides: SlidePlanItem[] = [];
+
+  // Halbzeit-Sponsor zuerst -- er „präsentiert" die Pause, also gehört
+  // er an ihren Anfang. Nur in der Halbzeit, nicht nach dem Abpfiff.
+  const halfTime = phase === 'half-time' ? sponsorSlotUrl(sponsorSlots, media, 'halfTime') : null;
+  if (halfTime) {
+    slides.push({ kind: 'sponsors', main: true, title: HALFTIME_SPONSOR_TITLE, urls: [halfTime], page: 0, pages: 1 });
+  }
 
   const main = urls('hauptsponsor');
   main.forEach((url, page) =>
@@ -777,8 +857,13 @@ export function buildSlidePlan(
 }
 
 /** Zahl der Folien einer Diashow, ohne die normale Ansicht. */
-export function slideCount(phase: MatchPhase, media: MediaLists, announcements: string[]): number {
-  return buildSlidePlan(phase, media, announcements).length;
+export function slideCount(
+  phase: MatchPhase,
+  media: MediaLists,
+  announcements: string[],
+  sponsorSlots?: SponsorSlots
+): number {
+  return buildSlidePlan(phase, media, announcements, sponsorSlots).length;
 }
 
 /**
@@ -1231,6 +1316,7 @@ export const IPC = {
   setBoardSize: 'display:set-board-size',
   setAppearance: 'display:set-appearance',
   setCompetition: 'match:set-competition',
+  setSponsorSlot: 'match:set-sponsor-slot',
   goalSetScorer: 'goal:set-scorer',
   goalSetOwnGoal: 'goal:set-own-goal',
   goalSetPenalty: 'goal:set-penalty',

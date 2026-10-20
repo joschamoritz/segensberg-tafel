@@ -150,3 +150,16 @@ export function goalTitle(goal: GoalEvent): string {
   if (goal.penalty) return 'TOR (FE)';
   return 'TOR';
 }
+
+/**
+ * Füllt einen „präsentiert von"-Platz. Ohne Logo wird der ganze Behälter
+ * ausgeblendet -- samt Schriftzug, ein „präsentiert von" ins Leere wäre
+ * schlimmer als nichts. Das `src` wird nur bei einem Wechsel gesetzt,
+ * sonst lüde das Bild bei jedem Zustands-Update neu.
+ */
+export function fillSponsorChip(container: HTMLElement, url: string | null): void {
+  container.hidden = url === null;
+  const img = container.querySelector('img')!;
+  if (url === null) img.removeAttribute('src');
+  else if (img.getAttribute('src') !== url) img.src = url;
+}

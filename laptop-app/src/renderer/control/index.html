@@ -44,6 +44,7 @@
       <button type="button" class="setup-entry" data-setup="anzeige">Anzeige</button>
       <button type="button" class="setup-entry" data-setup="teams">Teams &amp; Logos</button>
       <button type="button" class="setup-entry" data-setup="kader">Kader</button>
+      <button type="button" class="setup-entry" data-setup="sponsoren">Sponsoren</button>
     </nav>
   </header>
 
@@ -193,6 +194,39 @@
       </div>
     </div>
   </details>
+  </div>
+
+  <!-- „Präsentiert von"-Plätze. Logos aus Vereinsdaten/Werbung/
+       (Hauptsponsor/, Partner/ oder direkt im Ordner). -->
+  <div class="setup-panel" id="setup-sponsoren">
+    <div class="setup-panel-head">
+      <h2>Sponsoren</h2>
+      <button type="button" class="setup-close" data-setup-close>Schließen</button>
+    </div>
+
+  <section class="sponsor-slots" id="sponsor-slots">
+    <label for="sponsor-slot-lineup">Aufstellung:</label>
+    <select id="sponsor-slot-lineup" data-sponsor-slot="lineup"></select>
+    <span class="sponsor-slot-note">rechts in der Kopfzeile der Aufstellung</span>
+
+    <label for="sponsor-slot-halfTime">Halbzeit:</label>
+    <select id="sponsor-slot-halfTime" data-sponsor-slot="halfTime"></select>
+    <span class="sponsor-slot-note">erste Folie der Diashow in der Pause</span>
+
+    <label for="sponsor-slot-goal">Torjubel:</label>
+    <select id="sponsor-slot-goal" data-sponsor-slot="goal"></select>
+    <span class="sponsor-slot-note">unter „TOR!“, nur beim eigenen Tor</span>
+
+    <label for="sponsor-slot-corners">Ecken:</label>
+    <select id="sponsor-slot-corners" data-sponsor-slot="corners"></select>
+    <span class="sponsor-slot-note">rechts in der Ecken-Leiste</span>
+
+    <label for="sponsor-slot-matchday">Spieltagssponsor:</label>
+    <select id="sponsor-slot-matchday" data-sponsor-slot="matchday"></select>
+    <span class="sponsor-slot-note">auf der Begegnung vor dem Anpfiff · wird bei „Neues Spiel“ geleert</span>
+
+    <p class="sponsor-slots-hint" id="sponsor-slots-hint"></p>
+  </section>
   </div>
 
   <div class="setup-panel" id="setup-kader">

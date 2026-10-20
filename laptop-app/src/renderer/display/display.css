@@ -1178,8 +1178,15 @@ body.showing-scorer .board-match {
 .goal-crest,
 .goal-word,
 .goal-team,
+.goal-sponsor,
 .goal-confetti {
   display: none;
+}
+
+/* Tor-Sponsor nur beim EIGENEN Tor: Er „präsentiert" die Feier, und ein
+   Gegentor ist eine Meldung, keine Feier (wie der Rahmenpuls). */
+body[data-goal-stage='word'] .goal-sponsor:not([hidden]) {
+  display: flex;
 }
 
 /* Beide Vollbildstufen sind gleich aufgebaut: das Wappen der treffenden
@@ -1482,6 +1489,81 @@ body.goal-lead-change .goal-frame {
 
 .sponsor-window.is-main .sponsor-tile {
   padding: 4cqh 6cqw;
+}
+
+/* ═══════════════════════════════════════════
+   „Präsentiert von"-Plätze (alle Designs)
+   ═══════════════════════════════════════════ */
+/* Ein Logo in einer kleinen weißen Kachel -- dieselbe Begründung wie im
+   Sponsoren-Fenster: Sponsorenlogos sind für hellen Grund gezeichnet.
+   Höhe und Höchstbreite setzt jeder Platz selbst über --chip-h/--chip-w;
+   das Logo wird eingepasst, nie beschnitten. */
+
+.sponsor-chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--chip-h, 14cqh);
+  max-width: var(--chip-w, 28cqw);
+  padding: 1cqh 1.4cqw;
+  background: var(--svh-wh);
+  border-radius: 0.6cqh;
+}
+
+.sponsor-chip-img {
+  display: block;
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.presented {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2cqw;
+}
+
+.sponsor-chip[hidden],
+.presented[hidden] {
+  display: none;
+}
+
+.presented-by {
+  font-weight: 600;
+  font-size: 5.5cqh;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  color: var(--svh-gold);
+}
+
+/* Begegnung: unter dem Anstoß. */
+.pre-sponsor {
+  --chip-h: 13cqh;
+  --chip-w: 30cqw;
+}
+
+/* Aufstellung: rechts in der Kopfzeile, ohne Schriftzug -- die Zeile
+   trägt schon Wappen und Titel. */
+.lineup-sponsor {
+  --chip-h: 13cqh;
+  --chip-w: 22cqw;
+  margin-left: 2cqw;
+}
+
+/* Torjubel: unter „TOR!". */
+.goal-sponsor {
+  --chip-h: 15cqh;
+  --chip-w: 34cqw;
+}
+
+/* Ecken: rechts in der Info-Leiste. */
+.info-sponsor {
+  --chip-h: 16cqh;
+  --chip-w: 24cqw;
+  margin-left: 2cqw;
 }
 
 /* ═══════════════════════════════════════════

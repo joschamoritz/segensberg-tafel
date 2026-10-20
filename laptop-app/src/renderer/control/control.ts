@@ -23,6 +23,8 @@ import {
   renderAppearanceControls,
   renderAppVersion,
   renderCompetitionSelect,
+  renderSponsorSlotSelects,
+  wireSponsorSlots,
   renderLibrary,
   renderStatus,
   renderTeamSettings,
@@ -151,6 +153,7 @@ function renderState(state: MatchState): void {
   updateInputIfNotFocused(halfDurationInput, String(state.halfDurationMin));
 
   renderCompetitionSelect(state);
+  renderSponsorSlotSelects(state);
 
   const boardWidthInput = document.getElementById('board-width-input') as HTMLInputElement;
   const boardHeightInput = document.getElementById('board-height-input') as HTMLInputElement;
@@ -203,6 +206,8 @@ function main(): void {
   halfDurationInput.addEventListener('change', () =>
     window.api.setHalfDuration(Number(halfDurationInput.value))
   );
+
+  wireSponsorSlots();
 
   const competitionSelect = document.getElementById('competition-select') as HTMLSelectElement;
   competitionSelect.addEventListener('change', () =>
