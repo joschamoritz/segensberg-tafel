@@ -32,6 +32,9 @@ function medien(wettbewerbe) {
     highlights: { rootPath: 'H', files: [] },
     sounds: { rootPath: 'S', files: [] },
     wettbewerbe: { rootPath: 'C:\\Vereinsdaten\\Wettbewerbe', files: wettbewerbe },
+    hauptsponsor: { rootPath: 'HS', files: [] },
+    partner: { rootPath: 'P', files: [] },
+    historie: { rootPath: 'HI', files: [] },
   };
 }
 

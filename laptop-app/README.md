@@ -246,16 +246,19 @@ Electron-Main-Prozess (normaler Node-Kontext) und brauchen das nicht.
   gezählt. Beide stehen bewusst **nicht** dauerhaft auf der Tafel: Im
   laufenden Spiel ist bei 384×192 kein Platz für eine weitere feste
   Zeile, ohne dem Uhr-Panel etwas wegzunehmen.
-- **Diashow** für Werbung/Sponsoren, Vereinshighlights und Termine.
-  Läuft **nur auf Knopfdruck** („Diashow → Starten"), nie von selbst –
-  vor dem Anpfiff und in der Halbzeitpause. **Sponsoren erscheinen zu
-  viert in einem Fenster** aus gleich großen weißen Kacheln unter der
-  Titelleiste „Unsere Partner"; bei mehr als vier Logos folgen weitere
-  Seiten, kleine Quadrate zeigen die Seite an. Highlights und Termine
-  füllen weiterhin das ganze Bild. Die normale Ansicht (Begegnung bzw.
+- **Diashow** für Sponsoren, Vereinshighlights, Vereinsgeschichte und
+  Termine. Läuft **nur auf Knopfdruck** („Diashow → Starten"), nie von
+  selbst – vor dem Anpfiff, in der Halbzeitpause und nach dem Abpfiff.
+  Eine Schau in festen Blöcken: **Hauptsponsor** (je Logo eine Folie mit
+  einer großen Kachel unter „Unser Hauptsponsor"), **Partner** (zu viert
+  in gleich großen weißen Kacheln unter „Unsere Partner", bei mehr als
+  vier Logos weitere Seiten mit kleinen Quadraten als Seitenanzeige),
+  **Highlights** (Vollbild), **Vereinsgeschichte** (historisches Foto mit
+  Datum und Begegnung darunter) und **Termine**. Die normale Ansicht (Begegnung bzw.
   Zwischenstand) ist selbst eine Station der Rotation, der Spielstand
   ist also nie länger als eine Folie weg. Standzeit 8 Sekunden. Vor dem
-  Anpfiff läuft nur die Werbung, in der Pause zusätzlich Highlights und Termine. „Medien neu
+  Anpfiff laufen nur die Sponsoren, in der Pause und nach dem Abpfiff
+  zusätzlich Highlights, Vereinsgeschichte und Termine. „Medien neu
   einlesen" liest die Ordner erneut ein, ohne die App neu zu starten.
 - **Termine & Ankündigungen** werden im Steuerungsfenster als Textfeld
   gepflegt (eine Zeile je Ankündigung, höchstens fünf Zeilen je Folie)
@@ -290,8 +293,25 @@ Die **Tormusik** liegt in `Vereinsdaten/Sounds/` (MP3, WAV, OGG, M4A oder
 FLAC). Bevorzugt wird eine Datei namens `tor.*`; liegt keine da, nimmt
 die App die erste Audiodatei im Ordner.
 
-Die **Diashow-Bilder** liegen in `Vereinsdaten/Werbung/` und
-`Vereinsdaten/Highlights/` – gesucht an denselben drei Orten wie die
+Die **Diashow-Bilder** liegen unter `Vereinsdaten/`:
+
+| Ordner | Block |
+|---|---|
+| `Werbung/Hauptsponsor/` | Hauptsponsor, je Logo eine Folie |
+| `Werbung/Partner/` und direkt `Werbung/` | Partner, zu viert |
+| `Highlights/` | Vereinshighlights im Vollbild |
+| `Historie/` | historische Mannschaftsfotos mit Beschriftung |
+
+Logos direkt in `Werbung/` zählen als Partner, ein bestehender Ordner
+läuft also ohne Umräumen weiter. Bei den historischen Fotos kommt die
+Beschriftung aus dem Dateinamen: `1998-05-17_SV Hochlar 28 - Westfalia
+Herten 3-1.jpg` ergibt „17.05.1998" und „SV Hochlar 28 – Westfalia
+Herten 3:1". Statt des Tages geht auch nur Monat (`1998-05_…` →
+„Mai 1998") oder Jahr (`1998_…`); ohne Datum steht dort „Aus der
+Vereinsgeschichte". Weil das Datum vorn steht, laufen die Fotos
+zeitlich sortiert. Die Fotos werden eingepasst, nicht beschnitten.
+
+Alle Ordner werden gesucht an denselben drei Orten wie die
 Logo-Bibliothek (siehe unten). Die Reihenfolge auf der Tafel ergibt sich
 aus dem Dateinamen, deshalb ist `01_`, `02_` … die vorgesehene Pflege.
 Erlaubt sind PNG, JPG, WEBP und GIF; alles andere im Ordner wird

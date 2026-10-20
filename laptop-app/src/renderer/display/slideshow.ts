@@ -1,17 +1,15 @@
 import {
-  ANNOUNCEMENTS_PER_SLIDE,
-  announcementsVisible,
   ANNOUNCEMENTS_TITLE,
+  buildSlidePlan,
+  HISTORY_FALLBACK_TITLE,
+  HistoryCaption,
   MatchState,
-  mediaUrl,
   SLIDE_DURATION_MS,
-  slideFoldersForPhase,
   SPONSORS_PER_PAGE,
-  SPONSORS_TITLE,
 } from '../../shared/types';
 import { Slide, ui } from './common';
 
-// Diashow: Sponsoren, Highlights und Ankündigungen, nur auf Knopfdruck.
+// Diashow: Sponsoren, Vereinsbeiträge und Ankündigungen, nur auf Knopfdruck.
 
 let lastSlideshowId = 0;
 let slideDeck: Slide[] = [];
@@ -19,47 +17,12 @@ let slideIndex = 0;
 let slideTimer: ReturnType<typeof setTimeout> | null = null;
 
 /**
- * Stellt die Folienfolge für die aktuelle Phase zusammen: erst die
- * normale Ansicht, dann die Bilder der zuständigen Ordner, in der
- * Halbzeitpause zuletzt die Ankündigungen.
+ * Die Folienfolge: erst die normale Ansicht, dann die Blöcke aus
+ * `buildSlidePlan()` -- dieselbe Folge, deren Länge das Steuerungsfenster
+ * im Hinweis nennt.
  */
 function buildSlideDeck(state: MatchState): Slide[] {
-  const slides: Slide[] = [{ kind: 'base' }];
-
-  for (const folder of slideFoldersForPhase(state.phase)) {
-    const urls = state.media[folder].files.map((fileName) => mediaUrl(folder, fileName));
-
-    // Sponsoren zu viert im Fenster, alles andere einzeln im Vollbild.
-    // Die Zählung muss zu slideCount() passen -- danach richtet sich der
-    // Hinweis im Steuerungsfenster.
-    if (folder === 'werbung') {
-      const pages = Math.ceil(urls.length / SPONSORS_PER_PAGE);
-      for (let page = 0; page < pages; page++) {
-        slides.push({
-          kind: 'sponsors',
-          urls: urls.slice(page * SPONSORS_PER_PAGE, (page + 1) * SPONSORS_PER_PAGE),
-          page,
-          pages,
-        });
-      }
-      continue;
-    }
-
-    for (const url of urls) slides.push({ kind: 'image', url });
-  }
-
-  // Welche Phasen Ankündigungen zeigen, entscheidet announcementsVisible()
-  // -- dieselbe Regel nutzt die Folienzählung im Steuerungsfenster.
-  if (announcementsVisible(state.phase)) {
-    for (let i = 0; i < state.announcements.length; i += ANNOUNCEMENTS_PER_SLIDE) {
-      slides.push({
-        kind: 'text',
-        lines: state.announcements.slice(i, i + ANNOUNCEMENTS_PER_SLIDE),
-      });
-    }
-  }
-
-  return slides;
+  return [{ kind: 'base' }, ...buildSlidePlan(state.phase, state.media, state.announcements)];
 }
 
 /**
@@ -67,15 +30,20 @@ function buildSlideDeck(state: MatchState): Slide[] {
  * verschwinden: Sonst würden die übrigen größer, und gerade das soll das
  * Fenster verhindern -- alle Partner gleich groß.
  *
+ * Der Hauptsponsor nutzt dasselbe Fenster mit nur der ersten Kachel
+ * (`is-main`, das Stylesheet blendet die übrigen aus und gibt ihr die
+ * ganze Fläche).
+ *
  * Die Seitenanzeige (kleine Quadrate) erscheint erst ab zwei Seiten; bei
  * einer einzigen wäre sie ein Zeichen ohne Aussage.
  */
-function renderSponsorWindow(urls: string[], page: number, pages: number): void {
-  document.getElementById('sponsor-title')!.textContent = SPONSORS_TITLE;
+function renderSponsorWindow(slide: Extract<Slide, { kind: 'sponsors' }>): void {
+  document.getElementById('sponsor-window')!.classList.toggle('is-main', slide.main);
+  document.getElementById('sponsor-title')!.textContent = slide.title;
 
   for (let i = 0; i < SPONSORS_PER_PAGE; i++) {
     const logo = document.getElementById(`sponsor-logo-${i}`) as HTMLImageElement;
-    const url = urls[i];
+    const url = slide.urls[i];
     logo.hidden = url === undefined;
     if (url === undefined) {
       logo.removeAttribute('src');
@@ -86,12 +54,25 @@ function renderSponsorWindow(urls: string[], page: number, pages: number): void 
 
   const marks = document.getElementById('sponsor-pages')!;
   marks.textContent = '';
-  if (pages < 2) return;
-  for (let i = 0; i < pages; i++) {
+  if (slide.pages < 2) return;
+  for (let i = 0; i < slide.pages; i++) {
     const mark = document.createElement('i');
-    if (i === page) mark.className = 'is-current';
+    if (i === slide.page) mark.className = 'is-current';
     marks.appendChild(mark);
   }
+}
+
+/**
+ * Historisches Foto. Ohne Datum steht dessen Platz nicht leer, sondern
+ * nennt den Block -- so bleibt erkennbar, dass hier kein Sponsor läuft.
+ */
+function renderHistory(url: string, caption: HistoryCaption): void {
+  const image = document.getElementById('history-image') as HTMLImageElement;
+  if (image.getAttribute('src') !== url) image.src = url;
+  document.getElementById('history-date')!.textContent = caption.date ?? HISTORY_FALLBACK_TITLE;
+  const title = document.getElementById('history-title')!;
+  title.textContent = caption.title;
+  title.hidden = caption.title === '';
 }
 
 /** Zeigt eine Station. `base` blendet die Folienfläche einfach aus. */
@@ -105,15 +86,19 @@ function showSlide(slide: Slide): void {
   const image = document.getElementById('slide-image') as HTMLImageElement;
   const text = document.getElementById('slide-text')!;
   const sponsors = document.getElementById('sponsor-window')!;
+  const history = document.getElementById('history-slide')!;
 
   image.hidden = slide.kind !== 'image';
   text.hidden = slide.kind !== 'text';
   sponsors.hidden = slide.kind !== 'sponsors';
+  history.hidden = slide.kind !== 'history';
 
   if (slide.kind === 'image') {
     image.src = slide.url;
   } else if (slide.kind === 'sponsors') {
-    renderSponsorWindow(slide.urls, slide.page, slide.pages);
+    renderSponsorWindow(slide);
+  } else if (slide.kind === 'history') {
+    renderHistory(slide.url, slide.caption);
   } else {
     document.getElementById('slide-title')!.textContent = ANNOUNCEMENTS_TITLE;
 

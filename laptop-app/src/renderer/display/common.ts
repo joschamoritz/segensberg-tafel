@@ -9,6 +9,7 @@ import {
   LogoVariant,
   MatchState,
   shootoutScore,
+  SlidePlanItem,
 } from '../../shared/types';
 
 // Was mehrere Teile der Anzeige gemeinsam brauchen. Die Module der Anzeige
@@ -20,11 +21,7 @@ import {
  * bzw. Zwischenstand) -- sie rotiert bewusst mit, damit der Spielstand
  * nie länger als einen Schritt weg ist.
  */
-export type Slide =
-  | { kind: 'base' }
-  | { kind: 'image'; url: string }
-  | { kind: 'sponsors'; urls: string[]; page: number; pages: number }
-  | { kind: 'text'; lines: string[] };
+export type Slide = { kind: 'base' } | SlidePlanItem;
 
 export const ui: {
   currentState: MatchState | null;

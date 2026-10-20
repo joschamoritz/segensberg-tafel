@@ -177,6 +177,20 @@ damit sie beim Hochzählen nicht springen.
   Zweck. Weiße Kacheln, weil Sponsorenlogos fast immer für hellen Grund
   gezeichnet sind; die frühere Regel „Motive im Vereinsblau anlegen"
   gilt damit nur noch für Highlights.
+  **Hauptsponsor** (`.sponsor-window.is-main`, Nutzerentscheidung
+  20.10.2026): dasselbe Fenster mit Titel „UNSER HAUPTSPONSOR" und nur
+  EINER Kachel über die ganze Fläche. Bewusst kein eigenes Vollbild auf
+  Blau – gleiche Leiste und weiße Fläche machen ihn als Sponsor
+  erkennbar, die Größe macht den Unterschied zu den Partnern.
+- **Vereinsgeschichte** (`.history-slide`, Display, alle Designs):
+  Foto eingepasst (`contain`, kein Zuschnitt – sonst fehlen auf alten
+  Mannschaftsfotos die Köpfe der oberen Reihe), darunter eine Leiste auf
+  `--svh-dk` mit goldener Oberkante (1,2cqh, mindestens zwei
+  Tafelpixel). Oben das Datum in `--svh-gold` (7cqh), darunter die
+  Begegnung in Weiß (9cqh, einzeilig, sonst gekürzt). Die Leiste belegt
+  bei 384×192 rund 44 px, für das Foto bleiben 148. Ihre Form – Leiste
+  unten statt Titelleiste oben – trennt den Block auf einen Blick von
+  den Sponsoren.
 - **Torjubel** (`.board-goal` + `.goal-confetti`, Display): zwei Akte,
   gesteuert über `body[data-goal-stage]`.
   1. **Vollbild, für beide Mannschaften gleich aufgebaut:** das Wappen
@@ -354,7 +368,8 @@ der 70er/80er (Fotos des Nutzers vom 16.10.2026).
   Matrix als Punktschrift, ohne Indigofläche und ohne Gold (Nutzerwunsch
   16.10.2026); die Seitenmarken als Punkte daneben. Die Logos liegen
   weiter als Bilder in ihren weißen Kacheln über dem erloschenen Raster.
-  Highlight-Bilder ebenso.
+  Highlight-Bilder und historische Fotos ebenso; deren Beschriftung
+  steht dabei in normaler Schrift, nicht als Punktschrift.
 - **Technik:** gezeichnet auf einem Canvas (`.retro-matrix`), die
   Aufteilung steht ohne DOM in `shared/retroMatrix.ts` und ist dort
   getestet. Was gerade dran ist, liest die Anzeige aus denselben

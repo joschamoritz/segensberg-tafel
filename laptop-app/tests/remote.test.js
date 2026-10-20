@@ -279,6 +279,9 @@ function mitTormusik() {
     werbung: { rootPath: 'W', files: [] },
     highlights: { rootPath: 'H', files: [] },
     wettbewerbe: { rootPath: 'W', files: [] },
+    hauptsponsor: { rootPath: 'HS', files: [] },
+    partner: { rootPath: 'P', files: [] },
+    historie: { rootPath: 'HI', files: [] },
     sounds: { rootPath: 'S', files: ['tor.mp3'] },
   });
   return store;

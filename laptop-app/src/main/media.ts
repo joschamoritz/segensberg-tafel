@@ -1,7 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { MediaFolderId, MEDIA_FOLDER_IDS, MediaLists } from '../shared/types';
-import type { MediaFolderInfo } from '../shared/types';
 import { resolveDataFolder } from './persistence';
 
 /**
@@ -31,8 +30,13 @@ const AUDIO_EXTENSIONS = ['.mp3', '.wav', '.ogg', '.m4a', '.flac'];
  * Datei herausgereicht werden, nur weil sie dort liegt.
  */
 const FOLDERS: Record<MediaFolderId, { dir: string; extensions: string[] }> = {
+  // Partner direkt in Werbung/ -- der Ordner von vor den Sponsor-Stufen,
+  // er läuft ohne Umräumen weiter.
   werbung: { dir: 'Werbung', extensions: IMAGE_EXTENSIONS },
+  hauptsponsor: { dir: path.join('Werbung', 'Hauptsponsor'), extensions: IMAGE_EXTENSIONS },
+  partner: { dir: path.join('Werbung', 'Partner'), extensions: IMAGE_EXTENSIONS },
   highlights: { dir: 'Highlights', extensions: IMAGE_EXTENSIONS },
+  historie: { dir: 'Historie', extensions: IMAGE_EXTENSIONS },
   sounds: { dir: 'Sounds', extensions: AUDIO_EXTENSIONS },
   // Wettbewerbslogos gibt es oft nur als Vektordatei -- deshalb auch SVG.
   wettbewerbe: { dir: 'Wettbewerbe', extensions: [...IMAGE_EXTENSIONS, '.svg'] },
@@ -40,27 +44,23 @@ const FOLDERS: Record<MediaFolderId, { dir: string; extensions: string[] }> = {
 
 export class MediaLibrary {
   private roots: Record<MediaFolderId, string>;
-  private files: Record<MediaFolderId, string[]> = {
-    werbung: [],
-    highlights: [],
-    sounds: [],
-    wettbewerbe: [],
-  };
+  private files = emptyRecord(() => [] as string[]);
 
   /**
    * Ohne Argument werden die Ordner wie üblich gesucht
    * (`resolveDataFolder`). Die Tests geben stattdessen eigene
    * Wegwerf-Ordner vor: Ohne das griffen sie auf den
-   * Entwicklungspfad `D:\\Anzeigetafel\\Vereinsdaten\\Werbung` durch --
+   * Entwicklungspfad `D:\Anzeigetafel\Vereinsdaten\Werbung` durch --
    * also auf die echten Vereinsdaten.
+   *
+   * Werden Ordner vorgegeben, bleiben die NICHT genannten leer, statt auf
+   * die Suche zurückzufallen. Sonst landete jeder Test, der nur einen
+   * Ordner braucht, mit allen übrigen wieder in den echten Vereinsdaten.
    */
   constructor(roots?: Partial<Record<MediaFolderId, string>>) {
-    this.roots = {
-      werbung: roots?.werbung ?? resolveDataFolder(FOLDERS.werbung.dir),
-      highlights: roots?.highlights ?? resolveDataFolder(FOLDERS.highlights.dir),
-      sounds: roots?.sounds ?? resolveDataFolder(FOLDERS.sounds.dir),
-      wettbewerbe: roots?.wettbewerbe ?? resolveDataFolder(FOLDERS.wettbewerbe.dir),
-    };
+    this.roots = emptyRecord((id) =>
+      roots ? (roots[id] ?? '') : resolveDataFolder(FOLDERS[id].dir)
+    );
     this.scan();
   }
 
@@ -76,18 +76,9 @@ export class MediaLibrary {
   }
 
   getLists(): MediaLists {
-    const info = (id: MediaFolderId): MediaFolderInfo => ({
-      rootPath: this.roots[id],
-      // Kopie: Der Zustand ist ansonsten unveränderlich, und ein
-      // durchgereichtes Array ließe sich von außen umsortieren.
-      files: [...this.files[id]],
-    });
-    return {
-      werbung: info('werbung'),
-      highlights: info('highlights'),
-      sounds: info('sounds'),
-      wettbewerbe: info('wettbewerbe'),
-    };
+    // Kopie der Liste: Der Zustand ist ansonsten unveränderlich, und ein
+    // durchgereichtes Array ließe sich von außen umsortieren.
+    return emptyRecord((id) => ({ rootPath: this.roots[id], files: [...this.files[id]] }));
   }
 
   getRootPath(id: MediaFolderId): string {
@@ -105,6 +96,9 @@ export class MediaLibrary {
    */
   resolveFile(id: MediaFolderId, fileName: string): string | null {
     const root = this.roots[id];
+    // Ein nicht vorgegebener Ordner (nur in Tests) löste sonst gegen das
+    // Arbeitsverzeichnis auf.
+    if (root === '') return null;
     // basename() entfernt jeden Pfadanteil -- damit ist Traversal schon
     // hier erledigt.
     const safeName = path.basename(fileName);
@@ -143,4 +137,9 @@ function listFiles(dir: string, extensions: string[]): string[] {
     // noch keine Werbemotive hinterlegt hat.
     return [];
   }
+}
+
+/** Ein Eintrag je Medienordner -- neue Ordner können so nicht fehlen. */
+function emptyRecord<T>(make: (id: MediaFolderId) => T): Record<MediaFolderId, T> {
+  return Object.fromEntries(MEDIA_FOLDER_IDS.map((id) => [id, make(id)])) as Record<MediaFolderId, T>;
 }

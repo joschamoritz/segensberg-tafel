@@ -133,9 +133,11 @@ test('Folien laufen in jeder Phase außer dem laufenden Spiel', () => {
   assert.equal(slideshowAvailable('full-time'), true);
   assert.equal(slideshowAvailable('live'), false);
 
-  assert.deepEqual(slideFoldersForPhase('pre-match'), ['werbung']);
-  assert.deepEqual(slideFoldersForPhase('half-time'), ['werbung', 'highlights']);
-  assert.deepEqual(slideFoldersForPhase('full-time'), ['werbung', 'highlights']);
+  // Vor dem Anpfiff nur Sponsoren; Vereinsbeiträge brauchen die Pause.
+  const sponsoren = ['hauptsponsor', 'partner', 'werbung'];
+  assert.deepEqual(slideFoldersForPhase('pre-match'), sponsoren);
+  assert.deepEqual(slideFoldersForPhase('half-time'), [...sponsoren, 'highlights', 'historie']);
+  assert.deepEqual(slideFoldersForPhase('full-time'), [...sponsoren, 'highlights', 'historie']);
   assert.deepEqual(slideFoldersForPhase('live'), []);
 });
 
@@ -232,6 +234,9 @@ test('"Neues Spiel" behält Medien und Ankündigungen', () => {
     werbung: { rootPath: 'C:/x', files: ['01.png'] },
     highlights: { rootPath: 'C:/y', files: [] },
     wettbewerbe: { rootPath: 'W', files: [] },
+    hauptsponsor: { rootPath: 'HS', files: [] },
+    partner: { rootPath: 'P', files: [] },
+    historie: { rootPath: 'HI', files: [] },
     sounds: { rootPath: 'C:/z', files: ['tor.mp3'] },
   });
 

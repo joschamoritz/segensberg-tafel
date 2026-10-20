@@ -154,7 +154,8 @@
       <span class="info-value" id="info-value"></span>
     </div>
 
-    <!-- Diashow: Werbung/Sponsoren, Vereinshighlights und Termine.
+    <!-- Diashow: Hauptsponsor, Partner, Vereinshighlights, Vereinsgeschichte
+         und Termine, in dieser Reihenfolge als getrennte Blöcke.
          Läuft nur auf Knopfdruck (Nutzerwunsch) und rotiert dann Seite für
          Seite; die normale Ansicht ist selbst eine Station der Rotation. -->
     <div class="board board-slides">
@@ -174,6 +175,14 @@
         </div>
       </div>
       <img class="slide-image" id="slide-image" alt="" hidden />
+      <!-- Historisches Foto: Bild oben, Datum und Begegnung darunter. -->
+      <figure class="history-slide" id="history-slide" hidden>
+        <img class="history-image" id="history-image" alt="" />
+        <figcaption class="history-caption">
+          <span class="history-date" id="history-date"></span>
+          <span class="history-title" id="history-title"></span>
+        </figcaption>
+      </figure>
       <div class="slide-text" id="slide-text" hidden>
         <div class="slide-title" id="slide-title"></div>
         <ul class="slide-lines" id="slide-lines"></ul>

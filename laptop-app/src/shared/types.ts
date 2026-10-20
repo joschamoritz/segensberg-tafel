@@ -542,9 +542,24 @@ export interface LiveMatchSnapshot {
  * zweiter Weg für Dateien von der Platte ins Fenster wäre eine zweite
  * Stelle, an der die Pfadprüfung sitzen müsste.
  */
-export type MediaFolderId = 'werbung' | 'highlights' | 'sounds' | 'wettbewerbe';
+export type MediaFolderId =
+  | 'werbung'
+  | 'hauptsponsor'
+  | 'partner'
+  | 'highlights'
+  | 'historie'
+  | 'sounds'
+  | 'wettbewerbe';
 
-export const MEDIA_FOLDER_IDS: MediaFolderId[] = ['werbung', 'highlights', 'sounds', 'wettbewerbe'];
+export const MEDIA_FOLDER_IDS: MediaFolderId[] = [
+  'werbung',
+  'hauptsponsor',
+  'partner',
+  'highlights',
+  'historie',
+  'sounds',
+  'wettbewerbe',
+];
 
 /**
  * Lesbarer Name eines Wettbewerbs aus seinem Dateinamen:
@@ -558,6 +573,67 @@ export function competitionLabel(fileName: string): string {
     .replace(/^\d+[_\s-]+/, '')
     .replace(/[_]+/g, ' ')
     .trim();
+}
+
+/** Beschriftung eines historischen Fotos, siehe `historyCaption()`. */
+export interface HistoryCaption {
+  /** "17.05.1998", "Mai 1998" oder "1998" -- `null` ohne Datum */
+  date: string | null;
+  /** "SV Hochlar 28 – Westfalia Herten 3:1" -- leer, wenn nichts dasteht */
+  title: string;
+}
+
+const MONTHS = [
+  'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
+  'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember',
+];
+
+/**
+ * Duell und Datum eines historischen Mannschaftsfotos aus dem Dateinamen
+ * (Nutzerentscheidung 20.10.2026 -- Ordner statt Verwaltung, wie beim
+ * Wettbewerbslogo):
+ *
+ *   "1998-05-17_SV Hochlar - Westfalia Herten 3-1.jpg"
+ *     -> { date: "17.05.1998", title: "SV Hochlar – Westfalia Herten 3:1" }
+ *
+ * Das Datum steht vorn, damit die alphabetische Ordnung des Ordners
+ * zugleich die zeitliche ist. Erlaubt sind Tag, Monat oder nur das Jahr
+ * -- bei alten Fotos ist oft nur die Saison bekannt. Eine Ordnungsnummer
+ * davor (`01_`) wird übergangen; sie hat höchstens drei Stellen und ist
+ * so von einer Jahreszahl zu unterscheiden.
+ */
+export function historyCaption(fileName: string): HistoryCaption {
+  let rest = fileName
+    .replace(/\.[^.]+$/, '')
+    .replace(/^\d{1,3}[_\s]+(?=\d{4})/, '');
+
+  let date: string | null = null;
+  const match = /^(\d{4})(?:-(\d{1,2}))?(?:-(\d{1,2}))?(?=[_\s-]|$)/.exec(rest);
+  if (match) {
+    const [, year, month, day] = match;
+    const m = month ? Number(month) : 0;
+    const d = day ? Number(day) : 0;
+    if (m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+      date = `${String(d).padStart(2, '0')}.${String(m).padStart(2, '0')}.${year}`;
+    } else if (m >= 1 && m <= 12) {
+      date = `${MONTHS[m - 1]} ${year}`;
+    } else {
+      date = year;
+    }
+    rest = rest.slice(match[0].length);
+  }
+
+  const title = rest
+    .replace(/_+/g, ' ')
+    .replace(/^[\s\-–]+/, '')
+    // Ergebnis am Ende: "3-1" -> "3:1", wie auf der Tafel
+    .replace(/(\d+)\s*-\s*(\d+)\s*$/, '$1:$2')
+    // Begegnung: "A - B", "A vs B", "A gegen B" -> Gedankenstrich
+    .replace(/\s+(?:-|–|vs\.?|gegen)\s+/gi, ' – ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  return { date, title };
 }
 
 /**
@@ -620,35 +696,96 @@ export const SPONSORS_PER_PAGE = 4;
 /** Titelzeile des Sponsoren-Fensters. */
 export const SPONSORS_TITLE = 'UNSERE PARTNER';
 
+/** Titelzeile der Hauptsponsor-Folie -- dasselbe Fenster mit EINER Kachel. */
+export const MAIN_SPONSOR_TITLE = 'UNSER HAUPTSPONSOR';
+
+/** Kopfzeile eines historischen Fotos ohne Datum im Dateinamen. */
+export const HISTORY_FALLBACK_TITLE = 'AUS DER VEREINSGESCHICHTE';
+
 /**
- * Zahl der Folien einer Diashow, ohne die normale Ansicht.
+ * Eine Folie der Diashow, ohne die normale Ansicht.
  *
- * Gemeinsam für Anzeige und Steuerungsfenster: Die Anzeige baut daraus
- * ihre Folge, das Steuerungsfenster nennt die Zahl im Hinweis. Liefen die
- * beiden auseinander, kündigte der Hinweis eine andere Schau an, als
- * dann tatsächlich läuft.
+ * Partner und Hauptsponsor teilen sich das Sponsoren-Fenster: Der
+ * Hauptsponsor bekommt es allein mit einer großen Kachel
+ * (Nutzerentscheidung 20.10.2026). So bleibt er als Sponsor erkennbar --
+ * gleiche Titelleiste, gleiche weiße Fläche -- und wird trotzdem größer
+ * gezeigt als die Partner.
  */
-export function slideCount(
+export type SlidePlanItem =
+  | { kind: 'sponsors'; main: boolean; title: string; urls: string[]; page: number; pages: number }
+  | { kind: 'image'; url: string }
+  | { kind: 'history'; url: string; caption: HistoryCaption }
+  | { kind: 'text'; lines: string[] };
+
+/**
+ * Die Folienfolge einer Diashow, in klar getrennten Blöcken
+ * (Nutzerentscheidung 20.10.2026: eine Schau, nicht zwei Knöpfe):
+ * Hauptsponsor, Partner, Vereinshighlights, Vereinsgeschichte, Termine.
+ * Jeder Block hat seine eigene Form -- Sponsoren unter einer Titelleiste,
+ * historische Fotos mit Beschriftung darunter, Termine als Textfolie --,
+ * damit Werbung und Vereinsbeiträge auf der Tafel nicht verschwimmen.
+ *
+ * Partner kommen aus `Werbung/Partner/` UND direkt aus `Werbung/`: So
+ * läuft der bisherige Ordner ohne Umräumen weiter.
+ *
+ * Gemeinsam für Anzeige und Steuerungsfenster: Die Anzeige spielt genau
+ * diese Folge ab, das Steuerungsfenster nennt ihre Länge im Hinweis.
+ */
+export function buildSlidePlan(
   phase: MatchPhase,
   media: MediaLists,
-  announcementCount: number
-): number {
-  let count = 0;
-  for (const folder of slideFoldersForPhase(phase)) {
-    const files = media[folder].files.length;
-    count += folder === 'werbung' ? Math.ceil(files / SPONSORS_PER_PAGE) : files;
+  announcements: string[]
+): SlidePlanItem[] {
+  const folders = slideFoldersForPhase(phase);
+  const urls = (folder: MediaFolderId): string[] =>
+    folders.includes(folder) ? media[folder].files.map((f) => mediaUrl(folder, f)) : [];
+  const slides: SlidePlanItem[] = [];
+
+  const main = urls('hauptsponsor');
+  main.forEach((url, page) =>
+    slides.push({ kind: 'sponsors', main: true, title: MAIN_SPONSOR_TITLE, urls: [url], page, pages: main.length })
+  );
+
+  const partners = [...urls('partner'), ...urls('werbung')];
+  const pages = Math.ceil(partners.length / SPONSORS_PER_PAGE);
+  for (let page = 0; page < pages; page++) {
+    slides.push({
+      kind: 'sponsors',
+      main: false,
+      title: SPONSORS_TITLE,
+      urls: partners.slice(page * SPONSORS_PER_PAGE, (page + 1) * SPONSORS_PER_PAGE),
+      page,
+      pages,
+    });
   }
+
+  for (const url of urls('highlights')) slides.push({ kind: 'image', url });
+
+  if (folders.includes('historie')) {
+    for (const fileName of media.historie.files) {
+      slides.push({ kind: 'history', url: mediaUrl('historie', fileName), caption: historyCaption(fileName) });
+    }
+  }
+
   if (announcementsVisible(phase)) {
-    count += Math.ceil(announcementCount / ANNOUNCEMENTS_PER_SLIDE);
+    for (let i = 0; i < announcements.length; i += ANNOUNCEMENTS_PER_SLIDE) {
+      slides.push({ kind: 'text', lines: announcements.slice(i, i + ANNOUNCEMENTS_PER_SLIDE) });
+    }
   }
-  return count;
+
+  return slides;
+}
+
+/** Zahl der Folien einer Diashow, ohne die normale Ansicht. */
+export function slideCount(phase: MatchPhase, media: MediaLists, announcements: string[]): number {
+  return buildSlidePlan(phase, media, announcements).length;
 }
 
 /**
  * Welche Medienordner in welcher Phase laufen.
  *
- * Vor dem Anpfiff nur Werbung -- Highlights und Termine gehören in die
- * Pause, wo die Zuschauer Zeit zum Lesen haben.
+ * Vor dem Anpfiff nur Sponsoren -- Highlights, Vereinsgeschichte und
+ * Termine gehören in die Pause, wo die Zuschauer Zeit zum Lesen haben.
  *
  * Nach dem Abpfiff laufen dieselben Ordner wie in der Pause
  * (Nutzerwunsch 20.08.2026). Die frühere Begründung "dort steht der
@@ -659,8 +796,9 @@ export function slideCount(
  * "Diashow beenden" jederzeit zurück.
  */
 export function slideFoldersForPhase(phase: MatchPhase): MediaFolderId[] {
-  if (phase === 'pre-match') return ['werbung'];
-  if (phase === 'half-time' || phase === 'full-time') return ['werbung', 'highlights'];
+  const sponsors: MediaFolderId[] = ['hauptsponsor', 'partner', 'werbung'];
+  if (phase === 'pre-match') return sponsors;
+  if (phase === 'half-time' || phase === 'full-time') return [...sponsors, 'highlights', 'historie'];
   return [];
 }
 

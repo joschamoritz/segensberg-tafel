@@ -342,6 +342,9 @@ test('display: Bilder der Diashow liegen im Retro-Design über dem Raster', asyn
     werbung: { rootPath: 'W', files: ['01_a.png'] },
     highlights: { rootPath: 'H', files: [] },
     wettbewerbe: { rootPath: 'W', files: [] },
+    hauptsponsor: { rootPath: 'HS', files: [] },
+    partner: { rootPath: 'P', files: [] },
+    historie: { rootPath: 'HI', files: [] },
     sounds: { rootPath: 'S', files: [] },
   });
   r.emit('onStateUpdated', store.getState());
@@ -398,6 +401,9 @@ test('display: die Sponsoren-Folie zeigt den Titel als Punktschrift', async (t) 
     werbung: { rootPath: 'W', files: ['1.png', '2.png', '3.png', '4.png', '5.png'] },
     highlights: { rootPath: 'H', files: [] },
     wettbewerbe: { rootPath: 'W', files: [] },
+    hauptsponsor: { rootPath: 'HS', files: [] },
+    partner: { rootPath: 'P', files: [] },
+    historie: { rootPath: 'HI', files: [] },
     sounds: { rootPath: 'S', files: [] },
   });
   const r = openRenderer('display', t);
@@ -445,5 +451,25 @@ test('control: das Kurzname-Feld zeigt den Vorschlag und schickt die Eingabe', (
   const gesendet = r.calls.filter((c) => c.name === 'teamSetRetroName');
   assert.equal(gesendet.length, 1);
   assert.deepEqual(JSON.parse(JSON.stringify(gesendet[0].args)), ['away', 'Schwicker']);
+  assert.deepEqual(r.drainErrors(), []);
+});
+
+test('display: der Hauptsponsor trägt im Retro-Design seinen eigenen Titel', async (t) => {
+  const store = retroStore();
+  store.setMedia({
+    werbung: { rootPath: 'W', files: [] },
+    hauptsponsor: { rootPath: 'HS', files: ['haupt.png'] },
+    partner: { rootPath: 'P', files: [] },
+    highlights: { rootPath: 'H', files: [] },
+    historie: { rootPath: 'HI', files: [] },
+    wettbewerbe: { rootPath: 'W', files: [] },
+    sounds: { rootPath: 'S', files: [] },
+  });
+  const r = openRenderer('display', t);
+  r.emit('onStateUpdated', store.getState());
+  store.startSlideshow();
+  r.emit('onStateUpdated', store.getState());
+
+  assert.deepEqual(await szene(r), { kind: 'sponsors', title: 'UNSER HAUPTSPONSOR', page: 0, pages: 1 });
   assert.deepEqual(r.drainErrors(), []);
 });

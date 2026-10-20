@@ -24,6 +24,7 @@ import {
   MAX_CORNERS,
   MAX_SHOOTOUT_KICKS,
   MAX_STOPPAGE_MIN,
+  MEDIA_FOLDER_IDS,
   MediaLists,
   Player,
   SoundSettings,
@@ -97,12 +98,9 @@ function initialState(): MatchState {
     attendance: null,
     attendanceMessage: DEFAULT_ATTENDANCE_MESSAGE,
     announcements: [],
-    media: {
-      werbung: { rootPath: '', files: [] },
-      highlights: { rootPath: '', files: [] },
-      sounds: { rootPath: '', files: [] },
-      wettbewerbe: { rootPath: '', files: [] },
-    },
+    media: Object.fromEntries(
+      MEDIA_FOLDER_IDS.map((id) => [id, { rootPath: '', files: [] as string[] }])
+    ) as MediaLists,
     competition: null,
     slideshowRequest: null,
     shootout: null,

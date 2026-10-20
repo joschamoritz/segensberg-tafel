@@ -19,7 +19,6 @@ import {
   playerLabel,
   shootoutScore,
   splitAttendanceMessage,
-  SPONSORS_TITLE,
   TeamId,
 } from '../../shared/types';
 import { goalTitle, phaseLabelText, step, ui } from './common';
@@ -222,7 +221,7 @@ function currentRetroScene(state: MatchState): RetroScene {
       return { kind: 'text', title: ANNOUNCEMENTS_TITLE, lines: ui.activeSlide.lines };
     }
     if (ui.activeSlide.kind === 'sponsors') {
-      return { kind: 'sponsors', title: SPONSORS_TITLE, page: ui.activeSlide.page, pages: ui.activeSlide.pages };
+      return { kind: 'sponsors', title: ui.activeSlide.title, page: ui.activeSlide.page, pages: ui.activeSlide.pages };
     }
     if (ui.activeSlide.kind !== 'base') return { kind: 'blank' };
   }

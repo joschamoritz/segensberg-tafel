@@ -79,7 +79,7 @@ export function renderSlideshowControls(state: MatchState): void {
 
   // Dieselbe Zählung wie in der Anzeige: Sponsoren stehen dort zu viert
   // auf einer Folie, eine eigene Rechnung hier kündigte sonst mehr an.
-  const folien = slideCount(state.phase, state.media, state.announcements.length);
+  const folien = slideCount(state.phase, state.media, state.announcements);
 
   const start = document.getElementById('slideshow-start') as HTMLButtonElement;
   const stop = document.getElementById('slideshow-stop') as HTMLButtonElement;
@@ -97,7 +97,7 @@ export function renderSlideshowControls(state: MatchState): void {
     hint.textContent = 'Im laufenden Spiel gehört der Spielstand auf die Tafel.';
   } else if (leer) {
     hint.textContent =
-      'Keine Motive gefunden in "' + state.media.werbung.rootPath + '".';
+      'Keine Motive gefunden unter "' + vereinsdatenOrdner(state.media.werbung.rootPath) + '".';
   } else if (running) {
     hint.textContent = folien + ' Folien laufen im Wechsel mit dem Spielstand.';
   } else {
@@ -170,4 +170,13 @@ export function wireInfoControls(): void {
   document
     .getElementById('info-show-attendance')!
     .addEventListener('click', () => window.api.showInfo({ kind: 'attendance' }));
+}
+
+/**
+ * Der gemeinsame Ordner aller Diashow-Motive (`Vereinsdaten`). Seit es
+ * Hauptsponsor, Partner und Historie gibt, wäre der Pfad nur des
+ * Werbeordners ein falscher Hinweis darauf, wo gesucht wurde.
+ */
+function vereinsdatenOrdner(werbungPath: string): string {
+  return werbungPath.replace(/[\\/][^\\/]+[\\/]?$/, '') || werbungPath;
 }

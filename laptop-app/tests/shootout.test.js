@@ -94,6 +94,9 @@ test('eine laufende Diashow endet beim Start, und neu starten lässt sie sich ni
     highlights: { rootPath: 'H', files: [] },
     sounds: { rootPath: 'S', files: [] },
     wettbewerbe: { rootPath: 'C', files: [] },
+    hauptsponsor: { rootPath: 'HS', files: [] },
+    partner: { rootPath: 'P', files: [] },
+    historie: { rootPath: 'HI', files: [] },
   });
   store.startSlideshow();
   assert.notEqual(store.getState().slideshowRequest, null);

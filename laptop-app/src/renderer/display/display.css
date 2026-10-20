@@ -1468,6 +1468,83 @@ body.goal-lead-change .goal-frame {
   object-fit: contain;
 }
 
+/* Hauptsponsor: dasselbe Fenster, aber nur die erste Kachel, über die
+   ganze Fläche (Nutzerentscheidung 20.10.2026). Gleiche Titelleiste und
+   weiße Fläche wie bei den Partnern -- erkennbar als Sponsor, nur größer. */
+.sponsor-window.is-main .sponsor-grid {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+}
+
+.sponsor-window.is-main .sponsor-tile:not(:first-child) {
+  display: none;
+}
+
+.sponsor-window.is-main .sponsor-tile {
+  padding: 4cqh 6cqw;
+}
+
+/* ═══════════════════════════════════════════
+   Vereinsgeschichte (alle Designs)
+   ═══════════════════════════════════════════ */
+/* Historisches Mannschaftsfoto mit Datum und Begegnung darunter. Die
+   Leiste unten mit goldener Kante unterscheidet den Block von den
+   Sponsoren (Titelleiste oben) und den Highlights (reines Bild).
+
+   Das Foto wird eingepasst, nicht beschnitten: Alte Mannschaftsfotos
+   sind selten 2:1, und ein Zuschnitt nähme genau die Köpfe in der
+   oberen oder unteren Reihe weg. */
+
+.history-slide {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.history-slide[hidden],
+.history-title[hidden] {
+  display: none;
+}
+
+.history-image {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  object-fit: contain;
+}
+
+.history-caption {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  padding: 1.2cqh 3cqw 1.8cqh;
+  background: var(--svh-dk);
+  /* Mindestens zwei Tafelpixel -- eine Haarlinie verschwände auf der LED-Matrix. */
+  border-top: 1.2cqh solid var(--svh-gold);
+}
+
+.history-date {
+  font-weight: 700;
+  font-size: 7cqh;
+  line-height: 1.2;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--svh-gold);
+}
+
+.history-title {
+  font-weight: 600;
+  font-size: 9cqh;
+  line-height: 1.25;
+  text-transform: uppercase;
+  color: var(--svh-wh);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* ═══════════════════════════════════════════
    Design "Flutlicht"
    ═══════════════════════════════════════════ */

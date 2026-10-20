@@ -21,15 +21,23 @@ stubElectron();
 const { MatchStateStore } = load('main/state');
 const { slideCount, SPONSORS_PER_PAGE, SLIDE_DURATION_MS } = load('shared/types');
 
-function medien(werbung, highlights = []) {
+function medien(werbung, highlights = [], weitere = {}) {
+  const extra = Object.fromEntries(
+    Object.entries(weitere).map(([id, files]) => [id, { rootPath: id, files }])
+  );
   return {
     werbung: { rootPath: 'W', files: werbung },
     highlights: { rootPath: 'H', files: highlights },
     wettbewerbe: { rootPath: 'W', files: [] },
+    hauptsponsor: { rootPath: 'HS', files: [] },
+    partner: { rootPath: 'P', files: [] },
+    historie: { rootPath: 'HI', files: [] },
     sounds: { rootPath: 'S', files: [] },
+    ...extra,
   };
 }
 
+const termine = (n) => Array.from({ length: n }, (_, i) => `Termin ${i + 1}`);
 const logos = (n) => Array.from({ length: n }, (_, i) => `0${i + 1}_partner.png`);
 
 /** Ersetzt die Zeitschalter des Fensters, damit die Schau ohne Warten weiterläuft. */
@@ -72,18 +80,18 @@ function seitenmarken(r) {
 // --------------------------------------------------------------------
 
 test('Sponsoren zählen je angefangene vier als eine Folie', () => {
-  assert.equal(slideCount('pre-match', medien(logos(0)), 0), 0);
-  assert.equal(slideCount('pre-match', medien(logos(1)), 0), 1);
-  assert.equal(slideCount('pre-match', medien(logos(4)), 0), 1);
-  assert.equal(slideCount('pre-match', medien(logos(5)), 0), 2);
+  assert.equal(slideCount('pre-match', medien(logos(0)), []), 0);
+  assert.equal(slideCount('pre-match', medien(logos(1)), []), 1);
+  assert.equal(slideCount('pre-match', medien(logos(4)), []), 1);
+  assert.equal(slideCount('pre-match', medien(logos(5)), []), 2);
 });
 
 test('Highlights und Termine zählen weiter einzeln bzw. je fünf', () => {
   // 5 Partner = 2 Fenster, 2 Highlights = 2 Folien, 6 Termine = 2 Folien
-  assert.equal(slideCount('half-time', medien(logos(5), ['a.jpg', 'b.jpg']), 6), 6);
+  assert.equal(slideCount('half-time', medien(logos(5), ['a.jpg', 'b.jpg']), termine(6)), 6);
   // vor dem Anpfiff laufen nur die Partner
-  assert.equal(slideCount('pre-match', medien(logos(5), ['a.jpg', 'b.jpg']), 6), 2);
-  assert.equal(slideCount('live', medien(logos(5)), 6), 0);
+  assert.equal(slideCount('pre-match', medien(logos(5), ['a.jpg', 'b.jpg']), termine(6)), 2);
+  assert.equal(slideCount('live', medien(logos(5)), termine(6)), 0);
 });
 
 // --------------------------------------------------------------------
@@ -180,7 +188,13 @@ test('display: die Schau hat genau so viele Folien, wie das Steuerungsfenster an
 
   const r = openRenderer('display', t);
   const uhr = zeitRaffen(r);
-  store.setMedia(medien(werbung, highlights));
+  store.setMedia(
+    medien(werbung, highlights, {
+      hauptsponsor: ['01_haupt.png', '02_haupt.png'],
+      partner: ['01_neu.png'],
+      historie: ['1998-05-17_SV Hochlar - Herten.jpg', '2004_Aufstieg.jpg'],
+    })
+  );
   r.emit('onStateUpdated', store.getState());
   store.startSlideshow();
   r.emit('onStateUpdated', store.getState());
@@ -192,8 +206,9 @@ test('display: die Schau hat genau so viele Folien, wie das Steuerungsfenster an
     assert.ok(folien < 50, 'die Schau kehrt nie zur normalen Ansicht zurück');
   }
 
-  const angekuendigt = slideCount('half-time', store.getState().media, 2);
-  assert.equal(angekuendigt, 2 + 3 + 1);
+  const angekuendigt = slideCount('half-time', store.getState().media, store.getState().announcements);
+  // 2 Hauptsponsoren, 7 Partner = 2 Fenster, 3 Highlights, 2 Fotos, 1 Terminfolie
+  assert.equal(angekuendigt, 2 + 2 + 3 + 2 + 1);
   assert.equal(folien, angekuendigt);
   assert.deepEqual(r.drainErrors(), []);
 });
