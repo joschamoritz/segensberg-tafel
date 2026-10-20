@@ -29,6 +29,8 @@ export interface ContentConfig {
   slideBlocks?: SlideBlocks;
   /** Ablauf der Aufstellung -- geprüft wird in `sanitizeLineupStyle` */
   lineupStyle?: unknown;
+  /** Grundordnung der Spielfeld-Aufstellung -- geprüft in `sanitizeFormation` */
+  formation?: unknown;
 }
 
 function defaults(): ContentConfig {
@@ -72,6 +74,7 @@ export function loadContentConfig(): ContentConfig {
     },
     slideBlocks: parsed.slideBlocks,
     lineupStyle: parsed.lineupStyle,
+    formation: parsed.formation,
   };
 }
 

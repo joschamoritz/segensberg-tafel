@@ -180,6 +180,9 @@ body.celebrating .deco,
 body.showing-scorer .deco,
 body.showing-thanks .deco,
 body.showing-shootout .deco,
+/* Das Spielfeld füllt die Tafel bis in die Ecken -- die Streifen lägen
+   auf Wappen und Feldecke. */
+body:has(.pitch-page.is-active) .deco,
 body.showing-slide .deco {
   display: none;
 }
@@ -1043,6 +1046,87 @@ body.showing-thanks .board-match {
   font-size: 34cqh;
   line-height: 1.05;
   color: var(--svh-gold);
+}
+
+/* --- Aufstellung auf dem Spielfeld ------------------------------------- */
+/* Nur die Grundordnung des Heimteams mit leeren Trikots (Nutzerwunsch
+   21.10.2026). Feld in Vereinsfarben statt Rasengrün: dunkles Indigo,
+   Linien im hellen Indigo, Trikots weiß -- so heben sich die Trikots
+   ab, und die Linien treten zurück. Linien 0,8cqh stark: dünner
+   verschwänden sie auf der Matrix. Die Mannschaft spielt von links nach
+   rechts, das eigene Tor liegt links. */
+
+.pitch-page {
+  justify-content: flex-start;
+  gap: 1cqh;
+  padding: 2cqh 3cqw 3cqh;
+}
+
+.pitch {
+  flex: 1 1 auto;
+  position: relative;
+  width: 100%;
+  min-height: 0;
+  background: var(--svh-dk);
+  border: 0.8cqh solid var(--svh-lt);
+}
+
+.pitch > i {
+  position: absolute;
+  display: block;
+  border: 0.8cqh solid var(--svh-lt);
+}
+
+.pitch > .pitch-mid {
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-width: 0 0 0 0.8cqh;
+  transform: translateX(-50%);
+}
+
+.pitch-circle {
+  left: 50%;
+  top: 50%;
+  width: 30cqh;
+  height: 30cqh;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Strafräume: an der Torlinie offen, dort liegt schon die Außenlinie. */
+.pitch-box {
+  top: 22%;
+  bottom: 22%;
+  width: 13%;
+}
+
+.pitch > .pitch-box-own {
+  left: 0;
+  border-left: none;
+}
+
+.pitch > .pitch-box-opp {
+  right: 0;
+  border-right: none;
+}
+
+.pitch-shirts {
+  position: absolute;
+  inset: 0;
+}
+
+/* Lage und Größe setzt lineup.ts (Mittelpunkt auf dem Platz). */
+.pitch-shirt {
+  position: absolute;
+  width: 11cqh;
+  height: 11cqh;
+  transform: translate(-50%, -50%);
+}
+
+.pitch-shirt path {
+  fill: var(--svh-wh);
 }
 
 /* --- Einzel-Aufstellung (ein Spieler je Schritt) ----------------------- */

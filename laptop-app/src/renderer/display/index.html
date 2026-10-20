@@ -136,6 +136,25 @@
         </div>
       </div>
 
+      <!-- Aufstellung auf dem Spielfeld: nur die Grundordnung des
+           Heimteams mit leeren Trikots, ohne Namen und Nummern
+           (Nutzerentscheidung 21.10.2026). Die Trikots setzt lineup.ts
+           nach formationSpots(); die Feldlinien stehen fest im HTML. -->
+      <div class="pre-page pitch-page" data-page="pitch">
+        <div class="lineup-header">
+          <img class="lineup-logo" id="pitch-logo" alt="" hidden />
+          <span class="lineup-title" id="pitch-title"></span>
+          <span class="sponsor-chip lineup-sponsor" hidden><img class="sponsor-chip-img" alt="" /></span>
+        </div>
+        <div class="pitch" id="pitch">
+          <i class="pitch-mid"></i>
+          <i class="pitch-circle"></i>
+          <i class="pitch-box pitch-box-own"></i>
+          <i class="pitch-box pitch-box-opp"></i>
+          <div class="pitch-shirts" id="pitch-shirts"></div>
+        </div>
+      </div>
+
       <div class="pre-page lineup-page" data-page="bench-away">
         <div class="lineup-header">
           <img class="lineup-logo" id="bench-away-logo" alt="" hidden />

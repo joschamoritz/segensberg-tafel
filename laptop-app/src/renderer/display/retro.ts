@@ -1,3 +1,4 @@
+import { formationSpots } from '../../shared/formations';
 import {
   composeRetro,
   retroGrid,
@@ -246,6 +247,10 @@ function currentRetroScene(state: MatchState): RetroScene {
     // dieselbe Szene wie beim Torschützen, mit Rolle, Name und Verein.
     if (page === 'player-card') {
       return ui.activeCard ? { kind: 'scorer', ...ui.activeCard } : { kind: 'blank' };
+    }
+    // Spielfeld: Feldlinien und Spieler als Punkte (Nutzerwunsch 21.10.2026).
+    if (page === 'pitch') {
+      return { kind: 'pitch', title: `${home} ${state.formation}`, spots: formationSpots(state.formation) };
     }
     if (page !== 'matchup') return retroLineup(state, page);
     // Derselbe Countdown wie in den anderen Designs, nur ohne "UHR ·":

@@ -16,6 +16,7 @@ export const LINEUP_PLAYER_MS = 4000;
 
 export type LineupStep =
   | { kind: 'page'; page: 'start' | 'bench'; ms: number }
+  | { kind: 'pitch'; ms: number }
   | { kind: 'player'; playerId: string; ms: number }
   | { kind: 'coach'; ms: number };
 
@@ -33,6 +34,13 @@ export function lineupSteps(state: MatchState, team: TeamId, style: LineupStyle)
   const now = lineupNow(team, state.squads[team], state.events);
   const coach = state[team].coach.trim() !== '';
   const steps: LineupStep[] = [];
+
+  // Spielfeld: nur die Grundordnung, ohne Spieler -- deshalb auch ohne
+  // erfassten Kader möglich. Nur für das Heimteam; beim Gast gilt die
+  // Übersicht (Nutzerentscheidung 21.10.2026).
+  if (style === 'pitch' && team === 'home') {
+    return [{ kind: 'pitch', ms: LINEUP_PAGE_MS }];
+  }
 
   if (style === 'single') {
     for (const player of startingOrder(now.onPitch)) {

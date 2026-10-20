@@ -1,3 +1,4 @@
+import { DEFAULT_FORMATION, Formation } from '../shared/formations';
 import {
   BoardSize,
   DEFAULT_APPEARANCE,
@@ -96,6 +97,7 @@ function initialState(): MatchState {
     squads: { home: [], away: [] },
     lineupRequest: null,
     lineupStyle: 'overview',
+    formation: DEFAULT_FORMATION,
     scorerRequest: null,
     infoRequest: null,
     halfDurationMin: DEFAULT_HALF_DURATION_MIN,
@@ -511,9 +513,16 @@ export class MatchStateStore {
     this.emit();
   }
 
-  /** Übersicht oder einzeln mit Portraits, siehe `LineupStyle`. */
+  /** Übersicht, einzeln mit Portraits oder Spielfeld, siehe `LineupStyle`. */
   setLineupStyle(style: LineupStyle): void {
     this.state = { ...this.state, lineupStyle: style };
+    this.emit();
+  }
+
+  /** Grundordnung für die Spielfeld-Aufstellung. */
+  setFormation(formation: Formation): void {
+    if (formation === this.state.formation) return;
+    this.state = { ...this.state, formation };
     this.emit();
   }
 
@@ -1114,6 +1123,7 @@ export class MatchStateStore {
       sponsorSlots,
       slideBlocks,
       lineupStyle,
+      formation,
       attendanceMessage,
       announcements,
       media,
@@ -1134,6 +1144,7 @@ export class MatchStateStore {
       sponsorSlots: { ...sponsorSlots, matchday: null },
       slideBlocks,
       lineupStyle,
+      formation,
       attendanceMessage,
       announcements,
       media,

@@ -1,3 +1,4 @@
+import { formationSpots } from '../../shared/formations';
 import { lineupSteps, LineupStep } from '../../shared/lineupSteps';
 import { lineupNow } from '../../shared/substitutions';
 import { LINEUP_PAGE_MS, LineupStyle, MatchState, sortPlayersByNumber, TeamId } from '../../shared/types';
@@ -94,12 +95,46 @@ function renderLineupPage(
   return grid.childElementCount > 0;
 }
 
+/** Umriss des leeren Trikots -- derselbe wie beim neutralen Trikot der
+    Einzel-Aufstellung. */
+const SHIRT_PATH = 'M31 6 L41 3 Q50 11 59 3 L69 6 L95 23 L85 42 L74 35 L74 97 L26 97 L26 35 L15 42 L5 23 Z';
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/**
+ * Spielfeld mit der Grundordnung des Heimteams: leere Trikots an den
+ * Plätzen aus `formationSpots()`, ohne Namen und Nummern.
+ */
+function renderPitchPage(state: MatchState): void {
+  const teamState = state.home;
+  const logo = document.getElementById('pitch-logo') as HTMLImageElement;
+  if (teamState.logoDataUrl) logo.src = teamState.logoDataUrl;
+  logo.hidden = !teamState.logoDataUrl;
+  document.getElementById('pitch-title')!.textContent = `${teamState.name} · ${state.formation}`;
+
+  const shirts = document.getElementById('pitch-shirts')!;
+  shirts.textContent = '';
+  for (const spot of formationSpots(state.formation)) {
+    const svg = document.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('class', 'pitch-shirt');
+    svg.setAttribute('viewBox', '0 0 100 100');
+    svg.setAttribute('aria-hidden', 'true');
+    // element.style statt style-Attribut -- die CSP setzt style-src 'self'.
+    svg.style.left = `${(spot.x * 100).toFixed(2)}%`;
+    svg.style.top = `${(spot.y * 100).toFixed(2)}%`;
+    const path = document.createElementNS(SVG_NS, 'path');
+    path.setAttribute('d', SHIRT_PATH);
+    svg.appendChild(path);
+    shirts.appendChild(svg);
+  }
+}
+
 /** Erzeugt alle Aufstellungsseiten neu. */
 export function renderLineupPages(state: MatchState): void {
   // Kader (Spieler) und Teams (Name, Logo, Trainer) -- beides steht auf den
   // Aufstellungsseiten.
   // Die Chronik gehört mit dazu: Ein Wechsel ändert, wer auf der Seite steht.
-  const signature = `${state.revisions.squads}-${state.revisions.teams}-${state.revisions.events}`;
+  // Die Formation gehört dazu: Sie zählt keinen Revisionszähler hoch.
+  const signature = `${state.revisions.squads}-${state.revisions.teams}-${state.revisions.events}-${state.formation}`;
   if (lineupSignature === signature) return;
   lineupSignature = signature;
 
@@ -107,6 +142,7 @@ export function renderLineupPages(state: MatchState): void {
   renderLineupPage('bench-home', state, 'home', 'bench', false);
   renderLineupPage('lineup-away', state, 'away', 'start', true);
   renderLineupPage('bench-away', state, 'away', 'bench', false);
+  renderPitchPage(state);
 }
 
 /** Zeigt die Seite mit dem angegebenen Namen, blendet alle anderen aus. */
@@ -230,6 +266,11 @@ function showStep(state: MatchState, team: TeamId, step: LineupStep): void {
   if (step.kind === 'page') {
     ui.activeCard = null;
     showPage(`${step.page === 'start' ? 'lineup' : 'bench'}-${team}`);
+    return;
+  }
+  if (step.kind === 'pitch') {
+    ui.activeCard = null;
+    showPage('pitch');
     return;
   }
   fillCard(state, team, step);

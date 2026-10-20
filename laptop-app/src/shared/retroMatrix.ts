@@ -411,6 +411,12 @@ export type RetroScene =
   | { kind: 'scorer'; title: string; name: string; detail: string }
   | { kind: 'thanks'; before: string; number: string; after: string }
   | { kind: 'lineup'; title: string; entries: { number: string; name: string }[] }
+  /**
+   * Aufstellung auf dem Spielfeld: Feldlinien als einzelne Punkte, jeder
+   * Spieler als Block aus 3×3 Punkten -- so heben sich die Spieler von den
+   * Linien ab. `spots` wie in `formationSpots()` (Anteile des Felds).
+   */
+  | { kind: 'pitch'; title: string; spots: { x: number; y: number }[] }
   | { kind: 'text'; title: string; lines: string[] };
 
 /**
@@ -523,6 +529,69 @@ function composeMatch(m: DotMatrix, scene: Extract<RetroScene, { kind: 'match' }
  * (etwa 384×224 = 96×56), steht der Inhalt mittig darin; ist sie kleiner,
  * wird am Rand abgeschnitten statt verzerrt.
  */
+/**
+ * Spielfeld der Retro-Aufstellung. Titel oben in der kleinen Schrift,
+ * darunter das Feld über die volle Breite: Außenlinie, Mittellinie,
+ * Mittelkreis und die beiden Strafräume aus einzelnen Punkten, die
+ * Spieler als 3×3-Blöcke.
+ */
+function composePitch(
+  m: DotMatrix,
+  scene: Extract<RetroScene, { kind: 'pitch' }>,
+  x0: number,
+  y0: number,
+  w: number
+): void {
+  m.centered(scene.title, y0 + 1, 'klein', 1, x0, w);
+
+  const left = x0 + 1;
+  const right = x0 + w - 2;
+  const top = y0 + 8;
+  const bottom = y0 + BASE_ROWS - 1;
+  const width = right - left;
+  const height = bottom - top;
+
+  for (let x = left; x <= right; x++) {
+    m.set(x, top);
+    m.set(x, bottom);
+  }
+  for (let y = top; y <= bottom; y++) {
+    m.set(left, y);
+    m.set(right, y);
+  }
+
+  const midX = left + Math.round(width / 2);
+  const midY = top + Math.round(height / 2);
+  for (let y = top; y <= bottom; y++) m.set(midX, y);
+  const radius = 6;
+  for (let a = 0; a < 360; a += 6) {
+    const rad = (a * Math.PI) / 180;
+    m.set(midX + Math.round(radius * Math.cos(rad)), midY + Math.round(radius * Math.sin(rad)));
+  }
+
+  // Strafräume, an der Torlinie offen -- dort liegt schon die Außenlinie.
+  const boxW = Math.round(width * 0.13);
+  const boxTop = top + Math.round(height * 0.22);
+  const boxBottom = bottom - Math.round(height * 0.22);
+  for (const [edge, dir] of [
+    [left, 1],
+    [right, -1],
+  ] as const) {
+    const inner = edge + dir * boxW;
+    for (let y = boxTop; y <= boxBottom; y++) m.set(inner, y);
+    for (let i = 0; i <= boxW; i++) {
+      m.set(edge + dir * i, boxTop);
+      m.set(edge + dir * i, boxBottom);
+    }
+  }
+
+  for (const spot of scene.spots) {
+    const cx = left + Math.round(spot.x * width);
+    const cy = top + Math.round(spot.y * height);
+    m.block(cx - 1, cy - 1, 3, 3);
+  }
+}
+
 export function composeRetro(raw: RetroScene, cols: number, rows: number): DotMatrix {
   // Erst aufbereiten, dann messen: "Köln" wird zu "KOELN" und damit
   // breiter. Gemessen am Rohtext liefen Kürzung und Zentrierung daneben.
@@ -620,6 +689,10 @@ export function composeRetro(raw: RetroScene, cols: number, rows: number): DotMa
       });
       break;
     }
+
+    case 'pitch':
+      composePitch(m, scene, x0, y0, w);
+      break;
 
     case 'text':
       m.centered(scene.title, y0 + 1, 'gross', 1, x0, w);

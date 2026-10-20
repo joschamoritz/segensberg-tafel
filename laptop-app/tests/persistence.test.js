@@ -94,6 +94,7 @@ test('Texte: Hin- und Rückweg, fremde Werte werden nicht übernommen', () => {
     sound: { volume: 40, muted: true },
     slideBlocks: haken,
     lineupStyle: 'single',
+    formation: '4-2-3-1',
   });
   assert.deepEqual(loadContentConfig(), {
     attendanceMessage: 'Danke {n}!',
@@ -101,6 +102,7 @@ test('Texte: Hin- und Rückweg, fremde Werte werden nicht übernommen', () => {
     sound: { volume: 40, muted: true },
     slideBlocks: haken,
     lineupStyle: 'single',
+    formation: '4-2-3-1',
   });
 
   fs.writeFileSync(datei('content.json'), JSON.stringify({ announcements: ['ok', 7, { a: 1 }], sound: { volume: 900 } }));

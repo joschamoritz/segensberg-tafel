@@ -21,6 +21,10 @@ import { wireSound } from './sound';
 export function renderLineupControls(state: MatchState): void {
   const style = document.getElementById('lineup-style') as HTMLSelectElement;
   if (document.activeElement !== style) style.value = state.lineupStyle;
+  const formation = document.getElementById('lineup-formation') as HTMLSelectElement;
+  if (document.activeElement !== formation) formation.value = state.formation;
+  // Die Formation gilt nur für die Spielfeld-Ansicht.
+  formation.hidden = state.lineupStyle !== 'pitch';
 
   const enabled = state.phase === 'pre-match';
   for (const id of ['lineup-show-home', 'lineup-show-away', 'lineup-hide']) {
@@ -33,13 +37,18 @@ export function renderLineupControls(state: MatchState): void {
     return;
   }
 
+  // Beim Spielfeld braucht das Heimteam keinen Kader -- es zeigt nur die
+  // Formation. Der Gast-Knopf zeigt dann die Übersicht.
+  const pitch = state.lineupStyle === 'pitch';
   const missing = (['home', 'away'] as TeamId[]).filter(
-    (team) => state.squads[team].filter((p) => p.role !== 'out').length === 0
+    (team) =>
+      !(pitch && team === 'home') && state.squads[team].filter((p) => p.role !== 'out').length === 0
   );
-  hint.textContent =
-    missing.length === 0
-      ? ''
-      : `Kein Kader erfasst für: ${missing.map((team) => state[team].name).join(', ')}`;
+  const notes = [
+    pitch ? 'Spielfeld nur für Heim – „Gast“ zeigt die Übersicht.' : '',
+    missing.length === 0 ? '' : `Kein Kader erfasst für: ${missing.map((team) => state[team].name).join(', ')}`,
+  ];
+  hint.textContent = notes.filter(Boolean).join(' ');
 }
 
 /**

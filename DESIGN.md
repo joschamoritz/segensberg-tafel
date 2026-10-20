@@ -284,6 +284,19 @@ damit sie beim Hochzählen nicht springen.
   Zusammenhang, den der Bericht hat. Deshalb ausdrücklich „HZ“. Ein
   Abpfiff schon in der 1. Halbzeit heißt „SPIELABBRUCH“ (ohne
   Halbzeitstand, eine Pause gab es nicht).
+- **Spielfeld-Aufstellung** (`.pitch-page`, Display, seit 1.10.0):
+  Kopfzeile wie die Aufstellungsseiten („SV HOCHLAR 28 · 4-2-3-1“,
+  Wappen, Aufstellungssponsor), darunter das Feld über die volle Breite
+  (361×150 px bei 384×192). Feld in `--svh-dk`, Linien 0,8cqh in
+  `--svh-lt`, Trikots weiß (11cqh = 21 px) – Vereinsfarben statt
+  Rasengrün, und die Trikots heben sich von den zurückhaltenden Linien
+  ab. Eigenes Tor links. Plätze aus `formationSpots()`
+  (`shared/formations.ts`): Torwart bei 6 %, Reihen gleichmäßig von
+  22 % bis 84 % der Länge, je Reihe gleichmäßig über die Breite.
+  Gemessen: mindestens 29,6 px zwischen übereinanderstehenden Trikots.
+  Die Zierstreifen sind dort ausgeblendet – sie lägen auf Wappen und
+  Feldecke. **Retro:** Feldlinien als einzelne Punkte, Spieler als
+  3×3-Blöcke, Titel in der kleinen Punktschrift.
 - **Einzel-Aufstellung:** Bild (Portrait, Trikot, beim Trainer das
   Wappen) in einer festen Spalte links (34cqw), der Text daneben in der
   restlichen Breite. Vorher war beides gemeinsam zentriert, und das Bild

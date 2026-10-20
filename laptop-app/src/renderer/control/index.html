@@ -537,7 +537,12 @@
       <select id="lineup-style" aria-label="Ablauf der Aufstellung">
         <option value="overview">Übersicht</option>
         <option value="single">Einzeln mit Portraits</option>
+        <option value="pitch">Spielfeld (Formation)</option>
       </select>
+      <!-- Grundordnung für die Spielfeld-Ansicht; nur bei dieser Wahl
+           bedienbar. Die Optionen füllt infoControls.ts aus
+           shared/formations.ts. -->
+      <select id="lineup-formation" aria-label="Formation"></select>
       <button id="lineup-show-home" class="btn btn-small">Heim</button>
       <button id="lineup-show-away" class="btn btn-small">Gast</button>
       <button id="lineup-hide" class="btn btn-small">Zurück zur Begegnung</button>

@@ -1,3 +1,4 @@
+import { Formation } from './formations';
 /**
  * Farbvariante eines Vereinslogos.
  *
@@ -376,9 +377,12 @@ export const LINEUP_PAGE_MS = 9000;
  * `overview`: Startelf und Bank als je eine Seite.
  * `single`: jeder Spieler der Startelf einzeln mit Portrait, danach der
  * Trainer, danach die Bank als eine Seite (Nutzerwunsch 20.10.2026).
+ * `pitch`: die Grundordnung (`MatchState.formation`) mit leeren Trikots
+ * auf einem Spielfeld, nur für das Heimteam (Nutzerwunsch 21.10.2026).
+ * Der Gast-Knopf zeigt bei dieser Wahl die Übersicht.
  */
-export type LineupStyle = 'overview' | 'single';
-export const LINEUP_STYLES: readonly LineupStyle[] = ['overview', 'single'];
+export type LineupStyle = 'overview' | 'single' | 'pitch';
+export const LINEUP_STYLES: readonly LineupStyle[] = ['overview', 'single', 'pitch'];
 
 /** Mehr Ecken als das gibt es in einem Spiel nicht. */
 export const MAX_CORNERS = 99;
@@ -427,6 +431,8 @@ export interface MatchState {
       Anfrage nimmt ihn beim Auslösen mit -- ein Umschalten mittendrin
       ändert die laufende Einblendung nicht. */
   lineupStyle: LineupStyle;
+  /** Grundordnung für die Spielfeld-Aufstellung, gemerkt in `content.json`. */
+  formation: Formation;
   /**
    * Aufforderung, einen Torschützen groß einzublenden (Name, Portrait,
    * Spielstand). Wird nach dem Eintragen des Schützen per Knopf ausgelöst.
@@ -1439,6 +1445,7 @@ export const IPC = {
   setSponsorSlot: 'match:set-sponsor-slot',
   setSlideBlocks: 'slideshow:set-blocks',
   setLineupStyle: 'lineup:set-style',
+  setFormation: 'lineup:set-formation',
   goalSetScorer: 'goal:set-scorer',
   goalSetOwnGoal: 'goal:set-own-goal',
   goalSetPenalty: 'goal:set-penalty',

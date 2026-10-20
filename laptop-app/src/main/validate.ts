@@ -1,3 +1,4 @@
+import { DEFAULT_FORMATION, Formation, isFormation } from '../shared/formations';
 import {
   BoardSize,
   CardColor,
@@ -328,6 +329,11 @@ export function sanitizeBoardCredential(value: unknown): string {
 export function sanitizeBoardBrightness(value: unknown): number | null {
   if (typeof value !== 'number' || !Number.isFinite(value)) return null;
   return Math.round(Math.min(MAX_BOARD_BRIGHTNESS, Math.max(MIN_BOARD_BRIGHTNESS, value)));
+}
+
+/** Grundordnung; Unbekanntes fällt auf die Vorgabe zurück. */
+export function sanitizeFormation(value: unknown): Formation {
+  return isFormation(value) ? value : DEFAULT_FORMATION;
 }
 
 /** Ablauf der Aufstellung; Unbekanntes fällt auf die Übersicht zurück. */

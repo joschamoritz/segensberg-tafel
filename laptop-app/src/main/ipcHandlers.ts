@@ -34,6 +34,7 @@ import {
   sanitizeImportedPlayers,
   sanitizeKickoffTime,
   sanitizeLineupStyle,
+  sanitizeFormation,
   sanitizeOptionalId,
   sanitizePlayer,
   sanitizeText,
@@ -196,6 +197,10 @@ export function registerIpcHandlers(): void {
 
   onIpc(IPC.setLineupStyle, (_event, value: unknown) => {
     store.setLineupStyle(sanitizeLineupStyle(value));
+    persistContent();
+  });
+  onIpc(IPC.setFormation, (_event, value: unknown) => {
+    store.setFormation(sanitizeFormation(value));
     persistContent();
   });
   onIpc(IPC.setSlideBlocks, (_event, value: unknown) => {

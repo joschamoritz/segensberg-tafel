@@ -93,6 +93,14 @@ Herstellersoftware. Siehe `../CLAUDE.md` und `../DESIGN.md` für Hintergrund.
   mit dem Rand verbunden sind), Schriftzug in Oswald 700 auf 33 % der
   Höhe, auf die sichtbaren Pixel zugeschnitten. Bei einem neuen Trikot
   dieselben Schritte; die Nummer setzt die App selbst darauf. „Übersicht" ist der bisherige Ablauf.
+- **Aufstellung auf dem Spielfeld** (dritte Wahl „Spielfeld (Formation)"
+  im selben Wahlschalter, daneben die Formation: 4-4-2, 4-4-2 Raute,
+  4-3-3, 4-2-3-1, 4-1-4-1, 4-5-1, 3-5-2, 3-4-3, 5-3-2, 5-4-1). Zeigt
+  nur die Grundordnung des Heimteams mit leeren weißen Trikots auf einem
+  Feld in Vereinsfarben, ohne Namen und Nummern – deshalb auch ohne
+  erfassten Kader. Der Gast-Knopf zeigt bei dieser Wahl die Übersicht.
+  Wahl und Formation werden gemerkt (`content.json`). Im Retro-Design
+  Feldlinien und Spieler als Punkte.
 - **Retro-Design** als drittes: Punktmatrix wie alte Stadiontafeln,
   Leuchtfarbe Bernstein oder Weiß. Statt Wappen stehen Kurznamen da
   („ERKENSCHWICK"), vorgeschlagen aus dem Vereinsnamen und unter

@@ -124,7 +124,7 @@ test('display: Spieltags-, Aufstellungs- und Tor-Sponsor stehen an ihren Plätze
   assert.equal(r.document.getElementById('pre-sponsor-logo').getAttribute('src'), 'svh-media://hauptsponsor/haupt.png');
   assert.equal(r.document.getElementById('goal-sponsor-logo').getAttribute('src'), 'svh-media://partner/bank.png');
   const lineup = [...r.document.querySelectorAll('.lineup-sponsor')];
-  assert.equal(lineup.length, 5, 'alle vier Aufstellungsseiten und die Einzel-Aufstellung');
+  assert.equal(lineup.length, 6, 'alle vier Aufstellungsseiten, die Einzel-Aufstellung und das Spielfeld');
   for (const chip of lineup) {
     assert.equal(chip.hidden, false);
     assert.equal(chip.querySelector('img').getAttribute('src'), 'svh-media://partner/bank.png');

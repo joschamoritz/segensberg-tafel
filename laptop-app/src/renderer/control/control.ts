@@ -1,3 +1,4 @@
+import { FORMATION_IDS, isFormation } from '../../shared/formations';
 import { controlPhaseLabel, revertTargetLabel } from '../../shared/phaseLabels';
 import {
   CardColor,
@@ -16,6 +17,7 @@ import {
   RetroColor,
   TeamId,
 } from '../../shared/types';
+import { LINEUP_STYLES } from '../../shared/types';
 import { showError, ui, updateInputIfNotFocused } from './common';
 import { renderGoalLog } from './chronicle';
 import { renderInfoControls, renderLineupControls, renderSlideshowControls, wireInfoControls } from './infoControls';
@@ -324,9 +326,15 @@ function main(): void {
     .addEventListener('click', () => window.api.showLineup('away'));
   document.getElementById('lineup-hide')!.addEventListener('click', () => window.api.hideLineup());
   const lineupStyle = document.getElementById('lineup-style') as HTMLSelectElement;
-  lineupStyle.addEventListener('change', () =>
-    window.api.setLineupStyle(lineupStyle.value === 'single' ? 'single' : 'overview')
-  );
+  lineupStyle.addEventListener('change', () => {
+    const value = LINEUP_STYLES.find((style) => style === lineupStyle.value) ?? 'overview';
+    window.api.setLineupStyle(value);
+  });
+  const formation = document.getElementById('lineup-formation') as HTMLSelectElement;
+  for (const id of FORMATION_IDS) formation.appendChild(new Option(id, id));
+  formation.addEventListener('change', () => {
+    if (isFormation(formation.value)) window.api.setFormation(formation.value);
+  });
 
   document.getElementById('match-reset')!.addEventListener('click', () => {
     if (confirm('Neues Spiel starten? Spielstand und Uhr werden zurückgesetzt.')) {

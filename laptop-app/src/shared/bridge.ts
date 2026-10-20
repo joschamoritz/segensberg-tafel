@@ -1,3 +1,4 @@
+import { Formation } from './formations';
 import {
   AppInfo,
   AppStatus,
@@ -142,6 +143,7 @@ export function createApi(t: Transport) {
       t.send(IPC.setAnnouncements, announcements),
     setSlideBlocks: (blocks: SlideBlocks) => t.send(IPC.setSlideBlocks, blocks),
     setLineupStyle: (style: LineupStyle) => t.send(IPC.setLineupStyle, style),
+    setFormation: (formation: Formation) => t.send(IPC.setFormation, formation),
     slideshowStart: () => t.send(IPC.slideshowStart),
     shootoutStart: () => t.send(IPC.shootoutStart),
     shootoutKick: (team: TeamId, kick: ShootoutKick) => t.send(IPC.shootoutKick, team, kick),
