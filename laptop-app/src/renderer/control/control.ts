@@ -329,6 +329,21 @@ function main(): void {
     .getElementById('lineup-show-away')!
     .addEventListener('click', () => window.api.showLineup('away'));
   document.getElementById('lineup-hide')!.addEventListener('click', () => window.api.hideLineup());
+
+  // Shortcuts neben den Vereinsnamen: starten oder beenden, je nachdem,
+  // ob die Aufstellung dieser Mannschaft gerade läuft.
+  for (const team of ['home', 'away'] as TeamId[]) {
+    const quick = document.getElementById(`lineup-quick-${team}`)!;
+    quick.addEventListener('click', () => {
+      if (quick.classList.contains('is-running')) window.api.hideLineup();
+      else window.api.showLineup(team);
+    });
+  }
+  const slideshowQuick = document.getElementById('slideshow-quick')!;
+  slideshowQuick.addEventListener('click', () => {
+    if (slideshowQuick.classList.contains('is-running')) window.api.slideshowStop();
+    else window.api.slideshowStart();
+  });
   const lineupStyle = document.getElementById('lineup-style') as HTMLSelectElement;
   lineupStyle.addEventListener('change', () => {
     const value = LINEUP_STYLES.find((style) => style === lineupStyle.value) ?? 'overview';

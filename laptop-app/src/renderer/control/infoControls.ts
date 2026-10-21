@@ -31,6 +31,18 @@ export function renderLineupControls(state: MatchState): void {
     (document.getElementById(id) as HTMLButtonElement).disabled = !enabled;
   }
 
+  // Shortcuts neben den Vereinsnamen: im Spiel ausgeblendet statt
+  // ausgegraut -- kein toter Knopf neben dem Torzähler, und kein
+  // versehentlicher Start im Jubel. Läuft die Aufstellung dieser
+  // Mannschaft, beendet derselbe Knopf sie.
+  for (const team of ['home', 'away'] as TeamId[]) {
+    const quick = document.getElementById(`lineup-quick-${team}`) as HTMLButtonElement;
+    const running = state.lineupRequest?.team === team;
+    quick.hidden = !enabled;
+    quick.textContent = running ? '■ Beenden' : 'Aufstellung ▶';
+    quick.classList.toggle('is-running', running);
+  }
+
   const hint = document.getElementById('lineup-controls-hint')!;
   if (!enabled) {
     hint.textContent = 'Nur vor dem Anpfiff verfügbar.';
@@ -108,6 +120,13 @@ export function renderSlideshowControls(state: MatchState): void {
   const shootoutRunning = state.shootout !== null && !state.shootout.finished;
   start.disabled = !available || folien === 0 || shootoutRunning;
   stop.disabled = !running;
+
+  // Shortcut in der Phasenzeile: derselbe Start wie unten, als Umschalter.
+  const quick = document.getElementById('slideshow-quick') as HTMLButtonElement;
+  quick.hidden = !available;
+  quick.disabled = !running && start.disabled;
+  quick.textContent = running ? '■ Diashow' : '▶ Diashow';
+  quick.classList.toggle('is-running', running);
   start.classList.toggle('btn-next', available && !running && folien > 0);
 
   const hint = document.getElementById('slideshow-hint')!;

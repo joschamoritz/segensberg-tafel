@@ -848,6 +848,19 @@ body.is-remote .goal-remove {
   gap: 8px;
 }
 
+/* Shortcuts: in Gold abgesetzt, damit sie nicht wie ein Phasenknopf
+   gelesen werden -- sie wechseln keine Phase, sie zeigen etwas. */
+.btn-quick {
+  border-color: var(--svh-gold);
+  color: var(--svh-gold-dk);
+  background: var(--tint-gold);
+}
+
+.btn-quick.is-running {
+  background: var(--svh-gold);
+  color: var(--svh-wh);
+}
+
 .lineup-controls {
   display: flex;
   flex-wrap: wrap;
@@ -1132,8 +1145,44 @@ body.is-remote .goal-remove {
   text-align: center;
 }
 
-.team h2 {
+/* Vereinsname mit dem Aufstellungs-Shortcut daneben. Wird es eng (lange
+   Gastnamen bei 1366 px), kürzt der Name, nicht der Knopf. */
+.team-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   margin: 0 0 12px 0;
+  min-width: 0;
+}
+
+/* Feste Höhe in jeder Phase: Ohne das wäre die Karte vor dem Anpfiff
+   (mit Knopf) höher als danach, und die ganze Bedienung spränge beim
+   Anpfiff um eine Knopfhöhe nach oben. Der Knopf ist dafür flacher als
+   die übrigen kleinen Knöpfe. */
+.team-head {
+  min-height: 24px;
+}
+
+/* Am iPad hat jeder Knopf 44 px Fingermaß -- die Kopfzeile wächst mit,
+   in jeder Phase gleich. */
+body.is-remote .team-head {
+  min-height: 44px;
+}
+
+.team-head .btn-quick {
+  flex: 0 0 auto;
+  padding: 2px 10px;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.team h2 {
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-family: 'Oswald', sans-serif;
   font-size: 15px;
   font-weight: 600;

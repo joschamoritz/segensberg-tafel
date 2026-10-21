@@ -322,6 +322,11 @@ Electron-Main-Prozess (normaler Node-Kontext) und brauchen das nicht.
   `teams.json`; „Neues Spiel" leert nur den Spieltagssponsor. Fehlt eine
   gewählte Datei, bleibt der Platz auf der Tafel leer und die Auswahl
   zeigt „(Datei fehlt)".
+- **Shortcuts:** „Aufstellung ▶" neben dem Vereinsnamen jeder
+  Teamspalte (nur vor dem Anpfiff) und „▶ Diashow" in der Phasenzeile
+  (außer im laufenden Spiel). Ein zweiter Druck beendet. Art der
+  Aufstellung und Haken der Diashow werden weiter im Klapper „Mehr für
+  den Spieltag" eingestellt.
 - **Standzeiten** (Einrichtung → Anzeige): wie lange Torjubel (eigenes
   Tor und Gegentor getrennt), Torschütze, Karte/Ecken, Wechsel,
   Zuschauer-Danksagung, Aufstellungsseite, Einzel-Aufstellung je Spieler,

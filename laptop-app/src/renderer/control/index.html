@@ -394,6 +394,9 @@
       <button id="phase-halftime" class="btn">Halbzeit</button>
       <button id="phase-second-half" class="btn">2. Halbzeit anpfeifen</button>
       <button id="phase-fulltime" class="btn">Abpfiff</button>
+      <!-- Shortcut zur Diashow: vor dem Anpfiff, in der Pause und nach dem
+           Abpfiff. Die Haken der Blöcke bleiben im Klapper unten. -->
+      <button id="slideshow-quick" class="btn btn-quick" hidden>▶ Diashow</button>
       <button id="phase-revert" class="btn">↩ Phase zurück</button>
       <button id="match-reset" class="btn btn-danger">Neues Spiel</button>
     </div>
@@ -402,7 +405,13 @@
 
   <main class="teams">
     <section class="team team-home">
-      <h2 id="home-team-label">Heim</h2>
+      <!-- Shortcut zur Aufstellung, nur vor dem Anpfiff sichtbar. Trägt
+           bewusst KEIN data-team: Der dokumentweite Selektor
+           button[data-team] hängte ihm sonst einen Spielstand-Handler an. -->
+      <div class="team-head">
+        <h2 id="home-team-label">Heim</h2>
+        <button id="lineup-quick-home" class="btn btn-small btn-quick" hidden>Aufstellung ▶</button>
+      </div>
       <div class="score" id="home-score">0</div>
       <div class="stepper">
         <button data-team="home" data-delta="-1" class="btn btn-minus">−</button>
@@ -481,7 +490,13 @@
     </section>
 
     <section class="team team-away">
-      <h2 id="away-team-label">Gast</h2>
+      <!-- Shortcut zur Aufstellung, nur vor dem Anpfiff sichtbar. Trägt
+           bewusst KEIN data-team: Der dokumentweite Selektor
+           button[data-team] hängte ihm sonst einen Spielstand-Handler an. -->
+      <div class="team-head">
+        <h2 id="away-team-label">Gast</h2>
+        <button id="lineup-quick-away" class="btn btn-small btn-quick" hidden>Aufstellung ▶</button>
+      </div>
       <div class="score" id="away-score">0</div>
       <div class="stepper">
         <button data-team="away" data-delta="-1" class="btn btn-minus">−</button>
