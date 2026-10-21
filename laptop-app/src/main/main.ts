@@ -20,6 +20,7 @@ import {
   sanitizeLineupStyle,
   sanitizeFormation,
   sanitizeCompetition,
+  sanitizeDurations,
   sanitizeSlideBlocks,
   sanitizeSponsorSlots,
 } from './validate';
@@ -116,6 +117,7 @@ app.whenReady().then(() => {
   store.setAnnouncements(sanitizeAnnouncements(content.announcements));
   store.setSound(content.sound);
   store.setSlideBlocks(sanitizeSlideBlocks(content.slideBlocks));
+  store.setDurations(sanitizeDurations(content.durations));
   store.setLineupStyle(sanitizeLineupStyle(content.lineupStyle));
   store.setFormation(sanitizeFormation(content.formation));
 

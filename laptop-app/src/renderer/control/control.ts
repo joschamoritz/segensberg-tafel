@@ -26,6 +26,8 @@ import {
   renderAppVersion,
   renderCompetitionSelect,
   renderSponsorSlotSelects,
+  renderDurationInputs,
+  wireDurationInputs,
   wireSponsorSlots,
   renderLibrary,
   renderStatus,
@@ -157,6 +159,7 @@ function renderState(state: MatchState): void {
 
   renderCompetitionSelect(state);
   renderSponsorSlotSelects(state);
+  renderDurationInputs(state);
 
   const boardWidthInput = document.getElementById('board-width-input') as HTMLInputElement;
   const boardHeightInput = document.getElementById('board-height-input') as HTMLInputElement;
@@ -211,6 +214,7 @@ function main(): void {
   );
 
   wireSponsorSlots();
+  wireDurationInputs();
 
   const competitionSelect = document.getElementById('competition-select') as HTMLSelectElement;
   competitionSelect.addEventListener('change', () =>

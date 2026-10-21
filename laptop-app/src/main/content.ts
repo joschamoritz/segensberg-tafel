@@ -31,6 +31,8 @@ export interface ContentConfig {
   lineupStyle?: unknown;
   /** Grundordnung der Spielfeld-Aufstellung -- geprüft in `sanitizeFormation` */
   formation?: unknown;
+  /** Standzeiten -- geprüft wird in `sanitizeDurations` */
+  durations?: unknown;
 }
 
 function defaults(): ContentConfig {
@@ -75,6 +77,7 @@ export function loadContentConfig(): ContentConfig {
     slideBlocks: parsed.slideBlocks,
     lineupStyle: parsed.lineupStyle,
     formation: parsed.formation,
+    durations: parsed.durations,
   };
 }
 

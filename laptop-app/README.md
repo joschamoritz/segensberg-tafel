@@ -304,7 +304,8 @@ Electron-Main-Prozess (normaler Node-Kontext) und brauchen das nicht.
   Datum und Begegnung darunter) und **Termine**. Die normale Ansicht (Begegnung bzw.
   Zwischenstand) ist selbst eine Station der Rotation, der Spielstand
   ist also nie länger als eine Folie weg. Standzeit 12 Sekunden je Folie,
-  die normale Ansicht zwischen zwei Runden 20 Sekunden. **Welche Blöcke
+  die normale Ansicht zwischen zwei Runden 20 Sekunden (beides
+  einstellbar, siehe Standzeiten). **Welche Blöcke
   laufen, wird neben „Starten" abgehakt** (Partner, Highlights,
   Vereinsgeschichte, Termine); die Auswahl gilt in jeder Phase und liegt
   in `content.json`. Ein geänderter Haken gilt ab dem nächsten Start.
@@ -321,6 +322,13 @@ Electron-Main-Prozess (normaler Node-Kontext) und brauchen das nicht.
   `teams.json`; „Neues Spiel" leert nur den Spieltagssponsor. Fehlt eine
   gewählte Datei, bleibt der Platz auf der Tafel leer und die Auswahl
   zeigt „(Datei fehlt)".
+- **Standzeiten** (Einrichtung → Anzeige): wie lange Torjubel (eigenes
+  Tor und Gegentor getrennt), Torschütze, Karte/Ecken, Wechsel,
+  Zuschauer-Danksagung, Aufstellungsseite, Einzel-Aufstellung je Spieler,
+  Diashow-Folie und Spielstand zwischen zwei Diashow-Runden stehen, in
+  Sekunden (1–120, halbe Sekunden möglich). „Vorgaben“ setzt alles
+  zurück. Gilt ab der nächsten Einblendung, liegt in `content.json` und
+  übersteht „Neues Spiel“.
 - **Termine & Ankündigungen** werden im Steuerungsfenster als Textfeld
   gepflegt (eine Zeile je Ankündigung, höchstens fünf Zeilen je Folie)
   und in `content.json` gespeichert.

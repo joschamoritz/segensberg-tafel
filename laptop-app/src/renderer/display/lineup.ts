@@ -1,7 +1,7 @@
 import { formationSpots } from '../../shared/formations';
 import { lineupSteps, LineupStep } from '../../shared/lineupSteps';
 import { lineupNow } from '../../shared/substitutions';
-import { LINEUP_PAGE_MS, LineupStyle, MatchState, sortPlayersByNumber, TeamId } from '../../shared/types';
+import { DEFAULT_DURATIONS, LineupStyle, MatchState, sortPlayersByNumber, TeamId } from '../../shared/types';
 import { fitLines, nameVariants, ui } from './common';
 import { requestRetroPaint } from './retro';
 
@@ -181,7 +181,8 @@ export function showPage(pageName: string): void {
   // an dieser Stelle ändert sich sonst nichts.
   ui.activePageSince = Date.now();
   if (retroPageTimer) clearTimeout(retroPageTimer);
-  retroPageTimer = setTimeout(requestRetroPaint, LINEUP_PAGE_MS / 2 + 10);
+  const pageMs = (ui.currentState?.durations ?? DEFAULT_DURATIONS).lineupPage * 1000;
+  retroPageTimer = setTimeout(requestRetroPaint, pageMs / 2 + 10);
 }
 
 /**

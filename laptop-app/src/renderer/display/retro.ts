@@ -15,7 +15,7 @@ import {
   formatClock,
   formatEventMinute,
   goalScorer,
-  LINEUP_PAGE_MS,
+  DEFAULT_DURATIONS,
   MatchState,
   playerLabel,
   shootoutScore,
@@ -171,7 +171,8 @@ function retroLineup(state: MatchState, pageName: string): RetroScene {
   if (!isBench && coach) entries.push({ number: 'TR', name: coach });
   // Mehr als sechs Einträge: in zwei Hälften, je die halbe Standzeit der
   // Seite. Zweispaltig würden lange Namen auf der Matrix abgeschnitten.
-  const secondHalf = Date.now() - ui.activePageSince >= LINEUP_PAGE_MS / 2;
+  const pageMs = (state.durations ?? DEFAULT_DURATIONS).lineupPage * 1000;
+  const secondHalf = Date.now() - ui.activePageSince >= pageMs / 2;
   const shown =
     entries.length > 6 ? (secondHalf ? entries.slice(6) : entries.slice(0, 6)) : entries;
 

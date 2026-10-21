@@ -14,6 +14,7 @@ import {
   MatchState,
   Player,
   ShootoutKick,
+  DisplayDurations,
   SlideBlocks,
   SoundCommand,
   SponsorRef,
@@ -142,6 +143,7 @@ export function createApi(t: Transport) {
     setAnnouncements: (announcements: string[]) =>
       t.send(IPC.setAnnouncements, announcements),
     setSlideBlocks: (blocks: SlideBlocks) => t.send(IPC.setSlideBlocks, blocks),
+    setDurations: (durations: DisplayDurations) => t.send(IPC.setDurations, durations),
     setLineupStyle: (style: LineupStyle) => t.send(IPC.setLineupStyle, style),
     setFormation: (formation: Formation) => t.send(IPC.setFormation, formation),
     slideshowStart: () => t.send(IPC.slideshowStart),

@@ -168,6 +168,20 @@
     </p>
   </section>
 
+  <!-- Standzeiten der Anzeige in Sekunden. Die Felder entstehen einmal
+       beim Start aus DURATION_LABELS (setup.ts) -- eine Liste, die das
+       HTML zusätzlich führte, liefe beim nächsten neuen Wert auseinander. -->
+  <section class="duration-settings">
+    <fieldset class="duration-grid" id="duration-grid">
+      <legend>Standzeiten in Sekunden:</legend>
+    </fieldset>
+    <button id="duration-reset" class="btn btn-small">Vorgaben</button>
+    <p class="appearance-hint">
+      Gilt ab der nächsten Einblendung. Beim Torjubel zählt nur das
+      Vollbild; das Einlaufen der Ziffer danach bleibt gleich.
+    </p>
+  </section>
+
   <!-- Fernsteuerung im WLAN. Am iPad selbst ausgeblendet (body.is-remote). -->
   <section class="remote-settings">
     <label class="remote-toggle">

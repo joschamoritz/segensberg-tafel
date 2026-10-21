@@ -6,7 +6,6 @@ import {
   InfoOverlay,
   MatchState,
   playerLabel,
-  SCORER_DISPLAY_MS,
   splitAttendanceMessage,
   sponsorSlotLogo,
 } from '../../shared/types';
@@ -132,7 +131,7 @@ export function handleInfoRequest(state: MatchState): void {
   infoTimer = setTimeout(() => {
     clearInfoOverlay();
     infoTimer = null;
-  }, infoOverlayDurationMs(request.overlay));
+  }, infoOverlayDurationMs(request.overlay, state.durations));
 }
 
 /**
@@ -198,6 +197,6 @@ export function handleScorerRequest(state: MatchState): void {
     scorerTimer = setTimeout(() => {
       document.body.classList.remove('showing-scorer');
       scorerTimer = null;
-    }, SCORER_DISPLAY_MS);
+    }, state.durations.scorer * 1000);
   });
 }

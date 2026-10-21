@@ -4,8 +4,7 @@ import {
   HISTORY_FALLBACK_TITLE,
   HistoryCaption,
   MatchState,
-  SLIDE_BASE_DURATION_MS,
-  SLIDE_DURATION_MS,
+  DEFAULT_DURATIONS,
   SPONSORS_PER_PAGE,
 } from '../../shared/types';
 import { Slide, ui } from './common';
@@ -130,9 +129,14 @@ function stopSlideshow(): void {
   document.body.classList.remove('showing-slide');
 }
 
-/** Die normale Ansicht steht länger als eine Folie, siehe `SLIDE_BASE_DURATION_MS`. */
+/**
+ * Die normale Ansicht steht länger als eine Folie. Gelesen bei jedem
+ * Wechsel aus dem jüngsten Zustand -- eine geänderte Zeit gilt also schon
+ * in der laufenden Schau, anders als die Haken (die bestimmen die Folge).
+ */
 function slideDuration(slide: Slide): number {
-  return slide.kind === 'base' ? SLIDE_BASE_DURATION_MS : SLIDE_DURATION_MS;
+  const d = ui.currentState?.durations ?? DEFAULT_DURATIONS;
+  return (slide.kind === 'base' ? d.slideBase : d.slide) * 1000;
 }
 
 function advanceSlide(): void {

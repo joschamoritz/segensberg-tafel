@@ -13,6 +13,8 @@ import {
   DEFAULT_SOUND_SETTINGS,
   emptySponsorSlots,
   allSlideBlocks,
+  DEFAULT_DURATIONS,
+  DisplayDurations,
   SlideBlocks,
   GoalEvent,
   infoOverlayDurationMs,
@@ -115,6 +117,7 @@ function initialState(): MatchState {
     competition: null,
     sponsorSlots: emptySponsorSlots(),
     slideBlocks: allSlideBlocks(),
+    durations: { ...DEFAULT_DURATIONS },
     slideshowRequest: null,
     shootout: null,
     sound: { ...DEFAULT_SOUND_SETTINGS },
@@ -318,7 +321,7 @@ export class MatchStateStore {
         celebrate: withScore.phase === 'live',
       };
       events = [...events, goal];
-      if (goal.celebrate) this.celebrationEndsAt = this.now() + goalCelebrationMs(team);
+      if (goal.celebrate) this.celebrationEndsAt = this.now() + goalCelebrationMs(team, this.state.durations);
     } else {
       // Korrektur: jüngstes Tor dieser Mannschaft aus der Chronik nehmen
       // (Karten dabei überspringen)
@@ -471,6 +474,12 @@ export class MatchStateStore {
    * nicht -- ihre Folge steht ab dem Start fest (siehe slideshow.ts); der
    * Haken gilt für den nächsten Start.
    */
+  /** Standzeiten, siehe `DisplayDurations`. Gelten ab der nächsten Einblendung. */
+  setDurations(durations: DisplayDurations): void {
+    this.state = { ...this.state, durations: { ...durations } };
+    this.emit();
+  }
+
   setSlideBlocks(blocks: SlideBlocks): void {
     this.state = { ...this.state, slideBlocks: { ...blocks } };
     this.emit();
@@ -542,7 +551,7 @@ export class MatchStateStore {
     // Läuft noch ein Torjubel, zeigt die Anzeige den Torschützen erst danach
     // (siehe `afterCelebration()`); die Standzeit zählt ab dort.
     const waitMs = Math.max(0, this.celebrationEndsAt - this.now());
-    this.scheduleAutoHide('scorer', waitMs + SCORER_DISPLAY_MS, () => this.hideScorer());
+    this.scheduleAutoHide('scorer', waitMs + this.state.durations.scorer * 1000, () => this.hideScorer());
     this.emit();
   }
 
@@ -561,7 +570,7 @@ export class MatchStateStore {
     this.state = { ...this.state, infoRequest: { id: this.nextInfoId++, overlay } };
     // Die Danksagung steht länger als die schmale Leiste -- sie füllt das
     // Bild und will in Ruhe gelesen werden.
-    this.scheduleAutoHide('info', infoOverlayDurationMs(overlay), () => this.hideInfo());
+    this.scheduleAutoHide('info', infoOverlayDurationMs(overlay, this.state.durations), () => this.hideInfo());
     this.emit();
   }
 
@@ -1122,6 +1131,7 @@ export class MatchStateStore {
       competition,
       sponsorSlots,
       slideBlocks,
+      durations,
       lineupStyle,
       formation,
       attendanceMessage,
@@ -1143,6 +1153,7 @@ export class MatchStateStore {
       // Saisonverträge bleiben, der Spieltagssponsor wechselt je Spiel.
       sponsorSlots: { ...sponsorSlots, matchday: null },
       slideBlocks,
+      durations,
       lineupStyle,
       formation,
       attendanceMessage,

@@ -1,5 +1,5 @@
 import { lineupNow } from './substitutions';
-import { LINEUP_PAGE_MS, LineupStyle, MatchState, Player, sortPlayersByNumber, TeamId } from './types';
+import { DEFAULT_DURATIONS, LineupStyle, MatchState, Player, sortPlayersByNumber, TeamId } from './types';
 
 // --------------------------------------------------------------------
 // Ablauf einer Aufstellungs-Einblendung
@@ -34,23 +34,27 @@ export function lineupSteps(state: MatchState, team: TeamId, style: LineupStyle)
   const now = lineupNow(team, state.squads[team], state.events);
   const coach = state[team].coach.trim() !== '';
   const steps: LineupStep[] = [];
+  // Standzeiten aus dem Zustand -- Anzeige und Store lesen beide hier.
+  const durations = state.durations ?? DEFAULT_DURATIONS;
+  const pageMs = durations.lineupPage * 1000;
+  const playerMs = durations.lineupPlayer * 1000;
 
   // Spielfeld: nur die Grundordnung, ohne Spieler -- deshalb auch ohne
   // erfassten Kader möglich. Nur für das Heimteam; beim Gast gilt die
   // Übersicht (Nutzerentscheidung 21.10.2026).
   if (style === 'pitch' && team === 'home') {
-    return [{ kind: 'pitch', ms: LINEUP_PAGE_MS }];
+    return [{ kind: 'pitch', ms: pageMs }];
   }
 
   if (style === 'single') {
     for (const player of startingOrder(now.onPitch)) {
-      steps.push({ kind: 'player', playerId: player.id, ms: LINEUP_PLAYER_MS });
+      steps.push({ kind: 'player', playerId: player.id, ms: playerMs });
     }
-    if (coach) steps.push({ kind: 'coach', ms: LINEUP_PLAYER_MS });
+    if (coach) steps.push({ kind: 'coach', ms: playerMs });
   } else if (now.onPitch.length > 0 || coach) {
-    steps.push({ kind: 'page', page: 'start', ms: LINEUP_PAGE_MS });
+    steps.push({ kind: 'page', page: 'start', ms: pageMs });
   }
-  if (now.bench.length > 0) steps.push({ kind: 'page', page: 'bench', ms: LINEUP_PAGE_MS });
+  if (now.bench.length > 0) steps.push({ kind: 'page', page: 'bench', ms: pageMs });
   return steps;
 }
 

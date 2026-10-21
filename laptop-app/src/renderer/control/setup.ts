@@ -3,6 +3,12 @@ import {
   AppStatus,
   BoardLinkStatus,
   competitionLabel,
+  DEFAULT_DURATIONS,
+  DisplayDurations,
+  DURATION_KEYS,
+  DURATION_LABELS,
+  MAX_DURATION_S,
+  MIN_DURATION_S,
   FlutlichtEffects,
   MatchState,
   preferredSponsorFile,
@@ -253,6 +259,48 @@ export function parseSponsorOption(value: string): SponsorRef | null {
   const slash = value.indexOf('/');
   if (slash < 0) return null;
   return { folder: value.slice(0, slash) as SponsorFolderId, file: value.slice(slash + 1) };
+}
+
+/** Standzeiten in die Felder, außer in das, in dem gerade getippt wird. */
+export function renderDurationInputs(state: MatchState): void {
+  for (const key of DURATION_KEYS) {
+    const input = document.getElementById(`duration-${key}`) as HTMLInputElement | null;
+    if (input) updateInputIfNotFocused(input, String(state.durations[key]));
+  }
+}
+
+/**
+ * Baut die Felder einmal auf und verdrahtet sie. Alle Werte gehen
+ * gemeinsam raus; ein leeres oder unsinniges Feld ersetzt die Prüfschicht
+ * durch seine Vorgabe.
+ */
+export function wireDurationInputs(): void {
+  const grid = document.getElementById('duration-grid')!;
+  const inputs = DURATION_KEYS.map((key) => {
+    const label = document.createElement('label');
+    label.textContent = DURATION_LABELS[key];
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.id = `duration-${key}`;
+    input.min = String(MIN_DURATION_S);
+    input.max = String(MAX_DURATION_S);
+    input.step = '0.5';
+    input.dataset.duration = key;
+    label.appendChild(input);
+    grid.appendChild(label);
+    return input;
+  });
+
+  const send = (values: DisplayDurations): void => window.api.setDurations(values);
+  for (const input of inputs) {
+    input.addEventListener('change', () => {
+      const values = {} as DisplayDurations;
+      for (const i of inputs) values[i.dataset.duration as keyof DisplayDurations] = Number(i.value);
+      send(values);
+      input.blur();
+    });
+  }
+  document.getElementById('duration-reset')!.addEventListener('click', () => send({ ...DEFAULT_DURATIONS }));
 }
 
 export function wireSponsorSlots(): void {

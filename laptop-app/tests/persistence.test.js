@@ -88,6 +88,7 @@ test('Mannschaften: Hin- und Rückweg, beschädigte Datei fällt auf die Vorgabe
 test('Texte: Hin- und Rückweg, fremde Werte werden nicht übernommen', () => {
   aufräumen();
   const haken = { partner: true, highlights: false, historie: true, termine: false };
+  const zeiten = { goalHome: 6, goalAway: 2, scorer: 10, info: 5, sub: 6, thanks: 8, lineupPage: 9, lineupPlayer: 3, slide: 15, slideBase: 25 };
   saveContentConfig({
     attendanceMessage: 'Danke {n}!',
     announcements: ['So 25.08.'],
@@ -95,6 +96,7 @@ test('Texte: Hin- und Rückweg, fremde Werte werden nicht übernommen', () => {
     slideBlocks: haken,
     lineupStyle: 'single',
     formation: '4-2-3-1',
+    durations: zeiten,
   });
   assert.deepEqual(loadContentConfig(), {
     attendanceMessage: 'Danke {n}!',
@@ -103,6 +105,7 @@ test('Texte: Hin- und Rückweg, fremde Werte werden nicht übernommen', () => {
     slideBlocks: haken,
     lineupStyle: 'single',
     formation: '4-2-3-1',
+    durations: zeiten,
   });
 
   fs.writeFileSync(datei('content.json'), JSON.stringify({ announcements: ['ok', 7, { a: 1 }], sound: { volume: 900 } }));

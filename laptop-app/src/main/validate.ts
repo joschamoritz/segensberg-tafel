@@ -25,6 +25,11 @@ import {
   RetroColor,
   emptySponsorSlots,
   allSlideBlocks,
+  DEFAULT_DURATIONS,
+  DisplayDurations,
+  DURATION_KEYS,
+  MAX_DURATION_S,
+  MIN_DURATION_S,
   SLIDE_BLOCK_IDS,
   SlideBlocks,
   SPONSOR_FOLDER_IDS,
@@ -216,6 +221,22 @@ export function sanitizeCompetition(value: unknown): string | null {
   if (name === '' || name.length > 200) return null;
   if (/[\\/]/.test(name) || name === '.' || name === '..') return null;
   return name;
+}
+
+/**
+ * Standzeiten in Sekunden. Ein unbrauchbarer Einzelwert (leeres Feld,
+ * Text) fällt auf seine Vorgabe zurück, ein Wert außerhalb der Grenzen
+ * wird hineingeholt. Halbe Sekunden sind erlaubt, feiner nicht.
+ */
+export function sanitizeDurations(value: unknown): DisplayDurations {
+  const durations = { ...DEFAULT_DURATIONS };
+  if (!value || typeof value !== 'object') return durations;
+  for (const key of DURATION_KEYS) {
+    const raw = (value as Record<string, unknown>)[key];
+    if (typeof raw !== 'number' || !Number.isFinite(raw)) continue;
+    durations[key] = Math.min(MAX_DURATION_S, Math.max(MIN_DURATION_S, Math.round(raw * 2) / 2));
+  }
+  return durations;
 }
 
 /**

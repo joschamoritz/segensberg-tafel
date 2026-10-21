@@ -235,14 +235,75 @@ export const SCORER_DISPLAY_MS = 8000;
 export const THANKS_DISPLAY_MS = 8000;
 
 /** Wie lange die jeweilige Einblendung stehen bleibt. */
-export function infoOverlayDurationMs(overlay: InfoOverlay): number {
-  if (overlay.kind === 'attendance') return THANKS_DISPLAY_MS;
+export function infoOverlayDurationMs(
+  overlay: InfoOverlay,
+  durations: DisplayDurations = DEFAULT_DURATIONS
+): number {
+  if (overlay.kind === 'attendance') return durations.thanks * 1000;
   // Ein Wechsel nennt zwei Namen -- etwas länger als eine Karte.
-  if (overlay.kind === 'sub') return SUB_DISPLAY_MS;
-  return INFO_OVERLAY_MS;
+  if (overlay.kind === 'sub') return durations.sub * 1000;
+  return durations.info * 1000;
 }
 
 export const SUB_DISPLAY_MS = 6000;
+
+/**
+ * Standzeiten der Anzeige in Sekunden, im Steuerungsfenster einstellbar
+ * (Nutzerwunsch 21.10.2026). Die Konstanten oben und unten bleiben als
+ * Vorgaben stehen; gelesen wird überall dieser Wert aus dem Zustand.
+ *
+ * Store UND Anzeige rechnen damit: Der Store räumt eine Einblendung nach
+ * derselben Zeit ab, nach der die Anzeige sie ausblendet. Ändert jemand
+ * eine Zeit, während eine Einblendung steht, können beide für diese eine
+ * Einblendung auseinanderliegen -- harmlos, die nächste stimmt wieder.
+ *
+ * Gehört nach `content.json` (Situation am Platz, nicht das Spiel) und
+ * übersteht „Neues Spiel".
+ */
+export interface DisplayDurations {
+  /** Vollbild beim eigenen Tor */
+  goalHome: number;
+  /** Vollbild beim Gegentor */
+  goalAway: number;
+  /** Torschützen-Einblendung mit Portrait */
+  scorer: number;
+  /** Info-Leiste: Karte, Ecken */
+  info: number;
+  /** Info-Leiste: Wechsel */
+  sub: number;
+  /** Danksagung an die Zuschauer */
+  thanks: number;
+  /** Aufstellungsseite (Übersicht, Bank, Spielfeld) */
+  lineupPage: number;
+  /** Einzel-Aufstellung: je Spieler */
+  lineupPlayer: number;
+  /** Diashow: je Folie */
+  slide: number;
+  /** Diashow: normale Ansicht zwischen zwei Runden */
+  slideBase: number;
+}
+
+export type DurationKey = keyof DisplayDurations;
+
+/** Reihenfolge und Beschriftung im Steuerungsfenster. */
+export const DURATION_LABELS: Record<DurationKey, string> = {
+  goalHome: 'Torjubel (eigenes Tor)',
+  goalAway: 'Gegentor',
+  scorer: 'Torschütze',
+  info: 'Karte / Ecken',
+  sub: 'Wechsel',
+  thanks: 'Zuschauer-Danksagung',
+  lineupPage: 'Aufstellungsseite',
+  lineupPlayer: 'Einzel-Aufstellung je Spieler',
+  slide: 'Diashow je Folie',
+  slideBase: 'Diashow: Spielstand dazwischen',
+};
+
+export const DURATION_KEYS = Object.keys(DURATION_LABELS) as DurationKey[];
+
+/** Grenzen je Wert in Sekunden. Unter einer Sekunde liest niemand etwas. */
+export const MIN_DURATION_S = 1;
+export const MAX_DURATION_S = 120;
 
 /**
  * Stufen des Torjubels.
@@ -295,13 +356,23 @@ export const AWAY_GOAL_STAGES: GoalStagePlan[] = [
   { stage: 'boost', ms: 1200 },
 ];
 
-export function goalStagesFor(team: TeamId): GoalStagePlan[] {
-  return team === 'home' ? HOME_GOAL_STAGES : AWAY_GOAL_STAGES;
+/**
+ * Ablauf eines Jubels. Einstellbar ist nur der Vollbildteil; der
+ * Nachlauf auf der Spielansicht (`boost`) ist an die Animation der
+ * einlaufenden Ziffer gebunden und bleibt fest.
+ */
+export function goalStagesFor(
+  team: TeamId,
+  durations: DisplayDurations = DEFAULT_DURATIONS
+): GoalStagePlan[] {
+  const [vollbild, ...rest] = team === 'home' ? HOME_GOAL_STAGES : AWAY_GOAL_STAGES;
+  const ms = (team === 'home' ? durations.goalHome : durations.goalAway) * 1000;
+  return [{ stage: vollbild.stage, ms }, ...rest];
 }
 
 /** Gesamtdauer eines Jubels. */
-export function goalCelebrationMs(team: TeamId): number {
-  return goalStagesFor(team).reduce((summe, stufe) => summe + stufe.ms, 0);
+export function goalCelebrationMs(team: TeamId, durations: DisplayDurations = DEFAULT_DURATIONS): number {
+  return goalStagesFor(team, durations).reduce((summe, stufe) => summe + stufe.ms, 0);
 }
 
 /**
@@ -457,6 +528,8 @@ export interface MatchState {
   sponsorSlots: SponsorSlots;
   /** Abgehakte Blöcke der Diashow, siehe `SlideBlocks`. */
   slideBlocks: SlideBlocks;
+  /** Standzeiten in Sekunden, siehe `DisplayDurations`. */
+  durations: DisplayDurations;
   /** Geplanter Anstoß als "HH:MM"; leer = keine Angabe. Nur informativ --
       der Anpfiff wird weiterhin manuell ausgelöst. */
   kickoffTime: string;
@@ -849,6 +922,20 @@ export const SLIDE_DURATION_MS = 12000;
  * Runden eine Weile stehen, nicht nur kurz aufblitzen.
  */
 export const SLIDE_BASE_DURATION_MS = 20000;
+
+/** Vorgaben der Standzeiten, aus den Konstanten der einzelnen Stellen. */
+export const DEFAULT_DURATIONS: DisplayDurations = {
+  goalHome: HOME_GOAL_STAGES[0].ms / 1000,
+  goalAway: AWAY_GOAL_STAGES[0].ms / 1000,
+  scorer: SCORER_DISPLAY_MS / 1000,
+  info: INFO_OVERLAY_MS / 1000,
+  sub: SUB_DISPLAY_MS / 1000,
+  thanks: THANKS_DISPLAY_MS / 1000,
+  lineupPage: LINEUP_PAGE_MS / 1000,
+  lineupPlayer: 4,
+  slide: SLIDE_DURATION_MS / 1000,
+  slideBase: SLIDE_BASE_DURATION_MS / 1000,
+};
 
 /** Ankündigungen für die Halbzeitpause, eine je Zeile. */
 export const MAX_ANNOUNCEMENTS = 20;
@@ -1468,6 +1555,7 @@ export const IPC = {
   setCompetition: 'match:set-competition',
   setSponsorSlot: 'match:set-sponsor-slot',
   setSlideBlocks: 'slideshow:set-blocks',
+  setDurations: 'display:set-durations',
   setLineupStyle: 'lineup:set-style',
   setFormation: 'lineup:set-formation',
   goalSetScorer: 'goal:set-scorer',

@@ -126,7 +126,7 @@ function startCelebration(state: MatchState, goal: GoalEvent): void {
   document.body.classList.toggle('goal-home', istHeimtor);
   document.body.classList.toggle('goal-lead-change', showsLeadChangeFrame(goal));
 
-  const stufen = goalStagesFor(goal.team);
+  const stufen = goalStagesFor(goal.team, state.durations);
 
   // Die erste Stufe steht sofort: Über einen Timer mit 0 ms stünde für
   // einen Frame eine leere Fläche da.
