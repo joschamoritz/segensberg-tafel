@@ -114,18 +114,40 @@ function renderPitchPage(state: MatchState): void {
   const shirts = document.getElementById('pitch-shirts')!;
   shirts.textContent = '';
   for (const spot of formationSpots(state.formation)) {
-    const svg = document.createElementNS(SVG_NS, 'svg');
-    svg.setAttribute('class', 'pitch-shirt');
-    svg.setAttribute('viewBox', '0 0 100 100');
-    svg.setAttribute('aria-hidden', 'true');
-    // element.style statt style-Attribut -- die CSP setzt style-src 'self'.
-    svg.style.left = `${(spot.x * 100).toFixed(2)}%`;
-    svg.style.top = `${(spot.y * 100).toFixed(2)}%`;
-    const path = document.createElementNS(SVG_NS, 'path');
-    path.setAttribute('d', SHIRT_PATH);
-    svg.appendChild(path);
-    shirts.appendChild(svg);
+    // Das Heimtrikot mit Wappen und Trikotsponsor (Nutzerwunsch
+    // 21.10.2026, gebaut von scripts/trikot-vorne.py). Fehlt die Datei,
+    // steht der weiße Umriss da -- wie beim Rückentrikot der
+    // Einzel-Aufstellung.
+    const kit = document.createElement('img');
+    kit.className = 'pitch-shirt';
+    kit.alt = '';
+    kit.src = HOME_KIT_FRONT;
+    placeShirt(kit, spot);
+    kit.addEventListener('error', () => kit.replaceWith(blankShirt(spot)), { once: true });
+    shirts.appendChild(kit);
   }
+}
+
+/** Vorderseite des Heimtrikots, liegt neben index.html. */
+const HOME_KIT_FRONT = 'trikot-heim-vorne.png';
+
+function placeShirt(element: HTMLElement | SVGElement, spot: { x: number; y: number }): void {
+  // element.style statt style-Attribut -- die CSP setzt style-src 'self'.
+  element.style.left = `${(spot.x * 100).toFixed(2)}%`;
+  element.style.top = `${(spot.y * 100).toFixed(2)}%`;
+}
+
+/** Weißer Umriss als Rückfall, wenn das Trikotbild fehlt. */
+function blankShirt(spot: { x: number; y: number }): SVGSVGElement {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('class', 'pitch-shirt');
+  svg.setAttribute('viewBox', '0 0 100 100');
+  svg.setAttribute('aria-hidden', 'true');
+  placeShirt(svg, spot);
+  const path = document.createElementNS(SVG_NS, 'path');
+  path.setAttribute('d', SHIRT_PATH);
+  svg.appendChild(path);
+  return svg;
 }
 
 /** Erzeugt alle Aufstellungsseiten neu. */

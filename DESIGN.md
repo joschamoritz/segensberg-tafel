@@ -288,12 +288,16 @@ damit sie beim Hochzählen nicht springen.
   Kopfzeile wie die Aufstellungsseiten („SV HOCHLAR 28 · 4-2-3-1“,
   Wappen, Aufstellungssponsor), darunter das Feld über die volle Breite
   (361×150 px bei 384×192). Feld in `--svh-dk`, Linien 0,8cqh in
-  `--svh-lt`, Trikots weiß (11cqh = 21 px) – Vereinsfarben statt
-  Rasengrün, und die Trikots heben sich von den zurückhaltenden Linien
-  ab. Eigenes Tor links. Plätze aus `formationSpots()`
+  `--svh-lt`, Vereinsfarben statt Rasengrün. Die Spieler stehen im
+  **Heimtrikot von vorn** mit Wappen und Trikotsponsor
+  (`trikot-heim-vorne.png`, 13cqh = 25 px hoch; Nutzerwunsch
+  21.10.2026), als Rückfall ein weißer Umriss. Kontrast Trikotblau zu
+  Feld rund 2,7:1 – Wappen und Sponsor sind als weiße Flächen zu
+  erkennen, Einzelheiten bei 25 px nicht. Eigenes Tor links. Plätze aus `formationSpots()`
   (`shared/formations.ts`): Torwart bei 6 %, Reihen gleichmäßig von
   22 % bis 84 % der Länge, je Reihe gleichmäßig über die Breite.
-  Gemessen: mindestens 29,6 px zwischen übereinanderstehenden Trikots.
+  Gemessen: mindestens 29,6 px zwischen den Mitten übereinanderstehender
+  Trikots, also Luft bei 25 px Höhe.
   Die Zierstreifen sind dort ausgeblendet – sie lägen auf Wappen und
   Feldecke. **Retro:** Feldlinien als einzelne Punkte, Spieler als
   3×3-Blöcke, Titel in der kleinen Punktschrift.

@@ -1118,10 +1118,14 @@ body.showing-thanks .board-match {
 }
 
 /* Lage und Größe setzt lineup.ts (Mittelpunkt auf dem Platz). */
+/* 13cqh (25 px): Zwischen übereinanderstehenden Trikots liegen mindestens
+   29,6 px von Mitte zu Mitte, es bleibt also Luft. Das Heimtrikot ist
+   hochkant (413×512) und wird eingepasst. */
 .pitch-shirt {
   position: absolute;
-  width: 11cqh;
-  height: 11cqh;
+  width: 13cqh;
+  height: 13cqh;
+  object-fit: contain;
   transform: translate(-50%, -50%);
 }
 

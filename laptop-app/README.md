@@ -96,9 +96,17 @@ Herstellersoftware. Siehe `../CLAUDE.md` und `../DESIGN.md` für Hintergrund.
 - **Aufstellung auf dem Spielfeld** (dritte Wahl „Spielfeld (Formation)"
   im selben Wahlschalter, daneben die Formation: 4-4-2, 4-4-2 Raute,
   4-3-3, 4-2-3-1, 4-1-4-1, 4-5-1, 3-5-2, 3-4-3, 5-3-2, 5-4-1). Zeigt
-  nur die Grundordnung des Heimteams mit leeren weißen Trikots auf einem
-  Feld in Vereinsfarben, ohne Namen und Nummern – deshalb auch ohne
-  erfassten Kader. Der Gast-Knopf zeigt bei dieser Wahl die Übersicht.
+  nur die Grundordnung des Heimteams im Heimtrikot (Vorderseite mit
+  Vereinswappen und Trikotsponsor Ott) auf einem Feld in Vereinsfarben,
+  ohne Namen und Nummern – deshalb auch ohne erfassten Kader. Das
+  Trikotbild `src/renderer/display/trikot-heim-vorne.png` baut
+  `scripts/trikot-vorne.py` aus `Vereinsdaten/Trikot-vorne.jpg`
+  (Produktfoto auf weißem Grund), `SV Hochlar 28_Weiß.png` und
+  `Werbung/Partner/Ott_weiß.png`: Hintergrund vom Rand her
+  durchsichtig, Wappen auf die linke Brust, Sponsor mittig. Bei neuem
+  Trikot, Wappen oder Sponsor die Dateien tauschen und
+  `uv run --native-tls --with pillow python scripts/trikot-vorne.py`
+  ausführen. Fehlt das Bild, stehen weiße Umrisse da. Der Gast-Knopf zeigt bei dieser Wahl die Übersicht.
   Wahl und Formation werden gemerkt (`content.json`). Im Retro-Design
   Feldlinien und Spieler als Punkte.
 - **Retro-Design** als drittes: Punktmatrix wie alte Stadiontafeln,
