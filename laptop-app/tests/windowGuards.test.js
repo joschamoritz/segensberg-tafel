@@ -71,6 +71,20 @@ test('Retro: kein Element setzt sich mit visibility: visible über das Ausblende
   assert.deepEqual(sichtbar, ["body[data-theme='retro'][data-retro-overlay='slide'] .board-slides"]);
 });
 
+test('Portraits haben eine feste Höhe, nicht nur ein Höchstmaß', () => {
+  // `max-height` vergrößert nie. Portraits liegen mit höchstens 320 px
+  // vor; bei einer großen Tafelauflösung stand das Foto deshalb klein
+  // neben dem Trikot mit fester Höhe (Befund 21.10.2026).
+  const css = fs
+    .readFileSync(path.join(__dirname, '..', 'dist', 'renderer', 'display', 'display.css'), 'utf-8')
+    .replace(/\/\*[\s\S]*?\*\//g, '');
+  for (const klasse of ['card-photo', 'spotlight-photo']) {
+    const regel = [...css.matchAll(/([^{}]+)\{([^}]*)\}/g)].find((m) => m[1].trim() === `.${klasse}`);
+    assert.ok(regel, `.${klasse} fehlt`);
+    assert.match(regel[2], /(^|[;\s])height:\s*76cqh/, `.${klasse} ohne feste Höhe`);
+  }
+});
+
 test('Sponsorenlogos stehen ohne weiße Kachel (Nutzerentscheidung 20./21.10.2026)', () => {
   const css = fs
     .readFileSync(path.join(__dirname, '..', 'dist', 'renderer', 'display', 'display.css'), 'utf-8')

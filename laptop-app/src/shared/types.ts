@@ -823,8 +823,18 @@ export interface SlideshowRequest {
   phase: MatchPhase;
 }
 
-/** Standzeit einer Folie. */
-export const SLIDE_DURATION_MS = 8000;
+/**
+ * Standzeit einer Folie. 12 statt 8 s (Nutzerbefund 21.10.2026): Auf der
+ * Leinwand wirkte der Wechsel zu schnell, gerade bei Fotos.
+ */
+export const SLIDE_DURATION_MS = 12000;
+
+/**
+ * Standzeit der normalen Ansicht zwischen zwei Runden. Länger als eine
+ * Folie (Nutzerwunsch 21.10.2026): Der Zwischenstand soll zwischen den
+ * Runden eine Weile stehen, nicht nur kurz aufblitzen.
+ */
+export const SLIDE_BASE_DURATION_MS = 20000;
 
 /** Ankündigungen für die Halbzeitpause, eine je Zeile. */
 export const MAX_ANNOUNCEMENTS = 20;

@@ -23,7 +23,7 @@ const {
   buildSlidePlan,
   historyCaption,
   HISTORY_FALLBACK_TITLE,
-  SLIDE_DURATION_MS,
+  SLIDE_DURATION_MS, SLIDE_BASE_DURATION_MS,
   SPONSORS_TITLE,
 } = load('shared/types');
 
@@ -147,7 +147,7 @@ function zeitRaffen(r) {
   };
   r.window.clearTimeout = (id) => geplant.delete(id);
   return () => {
-    const [id, eintrag] = [...geplant].find(([, e]) => e.ms === SLIDE_DURATION_MS);
+    const [id, eintrag] = [...geplant].find(([, e]) => e.ms === SLIDE_DURATION_MS || e.ms === SLIDE_BASE_DURATION_MS);
     geplant.delete(id);
     eintrag.rueckruf();
   };

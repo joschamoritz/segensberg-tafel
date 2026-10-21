@@ -303,7 +303,8 @@ Electron-Main-Prozess (normaler Node-Kontext) und brauchen das nicht.
   **Highlights** (Vollbild), **Vereinsgeschichte** (historisches Foto mit
   Datum und Begegnung darunter) und **Termine**. Die normale Ansicht (Begegnung bzw.
   Zwischenstand) ist selbst eine Station der Rotation, der Spielstand
-  ist also nie länger als eine Folie weg. Standzeit 8 Sekunden. **Welche Blöcke
+  ist also nie länger als eine Folie weg. Standzeit 12 Sekunden je Folie,
+  die normale Ansicht zwischen zwei Runden 20 Sekunden. **Welche Blöcke
   laufen, wird neben „Starten" abgehakt** (Partner, Highlights,
   Vereinsgeschichte, Termine); die Auswahl gilt in jeder Phase und liegt
   in `content.json`. Ein geänderter Haken gilt ab dem nächsten Start.

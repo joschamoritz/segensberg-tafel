@@ -10,18 +10,39 @@ dem Baudatum. Welche Stelle wann steigt, steht in
 
 ---
 
+## 1.10.1 – 21.10.2026 (Testfassung)
+
+**Neu**
+
+- **Spielfeld-Aufstellung im Heimtrikot:** Statt leerer weißer Trikots
+  stehen die Spieler im blauen Heimtrikot mit Vereinswappen und Ott auf
+  der Brust, auf einem grünen Rasen mit Mähstreifen und weißen Linien.
+- **Vier weitere Formationen:** 4-1-3-2, 4-3-2-1 Tannenbaum, 3-4-1-2 und
+  3-2-4-1 – zusammen jetzt 14.
+
+**Geändert**
+
+- **Diashow ruhiger:** Jede Folie steht 12 statt 8 Sekunden. Zwischen
+  zwei Runden bleibt die normale Ansicht (Begegnung bzw. Zwischenstand)
+  20 Sekunden stehen, bevor die nächste Runde beginnt.
+
+**Behoben**
+
+- **Portrait und Trikot gleich groß:** In der Einzel-Aufstellung und bei
+  „Torschütze einblenden" stand das Foto deutlich kleiner als das
+  Trikot, wenn die Tafelauflösung größer als 384×192 eingestellt war
+  (zum Beispiel 1920×1080). Das Foto füllt jetzt dieselbe Fläche.
+
 ## 1.10.0 – 21.10.2026 (Testfassung)
 
 **Neu**
 
 - **Aufstellung auf dem Spielfeld:** Im Wahlschalter neben „Aufstellung
   einblenden" gibt es „Spielfeld (Formation)", daneben die Auswahl der
-  Formation (4-4-2, 4-4-2 Raute, 4-3-3, 4-2-3-1, 4-1-4-1, 4-5-1,
-  4-1-3-2, 4-3-2-1 Tannenbaum, 3-5-2, 3-4-3, 3-4-1-2, 3-2-4-1, 5-3-2,
-  5-4-1). Der Heim-Knopf zeigt dann die Grundordnung im
-  Heimtrikot mit Vereinswappen und Ott auf der Brust, ohne Namen und
-  Nummern, der Gast-Knopf weiter die Übersicht. Im Retro-Design als
-  Punkte.
+  Formation (4-4-2, 4-4-2 Raute, 4-3-3, 4-2-3-1, 4-1-4-1, 4-5-1, 3-5-2,
+  3-4-3, 5-3-2, 5-4-1). Der Heim-Knopf zeigt dann die Grundordnung mit
+  leeren Trikots auf einem Spielfeld, der Gast-Knopf weiter die
+  Übersicht. Im Retro-Design als Punkte.
 
 **Geändert**
 

@@ -1168,8 +1168,14 @@ body.showing-thanks .board-match {
   height: 76cqh;
 }
 
+/* Feste Höhe statt nur `max-height`: Ein Höchstmaß verkleinert, vergrößert
+   aber nie. Portraits liegen mit höchstens 320 px vor -- bei einer
+   Tafelauflösung von 1920×1080 stand das Foto daher klein neben dem
+   Trikot, das eine feste Höhe hat (Befund 21.10.2026). `object-fit`
+   passt das Bild in die Fläche, wenn `max-width` greift. */
 .card-photo {
-  max-height: 76cqh;
+  height: 76cqh;
+  width: auto;
   max-width: 30cqw;
   object-fit: contain;
   border-radius: 1cqh;
@@ -1326,9 +1332,11 @@ body.showing-scorer .board-match {
   display: none;
 }
 
+/* Feste Höhe aus demselben Grund wie bei `.card-photo`. */
 .spotlight-photo {
   flex: 0 0 auto;
-  max-height: 76cqh;
+  height: 76cqh;
+  width: auto;
   max-width: 30cqw;
   object-fit: contain;
   border-radius: 1cqh;

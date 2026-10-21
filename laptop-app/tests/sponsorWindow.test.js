@@ -19,7 +19,7 @@ const { openRenderer } = require('./dom');
 
 stubElectron();
 const { MatchStateStore } = load('main/state');
-const { slideCount, SPONSORS_PER_PAGE, SLIDE_DURATION_MS } = load('shared/types');
+const { slideCount, SPONSORS_PER_PAGE, SLIDE_DURATION_MS, SLIDE_BASE_DURATION_MS } = load('shared/types');
 
 function medien(werbung, highlights = [], weitere = {}) {
   const extra = Object.fromEntries(
@@ -53,7 +53,7 @@ function zeitRaffen(r) {
   return {
     /** Führt den nächsten Folienwechsel aus. */
     weiter() {
-      const [id, eintrag] = [...geplant].find(([, e]) => e.ms === SLIDE_DURATION_MS);
+      const [id, eintrag] = [...geplant].find(([, e]) => e.ms === SLIDE_DURATION_MS || e.ms === SLIDE_BASE_DURATION_MS);
       geplant.delete(id);
       eintrag.rueckruf();
     },
@@ -149,6 +149,35 @@ test('display: bei nur einer Seite gibt es keine Seitenmarken', (t) => {
   const { r } = schauMit(t, logos(3));
   assert.deepEqual(seitenmarken(r), []);
   assert.deepEqual(sichtbareLogos(r).filter(Boolean).length, 3);
+  assert.deepEqual(r.drainErrors(), []);
+});
+
+test('display: die normale Ansicht steht zwischen zwei Runden länger als eine Folie', (t) => {
+  // Nutzerwunsch 21.10.2026: Folien 12 s, der Zwischenstand vor der
+  // nächsten Runde 20 s.
+  const store = new MatchStateStore();
+  store.kickoff();
+  store.stopClock();
+  store.goToHalfTime();
+
+  const r = openRenderer('display', t);
+  const geplant = [];
+  r.window.setTimeout = (rueckruf, ms) => {
+    geplant.push({ rueckruf, ms });
+    return geplant.length;
+  };
+  r.window.clearTimeout = () => {};
+  store.setMedia(medien(logos(2)));
+  r.emit('onStateUpdated', store.getState());
+  store.startSlideshow();
+  r.emit('onStateUpdated', store.getState());
+
+  const folie = geplant.filter((e) => e.ms === SLIDE_DURATION_MS);
+  assert.equal(folie.length, 1, 'die erste Folie steht SLIDE_DURATION_MS');
+  folie[0].rueckruf();
+  assert.equal(r.document.body.classList.contains('showing-slide'), false, 'danach die normale Ansicht');
+  assert.equal(geplant.at(-1).ms, SLIDE_BASE_DURATION_MS);
+  assert.ok(SLIDE_BASE_DURATION_MS > SLIDE_DURATION_MS);
   assert.deepEqual(r.drainErrors(), []);
 });
 

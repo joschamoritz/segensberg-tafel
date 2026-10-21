@@ -4,6 +4,7 @@ import {
   HISTORY_FALLBACK_TITLE,
   HistoryCaption,
   MatchState,
+  SLIDE_BASE_DURATION_MS,
   SLIDE_DURATION_MS,
   SPONSORS_PER_PAGE,
 } from '../../shared/types';
@@ -129,10 +130,15 @@ function stopSlideshow(): void {
   document.body.classList.remove('showing-slide');
 }
 
+/** Die normale Ansicht steht länger als eine Folie, siehe `SLIDE_BASE_DURATION_MS`. */
+function slideDuration(slide: Slide): number {
+  return slide.kind === 'base' ? SLIDE_BASE_DURATION_MS : SLIDE_DURATION_MS;
+}
+
 function advanceSlide(): void {
   slideIndex = (slideIndex + 1) % slideDeck.length;
   showSlide(slideDeck[slideIndex]);
-  slideTimer = setTimeout(advanceSlide, SLIDE_DURATION_MS);
+  slideTimer = setTimeout(advanceSlide, slideDuration(slideDeck[slideIndex]));
 }
 
 /**
@@ -173,5 +179,5 @@ export function handleSlideshowRequest(state: MatchState): void {
   // als hätte der Knopf nichts bewirkt.
   slideIndex = 1;
   showSlide(slideDeck[slideIndex]);
-  slideTimer = setTimeout(advanceSlide, SLIDE_DURATION_MS);
+  slideTimer = setTimeout(advanceSlide, slideDuration(slideDeck[slideIndex]));
 }
