@@ -71,18 +71,36 @@ test('Retro: kein Element setzt sich mit visibility: visible über das Ausblende
   assert.deepEqual(sichtbar, ["body[data-theme='retro'][data-retro-overlay='slide'] .board-slides"]);
 });
 
-test('Portraits haben eine feste Höhe, nicht nur ein Höchstmaß', () => {
-  // `max-height` vergrößert nie. Portraits liegen mit höchstens 320 px
-  // vor; bei einer großen Tafelauflösung stand das Foto deshalb klein
-  // neben dem Trikot mit fester Höhe (Befund 21.10.2026).
-  const css = fs
-    .readFileSync(path.join(__dirname, '..', 'dist', 'renderer', 'display', 'display.css'), 'utf-8')
-    .replace(/\/\*[\s\S]*?\*\//g, '');
-  for (const klasse of ['card-photo', 'spotlight-photo']) {
-    const regel = [...css.matchAll(/([^{}]+)\{([^}]*)\}/g)].find((m) => m[1].trim() === `.${klasse}`);
-    assert.ok(regel, `.${klasse} fehlt`);
-    assert.match(regel[2], /(^|[;\s])height:\s*76cqh/, `.${klasse} ohne feste Höhe`);
+test('Bilder der Anzeige haben eine feste Größe, nicht nur ein Höchstmaß', () => {
+  // `max-height`/`max-width` verkleinern, vergrößern aber nie. Logos
+  // liegen mit höchstens 256 px vor, Portraits mit 320 px -- bei einer
+  // Tafelauflösung über 384×192 blieben sie auf Dateigröße stehen, und
+  // die Vorschau zeigte ein anderes Bild als die Tafel (Befund
+  // 21.10.2026: Foto klein neben dem Trikot, Wappen und Diashow zu klein).
+  const dir = path.join(__dirname, '..', 'dist', 'renderer', 'display');
+  const css = fs.readFileSync(path.join(dir, 'display.css'), 'utf-8').replace(/\/\*[\s\S]*?\*\//g, '');
+  const html = fs.readFileSync(path.join(dir, 'index.html'), 'utf-8');
+  const klassen = new Set(
+    [...html.matchAll(/<img\b[^>]*\bclass="([^"]+)"/g)].flatMap((m) => m[1].split(/\s+/))
+  );
+  klassen.add('pitch-shirt'); // entsteht in lineup.ts
+  assert.ok(klassen.has('crest-img') && klassen.has('slide-image'), 'Bildklassen nicht gefunden');
+
+  const regeln = [...css.matchAll(/([^{}]+)\{([^}]*)\}/g)];
+  for (const klasse of klassen) {
+    // Auch Selektorlisten wie `.card-jersey-home, .card-jersey-blank`.
+    const eigene = regeln.filter((m) => m[1].split(',').map((s) => s.trim()).includes(`.${klasse}`));
+    assert.ok(eigene.length > 0, `.${klasse} hat keine eigene Regel`);
+    assert.ok(
+      eigene.some((m) => /(^|[;\s])(height|width):/.test(m[2])),
+      `.${klasse} hat nur ein Höchstmaß`
+    );
   }
+  // Und nirgends ein Höchstmaß der Höhe ohne feste Höhe daneben.
+  const nurMax = regeln
+    .filter((m) => /max-height/.test(m[2]) && !/(^|[;\s])height:/.test(m[2]))
+    .map((m) => m[1].trim());
+  assert.deepEqual(nurMax, []);
 });
 
 test('Sponsorenlogos stehen ohne weiße Kachel (Nutzerentscheidung 20./21.10.2026)', () => {

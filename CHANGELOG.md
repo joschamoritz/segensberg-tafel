@@ -10,6 +10,16 @@ dem Baudatum. Welche Stelle wann steigt, steht in
 
 ---
 
+## 1.10.2 – 21.10.2026 (Testfassung)
+
+**Behoben**
+
+- **Vorschau zeigt alle Bilder in richtiger Größe:** Wappen,
+  Wettbewerbslogo, Logos in der Aufstellung, das Wappen beim Torjubel
+  und die Fotos der Diashow standen zu klein, wenn die Tafelauflösung
+  größer als 384×192 eingestellt war. Auf der Tafel selbst ändert sich
+  nichts.
+
 ## 1.10.1 – 21.10.2026 (Testfassung)
 
 **Neu**
