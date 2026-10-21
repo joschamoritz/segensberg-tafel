@@ -95,7 +95,8 @@ Herstellersoftware. Siehe `../CLAUDE.md` und `../DESIGN.md` für Hintergrund.
   dieselben Schritte; die Nummer setzt die App selbst darauf. „Übersicht" ist der bisherige Ablauf.
 - **Aufstellung auf dem Spielfeld** (dritte Wahl „Spielfeld (Formation)"
   im selben Wahlschalter, daneben die Formation: 4-4-2, 4-4-2 Raute,
-  4-3-3, 4-2-3-1, 4-1-4-1, 4-5-1, 3-5-2, 3-4-3, 5-3-2, 5-4-1). Zeigt
+  4-3-3, 4-2-3-1, 4-1-4-1, 4-5-1, 4-1-3-2, 4-3-2-1 Tannenbaum,
+  3-5-2, 3-4-3, 3-4-1-2, 3-2-4-1, 5-3-2, 5-4-1). Zeigt
   nur die Grundordnung des Heimteams im Heimtrikot (Vorderseite mit
   Vereinswappen und Trikotsponsor Ott) auf einem Rasenfeld,
   ohne Namen und Nummern – deshalb auch ohne erfassten Kader. Das

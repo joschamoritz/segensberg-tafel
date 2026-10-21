@@ -16,8 +16,9 @@ dem Baudatum. Welche Stelle wann steigt, steht in
 
 - **Aufstellung auf dem Spielfeld:** Im Wahlschalter neben „Aufstellung
   einblenden" gibt es „Spielfeld (Formation)", daneben die Auswahl der
-  Formation (4-4-2, 4-4-2 Raute, 4-3-3, 4-2-3-1, 4-1-4-1, 4-5-1, 3-5-2,
-  3-4-3, 5-3-2, 5-4-1). Der Heim-Knopf zeigt dann die Grundordnung im
+  Formation (4-4-2, 4-4-2 Raute, 4-3-3, 4-2-3-1, 4-1-4-1, 4-5-1,
+  4-1-3-2, 4-3-2-1 Tannenbaum, 3-5-2, 3-4-3, 3-4-1-2, 3-2-4-1, 5-3-2,
+  5-4-1). Der Heim-Knopf zeigt dann die Grundordnung im
   Heimtrikot mit Vereinswappen und Ott auf der Brust, ohne Namen und
   Nummern, der Gast-Knopf weiter die Übersicht. Im Retro-Design als
   Punkte.
