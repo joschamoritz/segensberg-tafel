@@ -592,8 +592,12 @@ lesen, ohne zu schreiben:
 
 ```bash
 npx asar list release/win-unpacked/resources/app.asar
-node -e "const a=require('fs').readFileSync('release/win-unpacked/resources/app.asar');console.log(a.includes('productName'))"
+node -e "const b=require('fs').readFileSync('release/win-unpacked/resources/app.asar');const h=JSON.parse(b.slice(16,16+b.readUInt32LE(12)));const f=h.files['package.json'];const o=8+b.readUInt32LE(4)+Number(f.offset);console.log('productName:',JSON.parse(b.slice(o,o+f.size)).productName)"
 ```
+
+Erwartet ist `productName: undefined`. Nur das gepackte `package.json`
+zählt: Die ganze Datei nach dem Wort zu durchsuchen schlägt seit der
+Tafel-Verbindung immer an, weil dort `device.productName` im Code steht.
 
 Danach kurz `git status` – ein geändertes `package.json` nach dem Bauen
 ist immer ein Fehler.
