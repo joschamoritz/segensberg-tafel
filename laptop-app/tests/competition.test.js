@@ -56,6 +56,18 @@ test('der Name kommt aus dem Dateinamen', () => {
   assert.equal(competitionLabel('Kreispokal 2026.webp'), 'Kreispokal 2026', 'Zahlen im Namen bleiben');
 });
 
+test('Ablagewörter fallen weg: „bezirksliga_logo“ heißt auf der Tafel „Bezirksliga“', () => {
+  // Befund des Nutzers 21.10.2026: Retro zeigte „BEZIRKSLIGA LOGO“.
+  // Die Namen stammen aus dem echten Ordner Vereinsdaten/Wettbewerbe.
+  assert.equal(competitionLabel('bezirksliga_logo.png'), 'Bezirksliga');
+  assert.equal(competitionLabel('kreisligaA_logo.png'), 'Kreisliga A');
+  assert.equal(competitionLabel('kreisliga_logo_alt.png'), 'Kreisliga');
+  assert.equal(competitionLabel('landesliga_logo.png'), 'Landesliga');
+  assert.equal(competitionLabel('Krombacher_Pokal.jpg'), 'Krombacher Pokal');
+  assert.equal(competitionLabel('Logopädie Müller.png'), 'Logopädie Müller', 'nur ganze Wörter');
+  assert.equal(competitionLabel('logo.png'), 'logo', 'nie leer');
+});
+
 test('die Prüfschicht lässt nur reine Dateinamen durch', () => {
   assert.equal(sanitizeCompetition('Kreisliga.png'), 'Kreisliga.png');
   assert.equal(sanitizeCompetition('  Kreisliga.png '), 'Kreisliga.png');

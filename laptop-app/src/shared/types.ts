@@ -587,13 +587,27 @@ export const MEDIA_FOLDER_IDS: MediaFolderId[] = [
  * "02_Krombacher_Westfalenpokal.png" -> "Krombacher Westfalenpokal".
  * Ohne eigenes Namensfeld -- der Ordner ist die Verwaltung, wie bei der
  * Diashow. Dient als Eintrag der Auswahl und als Text im Retro-Design.
+ *
+ * Dateinamen sind selten für die Tafel geschrieben: "bezirksliga_logo.png"
+ * stand im Retro-Design als "BEZIRKSLIGA LOGO" (Befund des Nutzers,
+ * 21.10.2026). Deshalb fallen die Ablagewörter "logo", "alt" und "neu"
+ * weg, ein angehängter Großbuchstabe wird abgesetzt ("kreisligaA" ->
+ * "Kreisliga A"), und jedes Wort beginnt groß.
  */
+const FILE_NAME_NOISE = /\b(logo|alt|neu)\b/gi;
+
 export function competitionLabel(fileName: string): string {
-  return fileName
+  const label = fileName
     .replace(/\.[^.]+$/, '')
     .replace(/^\d+[_\s-]+/, '')
     .replace(/[_]+/g, ' ')
-    .trim();
+    .replace(/([a-zäöüß])([A-Z])(?=\s|$)/g, '$1 $2')
+    .replace(FILE_NAME_NOISE, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/(^|\s)([a-zäöü])/g, (_m, space: string, letter: string) => space + letter.toUpperCase());
+  // Bestand der Name nur aus Ablagewörtern, lieber den Dateinamen als nichts.
+  return label === '' ? fileName.replace(/\.[^.]+$/, '') : label;
 }
 
 /**
