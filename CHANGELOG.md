@@ -10,6 +10,30 @@ dem Baudatum. Welche Stelle wann steigt, steht in
 
 ---
 
+## 1.11.0 – 21.10.2026 (Testfassung)
+
+**Neu**
+
+- **Shortcuts für Aufstellung und Diashow:** Neben dem Vereinsnamen jeder
+  Mannschaft steht vor dem Anpfiff „Aufstellung ▶", in der Zeile mit den
+  Spielphasen „▶ Diashow" (vor dem Anpfiff, in der Halbzeit und nach dem
+  Abpfiff). Ein zweiter Druck beendet. Im laufenden Spiel sind beide
+  ausgeblendet. Art der Aufstellung und Haken der Diashow stellt man
+  weiter unter „Mehr für den Spieltag" ein.
+- **Standzeiten einstellbar** (Einrichtung → Anzeige): wie lange
+  Torjubel, Gegentor, Torschütze, Karte/Ecken, Wechsel,
+  Zuschauer-Danksagung, Aufstellung, Diashow-Folie und der Spielstand
+  zwischen zwei Diashow-Runden stehen bleiben, in Sekunden. „Vorgaben"
+  setzt alles auf die bisherigen Zeiten zurück. Die Werte bleiben bei
+  „Neues Spiel" erhalten.
+
+**Behoben**
+
+- **Wettbewerbsname ohne „Logo":** Im Retro-Design stand zum Beispiel
+  „BEZIRKSLIGA LOGO", weil der Name aus dem Dateinamen kam. Jetzt
+  „Bezirksliga", „Kreisliga A" usw. – auch in der Auswahl im
+  Steuerungsfenster.
+
 ## 1.10.2 – 21.10.2026 (Testfassung)
 
 **Behoben**
