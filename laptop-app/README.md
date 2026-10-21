@@ -97,7 +97,7 @@ Herstellersoftware. Siehe `../CLAUDE.md` und `../DESIGN.md` für Hintergrund.
   im selben Wahlschalter, daneben die Formation: 4-4-2, 4-4-2 Raute,
   4-3-3, 4-2-3-1, 4-1-4-1, 4-5-1, 3-5-2, 3-4-3, 5-3-2, 5-4-1). Zeigt
   nur die Grundordnung des Heimteams im Heimtrikot (Vorderseite mit
-  Vereinswappen und Trikotsponsor Ott) auf einem Feld in Vereinsfarben,
+  Vereinswappen und Trikotsponsor Ott) auf einem Rasenfeld,
   ohne Namen und Nummern – deshalb auch ohne erfassten Kader. Das
   Trikotbild `src/renderer/display/trikot-heim-vorne.png` baut
   `scripts/trikot-vorne.py` aus `Vereinsdaten/Trikot-vorne.jpg`

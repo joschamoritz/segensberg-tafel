@@ -26,6 +26,10 @@
   /* Fläche neben der Bühne. Schwarz und nicht Vereinsblau: Was dort steht,
      gehört nicht zum Motiv, sondern ist ein Balken. */
   --stage-void: #000000;
+  /* Spielfeld der Aufstellung: Rasen mit Mähstreifen in zwei flachen
+     Grüntönen, Linien weiß */
+  --pitch-grass: #1f7a34;
+  --pitch-grass-alt: #23893a;
 
   /* Breite einer Ziffernzelle, relativ zur jeweiligen Schriftgröße.
      Oswald hat KEINE dicktengleichen Ziffern -- ohne feste Zellen ändert
@@ -1049,11 +1053,11 @@ body.showing-thanks .board-match {
 }
 
 /* --- Aufstellung auf dem Spielfeld ------------------------------------- */
-/* Nur die Grundordnung des Heimteams mit leeren Trikots (Nutzerwunsch
-   21.10.2026). Feld in Vereinsfarben statt Rasengrün: dunkles Indigo,
-   Linien im hellen Indigo, Trikots weiß -- so heben sich die Trikots
-   ab, und die Linien treten zurück. Linien 0,8cqh stark: dünner
-   verschwänden sie auf der Matrix. Die Mannschaft spielt von links nach
+/* Nur die Grundordnung des Heimteams im Heimtrikot (Nutzerwunsch
+   21.10.2026). Rasengrün statt Indigo, ebenfalls Nutzerwunsch: Das
+   blaue Trikot auf blauem Feld hob sich nicht ab. Mähstreifen mit harten
+   Kanten statt eines Verlaufs (LED-Guardrail), Linien weiß. Linien
+   0,8cqh stark: dünner verschwänden sie auf der Matrix. Die Mannschaft spielt von links nach
    rechts, das eigene Tor liegt links. */
 
 .pitch-page {
@@ -1067,14 +1071,18 @@ body.showing-thanks .board-match {
   position: relative;
   width: 100%;
   min-height: 0;
-  background: var(--svh-dk);
-  border: 0.8cqh solid var(--svh-lt);
+  background: repeating-linear-gradient(
+    90deg,
+    var(--pitch-grass) 0 10%,
+    var(--pitch-grass-alt) 10% 20%
+  );
+  border: 0.8cqh solid var(--svh-wh);
 }
 
 .pitch > i {
   position: absolute;
   display: block;
-  border: 0.8cqh solid var(--svh-lt);
+  border: 0.8cqh solid var(--svh-wh);
 }
 
 .pitch > .pitch-mid {
