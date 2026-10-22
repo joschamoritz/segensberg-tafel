@@ -49,5 +49,5 @@ eingeschränkten Shell-Umgebung läuft.
 
 ## Nächster Schritt
 
-Sobald der TB50-Controller verfügbar ist (laut Planung Ende 2026/Anfang
-2027), folgt das Testprotokoll in `../Testprotokoll-TB50-novasoft.md`.
+Sobald der eigene Controller verfügbar ist, wird der Installationsweg am
+Gerät geprüft.

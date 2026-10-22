@@ -16,9 +16,9 @@ controller-app/local.properties
 # ACHTUNG: Damit ist dieser Ordner NICHT durch git gesichert.
 Vereinsdaten/
 
-# Herstellersoftware und Handbücher (~708 MB): Installer von NovaLCT,
-# ViPlex, PDF-Handbücher, goracon-Werbemittel. Fremdes
-# Material, unverändert, jederzeit wiederbeschaffbar.
+# Herstellersoftware und Handbücher (~708 MB): Installer, PDF-Handbücher,
+# Werbemittel des Herstellers. Fremdes Material, unverändert, jederzeit
+# wiederbeschaffbar.
 Software LED-Anzeigetafel/
 
 # Interne Arbeitsnotizen (Nutzerentscheidung 22.10.2026): bleiben lokal,
@@ -28,6 +28,9 @@ Software LED-Anzeigetafel/
 CLAUDE.md
 Backlog.md
 Review-2026-10.md
+Testprotokoll-TB50-novasoft.md
+Display-Design-Ideen.md
+Design-Auftrag-Themes.md
 
 # Reste beim Prüfen gebauter Fassungen
 laptop-app/win-unpacked/

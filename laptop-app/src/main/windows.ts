@@ -11,10 +11,10 @@ import {
 } from './windowState';
 
 /**
- * "Präsentationsmodus"-Ansatz statt Fenstern auf Pixelkoordinaten: Wir fragen das
+ * "Präsentationsmodus"-Ansatz statt Fenster auf Pixelkoordinaten: Wir fragen das
  * Betriebssystem nach den tatsächlich angeschlossenen Bildschirmen und
  * öffnen dort ein echtes Vollbild-Fenster, statt ein Fenster manuell auf
- * Pixelkoordinaten zu positionieren. Siehe CLAUDE.md.
+ * Pixelkoordinaten zu positionieren.
  */
 export function listDisplays(): DisplayInfo[] {
   const primaryId = screen.getPrimaryDisplay().id;

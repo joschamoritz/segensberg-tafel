@@ -461,8 +461,9 @@ Scrollen im Bild. Die Seite war 1650 Pixel hoch, sichtbar waren 660.
 
 ## 1.0.0 – 19.08.2026
 
-Erste ausgelieferte Fassung. Die Laptop-Version ersetzt die Herstellersoftware im
-Spielbetrieb vollständig; sie war an einem Spieltag im echten Einsatz.
+Erste ausgelieferte Fassung. Die Laptop-Version ersetzt die
+mitgelieferte Herstellersoftware im Spielbetrieb vollständig; sie war an
+einem Spieltag im echten Einsatz.
 
 **Anzeige und Bedienung**
 

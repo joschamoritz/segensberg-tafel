@@ -7,8 +7,8 @@ und Einstellungen, siehe „Datenablage“) und die App-Kennung
 `de.hochlar28.anzeigetafel`. Beides nicht ändern: Ein neuer Paketname
 startete mit leeren Daten.
 
-Electron/TypeScript-App für den Trainings- und Spielbetrieb – Ersatz für die
-Herstellersoftware. Siehe `../CLAUDE.md` und `../DESIGN.md` für Hintergrund.
+Electron/TypeScript-App für den Trainings- und Spielbetrieb. Gestaltung
+siehe `../DESIGN.md`.
 
 ## Funktionsumfang (aktueller Stand)
 
@@ -46,10 +46,10 @@ Herstellersoftware. Siehe `../CLAUDE.md` und `../DESIGN.md` für Hintergrund.
   Zeilen in der Torschützenliste. Gestaltungsfragen lassen sich damit am
   Laptop beurteilen, nicht erst an der Wand. Hintergrund und Regeln
   stehen in `../DESIGN.md` unter „Die Bühne".
-- **Verbindung zur Tafel im WLAN** (TB50, noch nicht am Gerät
-  erprobt): Hängt der Laptop im WLAN `Taurus-…` der Tafel, findet die App
+- **Verbindung zur Tafel im WLAN** (NovaStar Taurus, am Gerät geprüft):
+  Hängt der Laptop im WLAN `Taurus-…` der Tafel, findet die App
   den Controller von selbst und meldet sich mit den Zugangsdaten aus der
-  goracon-Anleitung an (Admin / 1234, unter **Anzeige → Zugang zur Tafel**
+  Herstelleranleitung an (unter **Anzeige → Zugang zur Tafel**
   änderbar). Die Kopfzeile zeigt dann „Tafel verbunden · 70 %" – oder
   einen Hinweis in Gold, wenn die Tafel ihr eigenes ViPlex-Programm statt
   des Laptop-Bilds zeigt oder am HDMI-Eingang kein Signal ankommt. Ein

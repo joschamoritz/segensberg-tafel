@@ -1,9 +1,24 @@
 # Segensberg-Tafel
 
 Steuerungssoftware für die LED-Anzeigetafel des **SV Hochlar 28** am
-Segensberg in Recklinghausen – entstanden als Ersatz für die mitgelieferte
-Spieltagssoftware. Ein Laptop steuert die Tafel per HDMI, ein iPad
-kann im WLAN als Fernbedienung dazukommen.
+Segensberg in Recklinghausen. Ein Laptop steuert die Tafel per HDMI, ein
+iPad kann im WLAN als Fernbedienung dazukommen.
+
+![Steuerungsfenster am Laptop](docs/screenshots/steuerung.png)
+
+| | |
+|---|---|
+| ![Begegnung vor dem Anpfiff](docs/screenshots/begegnung.png) | ![Spielstand, Design Klassisch](docs/screenshots/klassisch.png) |
+| Begegnung vor dem Anpfiff | Spielstand im Design „Klassisch“ |
+| ![Spielstand, Design Flutlicht](docs/screenshots/flutlicht.png) | ![Spielstand, Design Retro](docs/screenshots/retro.png) |
+| Design „Flutlicht“ | Design „Retro“ als Punktmatrix |
+| ![Torjubel](docs/screenshots/torjubel.png) | ![Aufstellung](docs/screenshots/aufstellung.png) |
+| Torjubel | Aufstellung |
+| ![Aufstellung auf dem Spielfeld](docs/screenshots/spielfeld.png) | |
+| Aufstellung auf dem Spielfeld | |
+
+Die Bilder zeigen die Anzeige in dreifacher Größe (Tafel: 384 × 192
+Bildpunkte). Spieler und Gegner sind erfunden.
 
 ## Was sie kann
 
@@ -20,8 +35,9 @@ kann im WLAN als Fernbedienung dazukommen.
   Halbzeit, Torjubel, Ecken und Spieltagssponsor.
 - **Bedienung:** Steuerungsfenster am Laptop, Fernsteuerung vom iPad im
   WLAN (mit PIN), einstellbare Standzeiten.
-- **Vorbereitet:** Verbindung zum NovaStar-Taurus-Controller der Tafel im
-  WLAN (Helligkeit, HDMI-Umschaltung) – am Gerät noch nicht erprobt.
+- **Verbindung zur Tafel:** Der Laptop findet den NovaStar-Taurus-Controller
+  der Tafel im WLAN, zeigt an, ob die Tafel das Laptop-Bild zeigt, und
+  regelt Helligkeit und HDMI-Umschaltung.
 
 Die Anzeige rechnet in der Auflösung der LED-Wand (Standard 384 × 192)
 und zeigt im Vorschaufenster dasselbe Bild wie die Tafel.
@@ -39,8 +55,8 @@ Vereinsdaten (Kader mit Portraits, Logos der Ligavereine, Sponsorenmotive,
 Tormusik) liegen bewusst **nicht** im Repository. Die App liest sie aus
 einem Ordner `Vereinsdaten/`, siehe `laptop-app/README.md`.
 
-Einige Dokumente verweisen auf `CLAUDE.md`, `Backlog.md` oder
-`Review-2026-10.md`. Das sind interne Arbeitsnotizen, die nicht
+Einige Dokumente verweisen auf `CLAUDE.md`, `Backlog.md` oder weitere
+Planungsdokumente. Das sind interne Arbeitsnotizen, die nicht
 veröffentlicht sind.
 
 ## Schnellstart
