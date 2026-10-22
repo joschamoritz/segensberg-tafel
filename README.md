@@ -4,6 +4,12 @@ Steuerungssoftware für die LED-Anzeigetafel des **SV Hochlar 28** am
 Segensberg in Recklinghausen. Ein Laptop steuert die Tafel per HDMI, ein
 iPad kann im WLAN als Fernbedienung dazukommen.
 
+**Herunterladen:** Die fertige Windows-Fassung (Installer und portable
+`.exe`) gibt es unter
+[Releases → neueste Fassung](https://github.com/joschamoritz/segensberg-tafel/releases/latest).
+Beim ersten Start warnt Windows SmartScreen, weil die Datei nicht signiert
+ist: **Weitere Informationen → Trotzdem ausführen**.
+
 ![Steuerungsfenster am Laptop](docs/screenshots/steuerung.png)
 
 | | |

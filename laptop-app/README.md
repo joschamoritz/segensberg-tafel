@@ -601,6 +601,20 @@ lassen, gehört zu jeder Auslieferung dieselbe Reihenfolge:
    Spieltag durchfällt. Jede Fassung belegt rund 200 MB – ältere
    gelegentlich wegräumen, aber immer die zuletzt bewährte behalten.
 6. Datei auf den Stick bzw. den Spieltags-Laptop.
+7. **Committen und hochladen** (`git push`), dann auf GitHub ein
+   **Release** anlegen: Tag `v<Version>` auf genau den Commit, aus dem
+   gebaut wurde, beide `.exe` anhängen, Beschreibung aus dem
+   `CHANGELOG.md`-Eintrag plus SmartScreen-Hinweis. Mit der
+   GitHub-Kommandozeile:
+
+   ```bash
+   gh release create v1.11.1 --target main --title "Segensberg-Tafel 1.11.1" --notes-file notizen.md "release/Segensberg-Tafel Setup 1.11.1.exe" "release/Segensberg-Tafel-portable-1.11.1.exe"
+   ```
+
+   GitHub ersetzt im Dateinamen des Installers die Leerzeichen durch
+   Punkte (`Segensberg-Tafel.Setup.1.11.1.exe`) -- in der Beschreibung
+   diesen Namen verwenden. Danach prüfen, dass das Release kein Entwurf
+   ist und beide Dateien vollständig hochgeladen sind.
 
 **Das gepackte `package.json` nie im Projektordner entpacken.** Wer
 prüfen will, ob dort ein `productName` steht (siehe `../CLAUDE.md`,
