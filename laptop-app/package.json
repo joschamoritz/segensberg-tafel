@@ -1,6 +1,6 @@
 {
   "name": "anzeigetafel-laptop-app",
-  "version": "1.11.0",
+  "version": "1.11.1",
   "description": "Segensberg-Tafel: Steuerungssoftware für die LED-Anzeigetafel des SV Hochlar 28 (Laptop-Version)",
   "private": true,
   "license": "PolyForm-Noncommercial-1.0.0",

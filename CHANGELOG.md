@@ -10,6 +10,27 @@ dem Baudatum. Welche Stelle wann steigt, steht in
 
 ---
 
+## 1.11.1 – 22.10.2026 (Testfassung)
+
+**Geändert**
+
+- **Neuer Name: Segensberg-Tafel.** So heißen jetzt Fenster, Kopfzeile,
+  Startmenü-Eintrag, Installer und die portable Datei. Kader,
+  Einstellungen und Vereinsdaten bleiben beim Update erhalten – sie liegen
+  am selben Ort wie bisher.
+- **Lizenzhinweise im Programmordner:** Neben der `.exe` liegen jetzt
+  `LICENSE.txt`, `NOTICE.txt` und `THIRD-PARTY-NOTICES.md`.
+
+**Nach dem Update**
+
+- Prüfen, ob in **Einstellungen → Apps** noch ein Eintrag „Anzeigetafel"
+  neben „Segensberg-Tafel" steht. Falls ja, den alten deinstallieren –
+  die Daten bleiben dabei erhalten.
+- Wer am iPad ein Symbol auf dem Home-Bildschirm hat: Es heißt erst nach
+  erneutem „Zum Home-Bildschirm" auch dort „Segensberg-Tafel".
+- Eine Virenscanner-Ausnahme auf den **Ordner** gilt weiter. Eine Ausnahme
+  auf den alten Dateinamen der portablen Fassung muss neu gesetzt werden.
+
 ## 1.11.0 – 21.10.2026 (Testfassung)
 
 **Neu**
