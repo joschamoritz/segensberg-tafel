@@ -5,7 +5,8 @@ const path = require('path');
 
 const SRC_DIR = path.join(__dirname, '..', 'src', 'renderer');
 const DIST_DIR = path.join(__dirname, '..', 'dist', 'renderer');
-const EXTENSIONS = ['.html', '.css', '.woff2', '.jpg', '.png', '.svg'];
+// .txt: die Lizenz der Schriften (OFL.txt) muss mit ausgeliefert werden.
+const EXTENSIONS = ['.html', '.css', '.woff2', '.jpg', '.png', '.svg', '.txt'];
 
 function copyRecursive(srcDir, distDir) {
   fs.mkdirSync(distDir, { recursive: true });

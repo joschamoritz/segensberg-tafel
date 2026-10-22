@@ -1,4 +1,11 @@
-# Laptop-App (MVP)
+# Segensberg-Tafel – Laptop-App
+
+**Name seit 22.10.2026:** Fenstertitel, Installer, portable Datei und
+Startmenü heißen „Segensberg-Tafel“. Unverändert bleiben der interne
+Paketname `anzeigetafel-laptop-app` (daran hängt der Ordner mit Kadern
+und Einstellungen, siehe „Datenablage“) und die App-Kennung
+`de.hochlar28.anzeigetafel`. Beides nicht ändern: Ein neuer Paketname
+startete mit leeren Daten.
 
 Electron/TypeScript-App für den Trainings- und Spielbetrieb – Ersatz für die
 Herstellersoftware. Siehe `../CLAUDE.md` und `../DESIGN.md` für Hintergrund.

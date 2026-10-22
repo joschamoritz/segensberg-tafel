@@ -3,6 +3,7 @@
   "version": "1.11.0",
   "description": "Eigene Steuerungssoftware für die Vereins-LED-Anzeigetafel (Laptop-Version, Ersatz für die Herstellersoftware)",
   "private": true,
+  "license": "MIT",
   "author": "SV Hochlar 28",
   "main": "dist/main/main.js",
   "scripts": {
@@ -15,7 +16,7 @@
   },
   "build": {
     "appId": "de.hochlar28.anzeigetafel",
-    "productName": "Anzeigetafel",
+    "productName": "Segensberg-Tafel",
     "copyright": "SV Hochlar 28",
     "directories": {
       "output": "release",
@@ -36,10 +37,10 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "shortcutName": "Anzeigetafel"
+      "shortcutName": "Segensberg-Tafel"
     },
     "portable": {
-      "artifactName": "Anzeigetafel-portable-${version}.exe"
+      "artifactName": "Segensberg-Tafel-portable-${version}.exe"
     }
   },
   "devDependencies": {

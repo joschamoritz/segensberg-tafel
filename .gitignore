@@ -21,6 +21,17 @@ Vereinsdaten/
 # Material, unverändert, jederzeit wiederbeschaffbar.
 Software LED-Anzeigetafel/
 
+# Interne Arbeitsnotizen (Nutzerentscheidung 22.10.2026): bleiben lokal,
+# gehören nicht ins öffentliche Repository. Sie sind auch aus der Historie
+# entfernt. ACHTUNG: Damit sichert git sie NICHT -- Sicherungen liegen in
+# D:\Anzeigetafel-Sicherung-*.
+CLAUDE.md
+Backlog.md
+Review-2026-10.md
+
+# Reste beim Prüfen gebauter Fassungen
+laptop-app/win-unpacked/
+
 # Windows / Editoren
 Thumbs.db
 Desktop.ini

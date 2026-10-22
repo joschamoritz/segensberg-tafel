@@ -66,13 +66,13 @@ if (!isFirstInstance) {
   app.whenReady().then(() => {
     dialog.showMessageBoxSync({
       type: 'info',
-      title: 'Anzeigetafel läuft bereits',
-      message: 'Die Anzeigetafel ist bereits geöffnet.',
+      title: 'Segensberg-Tafel läuft bereits',
+      message: 'Die Segensberg-Tafel ist bereits geöffnet.',
       detail:
         'Es kann immer nur ein Fenster gleichzeitig laufen, damit sich nicht zwei ' +
         'Instanzen um den Anzeigebildschirm streiten.\n\n' +
         'Falls kein Fenster zu sehen ist: Die laufende Instanz im Task-Manager ' +
-        'unter "Anzeigetafel" beenden und danach erneut starten.',
+        'unter "Segensberg-Tafel" beenden und danach erneut starten.',
       buttons: ['OK'],
     });
     app.quit();

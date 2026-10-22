@@ -73,7 +73,7 @@ export function createControlWindow(): BrowserWindow {
     // Erst zeigen, wenn maximiert UND der Inhalt da ist -- sonst blitzt
     // beim Start erst das kleine, dann ein leeres weißes Fenster auf.
     show: false,
-    title: 'Anzeigetafel-Steuerung',
+    title: 'Segensberg-Tafel – Steuerung',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -135,7 +135,7 @@ export function createDisplayWindow(
     // Das Anzeigefenster gehört nicht in die Taskleiste -- bedient wird
     // ausschließlich das Steuerungsfenster.
     skipTaskbar: !previewMode,
-    title: previewMode ? 'Anzeigetafel – Vorschau (kein zweiter Bildschirm erkannt)' : 'Anzeigetafel',
+    title: previewMode ? 'Segensberg-Tafel – Vorschau (kein zweiter Bildschirm erkannt)' : 'Segensberg-Tafel – Anzeige',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,

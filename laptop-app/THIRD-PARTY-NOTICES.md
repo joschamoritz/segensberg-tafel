@@ -30,3 +30,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## Schriften: Oswald und Source Sans 3
+
+`src/renderer/fonts/` enthält Oswald (Copyright 2016 The Oswald Project
+Authors) und Source Sans 3 (Copyright 2010-2020 Adobe, Reserved Font Name
+„Source“), beide unter der SIL Open Font License 1.1. Der Lizenztext liegt
+als `src/renderer/fonts/OFL.txt` daneben und wird mit ausgeliefert.
