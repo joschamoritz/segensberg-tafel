@@ -1,5 +1,3 @@
-Required Notice: Copyright (c) 2026 Joscha Fresmann (https://github.com/joschamoritz)
-
 # PolyForm Noncommercial License 1.0.0
 
 <https://polyformproject.org/licenses/noncommercial/1.0.0>
@@ -73,13 +71,3 @@ The **licensor** is the individual or entity offering these terms, and the **sof
 **Your licenses** are all the licenses granted to you for the software under these terms.
 
 **Use** means anything you do with the software requiring one of your licenses.
-
----
-
-Not covered by this license: the crest of SV Hochlar 28
-(laptop-app/assets/heim-logo.png, laptop-app/build/icon.png) and the club
-jersey images including the sponsor logo
-(laptop-app/src/renderer/display/trikot-heim*.png). They are included with
-permission for use in this project only. The bundled fonts are licensed under
-the SIL Open Font License, see laptop-app/src/renderer/fonts/OFL.txt.
-Third-party code is listed in laptop-app/THIRD-PARTY-NOTICES.md.

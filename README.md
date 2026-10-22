@@ -75,7 +75,7 @@ Der Code steht unter der [PolyForm Noncommercial License 1.0.0](LICENSE):
 Ansehen, nutzen und anpassen ist für **nicht-kommerzielle Zwecke** erlaubt –
 etwa für Vereine, privat oder zum Lernen. Verkaufen oder als bezahltes
 Produkt oder Dienstleistung anbieten ist nicht erlaubt. Wer die Software
-weitergibt, muss die Lizenz und den Hinweis „Required Notice“ mitgeben.
+weitergibt, muss die Lizenz und die Datei [`NOTICE`](NOTICE) mitgeben.
 
 Ausgenommen sind das Vereinswappen des SV Hochlar 28 und die Trikotbilder
 mit Sponsorlogo; die Schriften stehen unter der SIL Open Font License. Fremder Code ist in

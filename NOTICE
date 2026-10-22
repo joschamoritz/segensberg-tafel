@@ -1,0 +1,12 @@
+Required Notice: Copyright (c) 2026 Joscha Fresmann (https://github.com/joschamoritz)
+
+Segensberg-Tafel is licensed under the PolyForm Noncommercial License 1.0.0
+(see LICENSE).
+
+Not covered by this license: the crest of SV Hochlar 28
+(laptop-app/assets/heim-logo.png, laptop-app/build/icon.png) and the club
+jersey images including the sponsor logo
+(laptop-app/src/renderer/display/trikot-heim*.png). They are included with
+permission for use in this project only. The bundled fonts are licensed under
+the SIL Open Font License, see laptop-app/src/renderer/fonts/OFL.txt.
+Third-party code is listed in laptop-app/THIRD-PARTY-NOTICES.md.
