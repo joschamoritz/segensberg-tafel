@@ -71,8 +71,13 @@ npm run dist     # Windows-Installer und portable .exe nach release/
 
 ## Lizenz
 
-Der Code steht unter der [MIT-Lizenz](LICENSE). Ausgenommen sind das
-Vereinswappen des SV Hochlar 28 und die Trikotbilder mit Sponsorlogo; die
-Schriften stehen unter der SIL Open Font License. Fremder Code ist in
+Der Code steht unter der [PolyForm Noncommercial License 1.0.0](LICENSE):
+Ansehen, nutzen und anpassen ist für **nicht-kommerzielle Zwecke** erlaubt –
+etwa für Vereine, privat oder zum Lernen. Verkaufen oder als bezahltes
+Produkt oder Dienstleistung anbieten ist nicht erlaubt. Wer die Software
+weitergibt, muss die Lizenz und den Hinweis „Required Notice“ mitgeben.
+
+Ausgenommen sind das Vereinswappen des SV Hochlar 28 und die Trikotbilder
+mit Sponsorlogo; die Schriften stehen unter der SIL Open Font License. Fremder Code ist in
 [`laptop-app/THIRD-PARTY-NOTICES.md`](laptop-app/THIRD-PARTY-NOTICES.md)
 aufgeführt.

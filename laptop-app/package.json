@@ -3,7 +3,7 @@
   "version": "1.11.0",
   "description": "Segensberg-Tafel: Steuerungssoftware für die LED-Anzeigetafel des SV Hochlar 28 (Laptop-Version)",
   "private": true,
-  "license": "MIT",
+  "license": "PolyForm-Noncommercial-1.0.0",
   "author": "SV Hochlar 28",
   "main": "dist/main/main.js",
   "scripts": {
